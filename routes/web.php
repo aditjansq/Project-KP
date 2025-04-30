@@ -29,14 +29,13 @@ Route::middleware('guest')->group(function () {
 
 // Melindungi route yang hanya bisa diakses pengguna yang sudah login
 Route::middleware('auth')->get('/dashboard', function () {
-    // Mengambil 5 log login terakhir
     $loginLogs = LoginLog::where('user_id', auth()->id())
                          ->latest()
-                         ->limit(5)
+                         ->limit(10)
                          ->get();
-
     return view('dashboard', compact('loginLogs'));
 });
+
 
 // Menambahkan route untuk logout
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
