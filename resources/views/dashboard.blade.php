@@ -4,24 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
-    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
 </head>
 <body>
+    <h1>Welcome to your Dashboard, {{ auth()->user()->name }}!</h1>
+    <p>Posisi : {{ Auth()->user()->job }}</p>
 
-    <div class="top-bar">
-        <div>
-            Selamat datang, {{ Auth::user()->name }}<br>
-            Posisi: {{ Auth::user()->job }}
-        </div>
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="logout-btn">Logout</button>
-        </form>
-    </div>
+    <h2>Recent Login Logs</h2>
+    <ul>
+        @foreach($loginLogs as $log)
+            <li>
+                <strong>Login At:</strong> {{ $log->login_at }} <br>
+                <strong>IP Address:</strong> {{ $log->ip_address }} <br>
+                <strong>User Agent:</strong> {{ $log->user_agent }} <br>
+                <hr>
+            </li>
+        @endforeach
+    </ul>
 
-    <div class="content">
-        <h1>Welcome to your Dashboard!</h1>
-    </div>
-
+    <!-- Form logout -->
+    <form method="POST" action="{{ route('logout') }}">
+        @csrf
+        <button type="submit">Logout</button>
+    </form>
 </body>
 </html>

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;  // Import controller yang tepat
+use App\Models\LoginLog;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,11 +28,14 @@ Route::middleware('guest')->group(function () {
 });
 
 // Melindungi route yang hanya bisa diakses pengguna yang sudah login
-Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    });
-    // Route lainnya yang hanya bisa diakses oleh pengguna yang login
+Route::middleware('auth')->get('/dashboard', function () {
+    // Mengambil 5 log login terakhir
+    $loginLogs = LoginLog::where('user_id', auth()->id())
+                         ->latest()
+                         ->limit(5)
+                         ->get();
+
+    return view('dashboard', compact('loginLogs'));
 });
 
 // Menambahkan route untuk logout

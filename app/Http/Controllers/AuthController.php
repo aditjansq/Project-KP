@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Models\LoginLog; // Import model LoginLog
+
 
 class AuthController extends Controller
 {
@@ -22,17 +24,24 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->only('email', 'password');
-
+    
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->intended('/dashboard'); // Arahkan ke halaman dashboard jika login sukses
+    
+            // Menyimpan log login
+            LoginLog::create([
+                'user_id' => Auth::id(),
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+    
+            return redirect()->intended('/dashboard');
         }
-
+    
         return back()->withErrors([
-            'email' => 'Email atau password salah. Silakan coba lagi.',
+            'email' => 'Email atau password salah.',
         ]);
     }
-
     // Menampilkan form register
     public function showRegisterForm()
     {
