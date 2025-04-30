@@ -18,10 +18,13 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Menambahkan route untuk login
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+// Menambahkan route untuk login dengan middleware 'guest' agar hanya bisa diakses oleh pengguna yang belum login
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
+    Route::post('/register', [AuthController::class, 'register']);
+});
 
 // Melindungi route yang hanya bisa diakses pengguna yang sudah login
 Route::middleware('auth')->group(function () {
@@ -31,7 +34,5 @@ Route::middleware('auth')->group(function () {
     // Route lainnya yang hanya bisa diakses oleh pengguna yang login
 });
 
-
-// Menambahkan route untuk register
-Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
-Route::post('/register', [AuthController::class, 'register']);
+// Menambahkan route untuk logout
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

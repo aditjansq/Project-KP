@@ -12,6 +12,9 @@ class AuthController extends Controller
     // Menampilkan form login
     public function showLoginForm()
     {
+        if (Auth::check()) {
+            return redirect('/dashboard'); // Pengguna sudah login, arahkan ke dashboard
+        }
         return view('auth.login'); // View: resources/views/auth/login.blade.php
     }
 
@@ -22,50 +25,60 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->intended('/dashboard'); // Ganti jika perlu
+            return redirect()->intended('/dashboard'); // Arahkan ke halaman dashboard jika login sukses
         }
 
         return back()->withErrors([
-            'email' => 'Email atau password salah.',
+            'email' => 'Email atau password salah. Silakan coba lagi.',
         ]);
     }
 
     // Menampilkan form register
     public function showRegisterForm()
     {
+        if (Auth::check()) {
+            return redirect('/dashboard'); // Pengguna sudah login, arahkan ke dashboard
+        }
         return view('auth.register'); // View: resources/views/auth/register.blade.php
     }
 
     // Menangani proses register
     public function register(Request $request)
     {
-        // Validasi input
+        // Validasi input pengguna
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
+            'no_hp' => 'required|string|max:20',
+            'job' => 'required|in:manajer,divisi marketing,staff service,divisi finance',
             'password' => 'required|string|confirmed|min:8',
         ]);
 
-        // Membuat user baru
+        // Buat pengguna baru
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'no_hp' => $request->no_hp,
+            'job' => $request->job,
+            'password' => Hash::make($request->password), // Enkripsi password
         ]);
 
-        // Login otomatis setelah register
+        // Login otomatis setelah registrasi
         Auth::login($user);
 
-        return redirect()->intended('/dashboard'); // Ganti jika perlu
+        // Arahkan ke halaman dashboard setelah registrasi dan login
+        return redirect()->intended('/dashboard');
     }
 
     // Menangani proses logout
     public function logout(Request $request)
     {
+        // Logout pengguna
         Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        $request->session()->invalidate();  // Menghapus session
+        $request->session()->regenerateToken();  // Regenerasi token CSRF untuk keamanan
 
+        // Arahkan pengguna ke halaman login setelah logout
         return redirect('/login');
     }
 }
