@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masuk</title>
+    <title>Verifikasi OTP</title>
 
     <!-- Bootstrap 5 CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -14,7 +14,7 @@
             font-family: 'Segoe UI', sans-serif;
         }
 
-        .login-container {
+        .otp-container {
             max-width: 400px;
             margin: 5% auto;
             padding: 2rem;
@@ -23,7 +23,7 @@
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
         }
 
-        .login-container h4 {
+        .otp-container h4 {
             font-weight: 600;
             color: #4A90E2;
         }
@@ -43,50 +43,45 @@
             border-color: #357ABD;
         }
 
-        .link {
-            color: #4A90E2;
-            text-decoration: none;
-        }
-
-        .link:hover {
-            text-decoration: underline;
+        .alert {
+            border-radius: 0.75rem;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <div class="login-container">
-            <h4 class="mb-4 text-center">Masuk ke Akun Anda</h4>
+        <div class="otp-container">
+            <h4 class="mb-4 text-center">Verifikasi OTP Anda</h4>
 
-            <!-- Pesan Error -->
-            @if ($errors->any())
-                <div class="alert alert-danger">
-                    <strong>{{ $errors->first() }}</strong>
+            <!-- Menampilkan Pesan Sukses -->
+            @if(session('success'))
+                <div class="alert alert-success">
+                    {{ session('success') }}
                 </div>
             @endif
 
-            <form method="POST" action="/login">
+            <!-- Menampilkan Pesan Error -->
+            @if($errors->any())
+                <div class="alert alert-danger">
+                    <ul>
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <!-- Form OTP -->
+            <form action="{{ route('otp.verify') }}" method="POST">
                 @csrf
 
                 <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" name="email" id="email" class="form-control" value="{{ old('email') }}" required autofocus>
+                    <label for="otp" class="form-label">Kode OTP</label>
+                    <input type="text" id="otp" name="otp" class="form-control" required>
                 </div>
 
-                <div class="mb-3">
-                    <label for="password" class="form-label">Kata Sandi</label>
-                    <input type="password" name="password" id="password" class="form-control" required>
-                </div>
-
-                <button type="submit" class="btn btn-primary w-100">Login</button>
-
-                <div class="mt-3 text-center">
-                    <a href="{{ route('password.request') }}" class="link">Lupa password?</a>
-                </div>
-                <div class="mt-2 text-center">
-                    <span>Belum punya akun? <a href="{{ route('register') }}" class="link">Daftar</a></span>
-                </div>
+                <button type="submit" class="btn btn-primary w-100">Verifikasi</button>
             </form>
         </div>
     </div>

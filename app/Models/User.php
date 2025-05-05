@@ -20,8 +20,11 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'no_hp',  // Tambahkan no_hp
-        'job',    // Tambahkan job
+        'no_hp',  
+        'job',   
+        'otp',             
+        'otp_sent_at',     
+        'email_verified',  
     ];
 
     /**
@@ -43,4 +46,6 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+
 }
