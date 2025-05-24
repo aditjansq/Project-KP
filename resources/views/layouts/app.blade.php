@@ -95,7 +95,7 @@
   <!-- Sidebar -->
   <div class="sidebar">
     <div class="brand">
-      <i class="bi bi-car-front-fill me-2"></i>Centra
+      <i class="bi bi-car-front-fill me-2"></i>Centra Mobiliondo
     </div>
 
     @php
