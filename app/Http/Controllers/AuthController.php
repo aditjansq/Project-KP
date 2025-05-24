@@ -18,7 +18,9 @@ class AuthController extends Controller
             if (!Auth::user()->is_verified) {
                 Auth::logout();
             } else {
-                return redirect('/dashboard');
+                // ✅ DIUBAH: redirect ke dashboard sesuai role
+                $job = strtolower(str_replace(' ', '-', Auth::user()->job));
+                return redirect("/dashboard/{$job}");
             }
         }
 
@@ -44,7 +46,9 @@ class AuthController extends Controller
                 'user_agent' => $request->userAgent(),
             ]);
 
-            return redirect()->intended('/dashboard');
+            // ✅ DIUBAH: redirect ke dashboard sesuai job
+            $job = strtolower(str_replace(' ', '-', Auth::user()->job));
+            return redirect("/dashboard/{$job}");
         }
 
         return back()->withErrors([
@@ -55,7 +59,9 @@ class AuthController extends Controller
     public function showRegisterForm()
     {
         if (Auth::check()) {
-            return redirect('/dashboard');
+            // ✅ DIUBAH: redirect ke dashboard sesuai job
+            $job = strtolower(str_replace(' ', '-', Auth::user()->job));
+            return redirect("/dashboard/{$job}");
         }
 
         return view('auth.register');
@@ -117,7 +123,9 @@ class AuthController extends Controller
             Auth::login($user);
             session()->forget('otp_user_id');
 
-            return redirect('/dashboard')->with('success', 'Email berhasil diverifikasi!');
+            // ✅ DIUBAH: redirect ke dashboard sesuai job
+            $job = strtolower(str_replace(' ', '-', $user->job));
+            return redirect("/dashboard/{$job}")->with('success', 'Email berhasil diverifikasi!');
         }
 
         return back()->withErrors(['otp' => 'Kode OTP salah atau sudah tidak berlaku.']);
