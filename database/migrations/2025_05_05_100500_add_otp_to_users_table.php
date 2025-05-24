@@ -10,13 +10,13 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             // Menambahkan kolom otp_code jika belum ada
-            if (!Schema::hasColumn('users', 'otp_code')) {
-                $table->string('otp_code', 6)->nullable()->after('password');
+            if (!Schema::hasColumn('users', 'otp')) {
+                $table->string('otp', 6)->nullable()->after('password');
             }
 
             // Menambahkan kolom otp_sent_at jika belum ada
             if (!Schema::hasColumn('users', 'otp_sent_at')) {
-                $table->timestamp('otp_sent_at')->nullable()->after('otp_code');
+                $table->timestamp('otp_sent_at')->nullable()->after('otp');
             }
 
             // Menambahkan kolom is_verified jika belum ada
@@ -29,7 +29,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['otp_code', 'otp_sent_at', 'is_verified']);
+            $table->dropColumn(['otp', 'otp_sent_at', 'is_verified']);
         });
     }
 };

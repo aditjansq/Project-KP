@@ -27,7 +27,7 @@ Route::middleware('guest')->group(function () {
 // Hanya untuk user yang login dan sudah verifikasi email
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
-        if (!auth()->user()->email_verified) {
+        if (!auth()->user()->is_verified) {
             return redirect()->route('otp.form')->withErrors([
                 'otp' => 'Silakan verifikasi email Anda terlebih dahulu.'
             ]);
