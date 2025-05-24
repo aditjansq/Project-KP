@@ -40,25 +40,23 @@ Route::middleware(['auth'])->group(function () {
         return redirect("/dashboard/{$job}");
     })->name('dashboard');
 
-    // ✅ Data Mobil - termasuk Finance sekarang
-    Route::get('/mobil', [MobilController::class, 'index'])
-        ->middleware('role:manajer,divisi marketing,staff service,divisi finance') // ✅ lowercase semua
-        ->name('mobil.index');
+    // ✅ CRUD Data Mobil - hanya untuk role tertentu
+    Route::resource('mobil', MobilController::class)
+        ->middleware('role:manajer,divisi marketing,staff service,divisi finance');
 
-    // ✅ Data Pembeli - termasuk Finance sekarang
-    Route::get('/pembeli', [PembeliController::class, 'index'])
-        ->middleware('role:manajer,divisi marketing,divisi finance') // ✅ lowercase semua
-        ->name('pembeli.index');
+    // ✅ CRUD Data Pembeli - termasuk Finance sekarang
+    Route::resource('pembeli', PembeliController::class)
+        ->middleware('role:manajer,divisi marketing,divisi finance');
 
-    // ✅ Transaksi - tetap Manajer & Finance
+    // ✅ CRUD Transaksi (kalau mau ditambahkan fitur CRUD, ini bisa pakai resource juga)
     Route::get('/transaksi', [TransaksiController::class, 'index'])
-        ->middleware('role:manajer,divisi finance') // ✅ lowercase semua
+        ->middleware('role:manajer,divisi finance')
         ->name('transaksi.index');
 
     // ✅ Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // ✅ Dashboard per Role (semua lowercase)
+    // ✅ Dashboard per Role
     Route::middleware('role:manajer')->get('/dashboard/manajer', function () {
         return view('roles.manajer');
     });

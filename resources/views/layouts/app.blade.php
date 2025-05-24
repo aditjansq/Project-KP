@@ -36,23 +36,28 @@
         <hr>
 
         @php
-            $job = strtolower(auth()->user()->job); // ✅ lowercase langsung dari database
+            $job = strtolower(auth()->user()->job); // lowercase langsung dari database
         @endphp
 
-        {{-- ✅ Dashboard sesuai job, URL pakai dash --}}
+        {{-- Dashboard --}}
         <a href="{{ url('/dashboard/' . str_replace(' ', '-', $job)) }}">Dashboard</a>
 
-        {{-- ✅ Data Mobil: Manajer, Marketing, Service, Finance --}}
+        {{-- Data Mobil: Manajer, Marketing, Service, Finance --}}
         @if(in_array($job, ['manajer', 'divisi marketing', 'staff service', 'divisi finance']))
             <a href="{{ route('mobil.index') }}">Data Mobil</a>
         @endif
 
-        {{-- ✅ Data Pembeli: Manajer, Marketing, Finance --}}
+        {{-- Data Pembeli + Submenu --}}
         @if(in_array($job, ['manajer', 'divisi marketing', 'divisi finance']))
-            <a href="{{ route('pembeli.index') }}">Data Pembeli</a>
+            <div class="mb-2">
+                <a href="{{ route('pembeli.index') }}">Data Pembeli</a>
+                <div style="margin-left: 10px;">
+                    <a href="{{ route('pembeli.create') }}" style="font-size: 0.9rem;">➤ Tambah Pembeli</a>
+                </div>
+            </div>
         @endif
 
-        {{-- ✅ Transaksi: Manajer, Finance --}}
+        {{-- Transaksi --}}
         @if(in_array($job, ['manajer', 'divisi finance']))
             <a href="{{ route('transaksi.index') }}">Transaksi</a>
         @endif
