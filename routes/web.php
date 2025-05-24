@@ -18,7 +18,7 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
 
-    // OTP Verification
+    // ✅ OTP Verification
     Route::get('/verify-otp', [AuthController::class, 'showOtpForm'])->name('otp.form');
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])->name('otp.verify');
 });
@@ -40,15 +40,15 @@ Route::middleware(['auth'])->group(function () {
         return redirect("/dashboard/{$job}");
     })->name('dashboard');
 
-    // ✅ CRUD Data Mobil - hanya untuk role tertentu
+    // ✅ CRUD Data Mobil
     Route::resource('mobil', MobilController::class)
         ->middleware('role:manajer,divisi marketing,staff service,divisi finance');
 
-    // ✅ CRUD Data Pembeli - termasuk Finance sekarang
+    // ✅ CRUD Data Pembeli
     Route::resource('pembeli', PembeliController::class)
         ->middleware('role:manajer,divisi marketing,divisi finance');
 
-    // ✅ CRUD Transaksi (kalau mau ditambahkan fitur CRUD, ini bisa pakai resource juga)
+    // ✅ Transaksi - hanya manajer dan finance
     Route::get('/transaksi', [TransaksiController::class, 'index'])
         ->middleware('role:manajer,divisi finance')
         ->name('transaksi.index');

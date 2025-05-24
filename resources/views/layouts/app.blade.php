@@ -23,6 +23,10 @@
         .sidebar a:hover {
             background-color: #495057;
         }
+        .submenu {
+            margin-left: 15px;
+            font-size: 0.9rem;
+        }
         .main-content {
             flex: 1;
             padding: 2rem;
@@ -36,32 +40,34 @@
         <hr>
 
         @php
-            $job = strtolower(auth()->user()->job); // lowercase langsung dari database
+            $job = strtolower(auth()->user()->job); // lowercase job
         @endphp
 
-        {{-- Dashboard --}}
+        {{-- ✅ Dashboard --}}
         <a href="{{ url('/dashboard/' . str_replace(' ', '-', $job)) }}">Dashboard</a>
 
-        {{-- Data Mobil: Manajer, Marketing, Service, Finance --}}
+        {{-- ✅ Data Mobil + submenu --}}
         @if(in_array($job, ['manajer', 'divisi marketing', 'staff service', 'divisi finance']))
             <a href="{{ route('mobil.index') }}">Data Mobil</a>
-        @endif
-
-        {{-- Data Pembeli + Submenu --}}
-        @if(in_array($job, ['manajer', 'divisi marketing', 'divisi finance']))
-            <div class="mb-2">
-                <a href="{{ route('pembeli.index') }}">Data Pembeli</a>
-                <div style="margin-left: 10px;">
-                    <a href="{{ route('pembeli.create') }}" style="font-size: 0.9rem;">➤ Tambah Pembeli</a>
-                </div>
+            <div class="submenu">
+                <a href="{{ route('mobil.create') }}">➤ Tambah Mobil</a>
             </div>
         @endif
 
-        {{-- Transaksi --}}
+        {{-- ✅ Data Pembeli + submenu --}}
+        @if(in_array($job, ['manajer', 'divisi marketing', 'divisi finance']))
+            <a href="{{ route('pembeli.index') }}">Data Pembeli</a>
+            <div class="submenu">
+                <a href="{{ route('pembeli.create') }}">➤ Tambah Pembeli</a>
+            </div>
+        @endif
+
+        {{-- ✅ Transaksi --}}
         @if(in_array($job, ['manajer', 'divisi finance']))
             <a href="{{ route('transaksi.index') }}">Transaksi</a>
         @endif
 
+        {{-- ✅ Logout --}}
         <form action="{{ route('logout') }}" method="POST" class="mt-4">
             @csrf
             <button type="submit" class="btn btn-light btn-sm w-100">Logout</button>
