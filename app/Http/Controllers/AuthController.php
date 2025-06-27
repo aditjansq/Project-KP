@@ -18,7 +18,7 @@ class AuthController extends Controller
             if (!Auth::user()->is_verified) {
                 Auth::logout();
             } else {
-                // ✅ DIUBAH: redirect ke dashboard sesuai role
+                // Redirect ke dashboard sesuai job
                 $job = strtolower(str_replace(' ', '-', Auth::user()->job));
                 return redirect("/dashboard/{$job}");
             }
@@ -46,7 +46,7 @@ class AuthController extends Controller
                 'user_agent' => $request->userAgent(),
             ]);
 
-            // ✅ DIUBAH: redirect ke dashboard sesuai job
+            // Redirect ke dashboard sesuai job
             $job = strtolower(str_replace(' ', '-', Auth::user()->job));
             return redirect("/dashboard/{$job}");
         }
@@ -59,7 +59,7 @@ class AuthController extends Controller
     public function showRegisterForm()
     {
         if (Auth::check()) {
-            // ✅ DIUBAH: redirect ke dashboard sesuai job
+            // Redirect ke dashboard sesuai job
             $job = strtolower(str_replace(' ', '-', Auth::user()->job));
             return redirect("/dashboard/{$job}");
         }
@@ -69,11 +69,12 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
+        // Validasi hanya menerima 'manajer', 'admin', atau 'sales' untuk job
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'no_hp' => 'required|string|max:20',
-            'job' => 'required|in:manajer,divisi marketing,staff service,divisi finance',
+            'job' => 'required|in:manajer,admin,sales', // Menambahkan 'admin' dan 'sales' dalam validasi job
             'password' => 'required|string|confirmed|min:8',
         ]);
 
@@ -90,6 +91,7 @@ class AuthController extends Controller
             'otp_sent_at' => now(),
         ]);
 
+        // Mengirim OTP ke email pengguna
         Mail::to($user->email)->send(new OtpMail($otp));
         session(['otp_user_id' => $user->id]);
 
@@ -123,7 +125,7 @@ class AuthController extends Controller
             Auth::login($user);
             session()->forget('otp_user_id');
 
-            // ✅ DIUBAH: redirect ke dashboard sesuai job
+            // Redirect ke dashboard sesuai job
             $job = strtolower(str_replace(' ', '-', $user->job));
             return redirect("/dashboard/{$job}")->with('success', 'Email berhasil diverifikasi!');
         }

@@ -12,11 +12,16 @@
         body {
             background-color: #f8f9fa;
             font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            height: 100vh; /* Full viewport height */
+            display: flex;
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
         }
 
         .otp-container {
             max-width: 400px;
-            margin: 5% auto;
+            width: 100%;
             padding: 2rem;
             background: white;
             border-radius: 1rem;
@@ -26,6 +31,7 @@
         .otp-container h4 {
             font-weight: 600;
             color: #4A90E2;
+            text-align: center;
         }
 
         .form-control, .btn {
@@ -50,40 +56,38 @@
 </head>
 <body>
 
-    <div class="container">
-        <div class="otp-container">
-            <h4 class="mb-4 text-center">Verifikasi OTP Anda</h4>
+    <div class="otp-container">
+        <h4 class="mb-4 text-center">Verifikasi OTP Anda</h4>
 
-            <!-- Menampilkan Pesan Sukses -->
-            @if(session('success'))
-                <div class="alert alert-success">
-                    {{ session('success') }}
-                </div>
-            @endif
+        <!-- Menampilkan Pesan Sukses -->
+        @if(session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
 
-            <!-- Menampilkan Pesan Error -->
-            @if($errors->any())
-                <div class="alert alert-danger">
-                    <ul>
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+        <!-- Menampilkan Pesan Error -->
+        @if($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-            <!-- Form OTP -->
-            <form action="{{ route('otp.verify') }}" method="POST">
-                @csrf
+        <!-- Form OTP -->
+        <form action="{{ route('otp.verify') }}" method="POST">
+            @csrf
 
-                <div class="mb-3">
-                    <label for="otp" class="form-label">Kode OTP</label>
-                    <input type="text" id="otp" name="otp" class="form-control" required>
-                </div>
+            <div class="mb-3">
+                <label for="otp" class="form-label">Kode OTP</label>
+                <input type="text" id="otp" name="otp" class="form-control" required>
+            </div>
 
-                <button type="submit" class="btn btn-primary w-100">Verifikasi</button>
-            </form>
-        </div>
+            <button type="submit" class="btn btn-primary w-100">Verifikasi</button>
+        </form>
     </div>
 
     <!-- Bootstrap JS (Opsional, hanya jika Anda butuh interaksi JS) -->

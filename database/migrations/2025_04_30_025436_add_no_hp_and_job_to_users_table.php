@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('no_hp')->nullable()->after('email');
-            $table->enum('job', ['manajer', 'divisi marketing', 'staff service', 'divisi finance'])->nullable()->after('no_hp');
+            $table->enum('job', ['manajer', 'admin', 'sales'])->nullable()->after('no_hp');
         });
     }
 
