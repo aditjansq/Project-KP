@@ -3,9 +3,16 @@
 @section('title', 'Edit Penjual')
 
 @section('content')
+{{-- Pindahkan pernyataan use ke sini, di awal file --}}
+@php
+    use Illuminate\Support\Facades\Storage;
+@endphp
+
 <head>
     {{-- Animate.css for subtle animations --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    {{-- Font Awesome untuk ikon file --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <div class="container-fluid py-4 px-3 px-md-4">
     <div class="row mb-4 align-items-center">
@@ -33,7 +40,7 @@
 
     <div class="card border-0 shadow-xl rounded-4 animate__animated animate__fadeInUp">
         <div class="card-body p-lg-5 p-md-4 p-3">
-            <form method="POST" action="{{ route('penjual.update', $penjual->id) }}" novalidate>
+            <form method="POST" action="{{ route('penjual.update', $penjual->id) }}" novalidate enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 
@@ -42,7 +49,7 @@
                 @endphp
 
                 <h5 class="mb-4 fw-bold text-dark border-bottom pb-2">Informasi Penjual</h5>
-                <div class="row g-3 mb-4"> {{-- Added g-3 for consistent spacing --}}
+                <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <label for="kode_penjual" class="form-label text-muted">Kode Penjual</label>
                         <input type="text" name="kode_penjual" id="kode_penjual" class="form-control form-control-lg bg-light-subtle rounded-pill border-0 shadow-sm" value="{{ $penjual->kode_penjual }}" readonly>
@@ -50,27 +57,78 @@
                     <div class="col-md-6">
                         <label for="nama" class="form-label text-muted">Nama Penjual</label>
                         <input type="text" name="nama" id="nama" class="form-control form-control-lg rounded-pill shadow-sm" value="{{ $old('nama') }}" required>
+                        @error('nama')
+                            <div class="text-danger mt-1">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="col-md-6">
                         <label for="tanggal_lahir" class="form-label text-muted">Tanggal Lahir</label>
-                        {{-- Set max attribute to today's date to prevent future dates --}}
                         <input type="date" name="tanggal_lahir" id="tanggal_lahir" class="form-control form-control-lg rounded-pill shadow-sm" value="{{ $old('tanggal_lahir') }}" max="{{ date('Y-m-d') }}" required>
+                        @error('tanggal_lahir')
+                            <div class="text-danger mt-1">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="col-md-6">
                         <label for="no_telepon" class="form-label text-muted">No. Telepon</label>
                         <input type="text" name="no_telepon" id="no_telepon" class="form-control form-control-lg rounded-pill shadow-sm" value="{{ $old('no_telepon') }}">
+                        @error('no_telepon')
+                            <div class="text-danger mt-1">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="col-md-12">
                         <label for="alamat" class="form-label text-muted">Alamat</label>
                         <textarea name="alamat" id="alamat" class="form-control form-control-lg rounded-3 shadow-sm" rows="3" required>{{ $old('alamat') }}</textarea>
+                        @error('alamat')
+                            <div class="text-danger mt-1">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="col-md-6">
                         <label for="pekerjaan" class="form-label text-muted">Pekerjaan</label>
                         <input type="text" name="pekerjaan" id="pekerjaan" class="form-control form-control-lg rounded-pill shadow-sm" value="{{ $old('pekerjaan') }}">
+                        @error('pekerjaan')
+                            <div class="text-danger mt-1">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
 
-                <div class="mt-5 d-flex justify-content-end"> {{-- Menghapus gap-3 dan hanya menyisakan tombol Update Data --}}
+                <h5 class="mb-4 fw-bold text-dark border-bottom pb-2 mt-5">Dokumen Pendukung</h5>
+                <div class="row g-3 mb-4">
+                    {{-- KTP Pasangan --}}
+                    <div class="col-md-6">
+                        <label for="ktp_pasangan" class="form-label text-muted">Upload KTP Suami/Istri (jika ada)</label>
+                        <input type="file" name="ktp_pasangan" id="ktp_pasangan" class="form-control form-control-lg rounded-pill shadow-sm" accept=".jpeg,.png,.pdf">
+                        <div id="ktp_pasangan_preview" class="mt-2 preview-container">
+                            @if ($penjual->ktp_pasangan)
+                                @php
+                                    $fileExtension = pathinfo($penjual->ktp_pasangan, PATHINFO_EXTENSION);
+                                    $fileName = basename($penjual->ktp_pasangan);
+                                    $fileUrl = Storage::url($penjual->ktp_pasangan);
+                                @endphp
+                                @if (in_array(strtolower($fileExtension), ['jpg', 'jpeg', 'png']))
+                                    <img src="{{ $fileUrl }}" alt="{{ $fileName }}">
+                                @else
+                                    <div class="file-icon-preview">
+                                        <i class="fas fa-file-pdf"></i>
+                                        <span>{{ $fileName }}</span>
+                                    </div>
+                                @endif
+                                <a href="{{ $fileUrl }}" target="_blank" class="preview-link">Lihat Dokumen</a>
+                                {{-- Menampilkan Nama File Saja --}}
+                                <small class="text-muted text-center mt-1" style="font-size: 0.75em; word-break: break-all; padding: 0 5px;">
+                                    Nama File: `{{ basename($penjual->ktp_pasangan) }}`
+                                </small>
+                            @endif
+                        </div>
+                        @error('ktp_pasangan')
+                            <div class="text-danger mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    {{-- Kartu Keluarga (DIHAPUS) --}}
+                    {{-- Slip Gaji (DIHAPUS) --}}
+                </div>
+
+                <div class="mt-5 d-flex justify-content-end">
                     <button type="submit" class="btn btn-success btn-lg px-4 rounded-pill shadow-sm animate__animated animate__pulse animate__infinite">
                         <i class="bi bi-save me-2"></i>Update Data
                     </button>
@@ -81,7 +139,7 @@
 </div>
 
 <style>
-    /* Add custom styles here for consistency */
+    /* Styling yang sudah ada */
     body {
         background-color: #f8f9fa;
         font-family: 'Poppins', sans-serif;
@@ -106,7 +164,6 @@
         border: 1px solid #dee2e6; /* subtle border */
     }
 
-    /* Textarea doesn't get pill shape */
     textarea.form-control-lg {
         border-radius: 0.75rem !important;
     }
@@ -116,18 +173,22 @@
         box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25), 0 2px 8px rgba(0,0,0,0.1);
     }
 
+    input[type="file"].form-control-lg {
+        height: auto;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+
     .bg-light-subtle {
         background-color: #f8f9fa !important;
     }
 
-    /* Card Styling */
     .card {
         border-radius: 1rem !important;
         overflow: hidden;
         box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.09) !important;
     }
 
-    /* Alert Styling */
     .alert-danger {
         background-color: #fef2f2;
         color: #721c24;
@@ -146,7 +207,6 @@
         margin-bottom: 5px;
     }
 
-    /* Buttons */
     .btn-primary {
         background: linear-gradient(45deg, #0d6efd, #0b5ed7);
         border: none;
@@ -187,10 +247,9 @@
         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
     }
     .animate__pulse {
-        animation-duration: 2s; /* Increase animation duration */
+        animation-duration: 2s;
     }
 
-    /* Responsive adjustments */
     @media (max-width: 768px) {
         .btn-lg {
             width: 100%;
@@ -200,13 +259,148 @@
             flex-direction: column;
             gap: 1rem;
         }
-        .d-flex.justify-content-between { /* Adjust for the row with back/update buttons */
-            flex-direction: column-reverse; /* Put back button on top, then update */
+        .d-flex.justify-content-between {
+            flex-direction: column-reverse;
             gap: 1rem;
         }
     }
+
+    /* Style untuk Preview File */
+    .preview-container {
+        width: 100%;
+        max-width: 200px; /* Lebar maksimum untuk pratinjau */
+        height: auto;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column; /* Mengubah arah menjadi kolom untuk ikon dan tautan */
+        justify-content: center;
+        align-items: center;
+        background-color: #f9f9f9;
+        margin-top: 8px;
+        min-height: 100px; /* Tinggi minimum agar konsisten */
+    }
+
+    .preview-container img {
+        max-width: 100%;
+        max-height: 150px; /* Tinggi maksimum untuk gambar */
+        display: block;
+        object-fit: contain;
+    }
+
+    .preview-container .file-icon-preview {
+        padding: 20px;
+        text-align: center;
+        color: #6c757d;
+        flex-grow: 1; /* Agar mengambil ruang yang tersedia */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .preview-container .file-icon-preview i {
+        font-size: 3em;
+        margin-bottom: 5px;
+    }
+
+    .preview-container .file-icon-preview span {
+        display: block;
+        font-size: 0.8em;
+        word-break: break-all;
+    }
+
+    .preview-link {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        text-align: center;
+        font-size: 0.9em;
+        background-color: #e9ecef;
+        border-top: 1px solid #e0e0e0;
+        text-decoration: none;
+        color: #007bff;
+    }
+
+    .preview-link:hover {
+        background-color: #dee2e6;
+        color: #0056b3;
+    }
 </style>
 
-<!-- Include Bootstrap JS (Bundled with Popper for modals/dropdowns) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Hanya menyertakan ktp_pasangan karena yang lain dihapus
+        const fileInputs = ['ktp_pasangan'];
+
+        fileInputs.forEach(inputId => {
+            const inputElement = document.getElementById(inputId);
+            const previewContainer = document.getElementById(`${inputId}_preview`);
+
+            // Pastikan elemen input dan preview ada sebelum menambahkan event listener
+            if (inputElement && previewContainer) {
+                inputElement.addEventListener('change', function() {
+                    previewContainer.innerHTML = ''; // Bersihkan pratinjau sebelumnya
+
+                    const file = this.files[0];
+                    if (file) {
+                        const fileType = file.type;
+                        const fileName = file.name;
+
+                        if (fileType.startsWith('image/')) {
+                            // Pratinjau Gambar
+                            const img = document.createElement('img');
+                            img.src = URL.createObjectURL(file);
+                            img.alt = fileName;
+                            previewContainer.appendChild(img);
+                        } else if (fileType === 'application/pdf') {
+                            // Pratinjau PDF (ikon dan tautan)
+                            const iconHtml = `
+                                <div class="file-icon-preview">
+                                    <i class="fas fa-file-pdf"></i>
+                                    <span>${fileName}</span>
+                                </div>
+                                <a href="${URL.createObjectURL(file)}" target="_blank" class="preview-link">Lihat PDF</a>
+                            `;
+                            previewContainer.innerHTML = iconHtml;
+                        } else {
+                            // Jenis file lain (ikon umum)
+                            const iconHtml = `
+                                <div class="file-icon-preview">
+                                    <i class="fas fa-file"></i>
+                                    <span>${fileName}</span>
+                                </div>
+                            `;
+                            previewContainer.innerHTML = iconHtml;
+                        }
+                        // Tambahkan display path untuk file yang baru diupload
+                        const pathDisplay = document.createElement('small');
+                        pathDisplay.className = 'text-muted text-center mt-1';
+                        pathDisplay.style.cssText = 'font-size: 0.75em; word-break: break-all; padding: 0 5px;';
+                        pathDisplay.innerHTML = `Nama File: \`${fileName}\``; // Untuk file baru, tampilkan namanya saja
+                        previewContainer.appendChild(pathDisplay);
+
+                    } else {
+                        // Jika file dihapus dari input, tampilkan pratinjau file yang sudah ada (jika ada)
+                        // Atau kosongkan jika tidak ada file lama
+                        // Ini memerlukan data lama dari backend, yang saat ini tidak mudah diakses oleh JS langsung dari `old()`
+                        // Untuk kesederhanaan, jika tidak ada file baru dipilih, preview dikosongkan.
+                        // Jika ada file lama, itu akan dirender ulang dari Blade saat halaman dimuat.
+                        // Untuk kasus ini, karena hanya ada ktp_pasangan, kita bisa membiarkannya kosong
+                        // atau menambahkan placeholder jika tidak ada file yang dipilih/lama.
+                        // Contoh placeholder jika tidak ada file:
+                        // previewContainer.innerHTML = '<div class="file-icon-preview"><i class="fas fa-file-excel"></i><span>Tidak Ada File</span></div>';
+                    }
+                });
+            }
+        });
+
+        // Fungsi helper untuk mendapatkan nama file dasar dari path
+        function basename(path) {
+            return path.split('/').reverse()[0];
+        }
+    });
+</script>
 @endsection

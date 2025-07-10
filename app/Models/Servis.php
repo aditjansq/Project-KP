@@ -16,6 +16,8 @@ class Servis extends Model
         'metode_pembayaran', // kolom metode pembayaran
         'total_harga',       // kolom total harga yang dihitung berdasarkan item
         'status',
+        'total_biaya_keseluruhan', // Tambahkan ini
+
     ];
 
     /**

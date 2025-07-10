@@ -4,11 +4,11 @@
 
 @section('content')
 <head>
-    {{-- Select2 CSS for enhanced dropdowns --}}
+    {{-- Select2 CSS untuk dropdown yang lebih baik --}}
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    {{-- Animate.css for subtle animations --}}
+    {{-- Animate.css untuk animasi halus --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    {{-- Bootstrap Icons for PDF icon --}}
+    {{-- Bootstrap Icons untuk ikon PDF --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 </head>
 <div class="container-fluid py-4 px-3 px-md-4">
@@ -42,27 +42,8 @@
     </div>
     @endif
 
-    {{-- Temporary Debugging Block: Pastikan file gambar dapat diakses oleh browser --}}
-    <div class="card p-3 mb-4 bg-warning-subtle border-warning">
-        <h5>DEBUGGING: Tes Jalur Aset (Pastikan Anda Melihat Gambar Ini!)</h5>
-        @if ($transaksi->bukti_pembayaran)
-            @php
-                $testFileUrl = asset('storage/' . $transaksi->bukti_pembayaran);
-            @endphp
-            <p>Jalur File dari DB: <code>{{ $transaksi->bukti_pembayaran }}</code></p>
-            <p>URL yang Dihasilkan (via <code>asset('storage/...')</code>): <a href="{{ $testFileUrl }}" target="_blank"><code>{{ $testFileUrl }}</code></a></p>
-            <p>Mencoba memuat gambar:</p>
-            <img src="{{ $testFileUrl }}" alt="Debug Image" style="max-width: 200px; border: 1px solid red;" onerror="this.onerror=null;this.src='https://placehold.co/200x150/ffcccc/cc0000?text=GAMBAR+TIDAK+AKSESIBEL'; console.error('Error loading debug image for URL:', this.src, '. Periksa storage:link dan izin folder.');">
-            <p class="mt-2">Jika Anda melihat "GAMBAR TIDAK AKSESIBEL" di atas, atau mengklik link URL menghasilkan 404/403, file tidak dapat diakses oleh browser.</p>
-        @else
-            <p>Tidak ada `bukti_pembayaran` di database untuk transaksi ini (Tidak dapat melakukan tes debug).</p>
-        @endif
-    </div>
-    {{-- Akhir Blok Debugging Sementara --}}
-
     <div class="card border-0 shadow-xl rounded-4 animate__animated animate__fadeInUp">
         <div class="card-body p-lg-5 p-md-4 p-3">
-            {{-- Pastikan enctype="multipart/form-data" ada di sini untuk memungkinkan unggahan file --}}
             <form id="transaksiEditForm" method="POST" action="{{ route('transaksi.pembeli.update', $transaksi->id) }}" enctype="multipart/form-data">
                 @csrf
                 @method('PATCH')
@@ -71,13 +52,11 @@
                 <h5 class="mb-4 fw-bold text-dark border-bottom pb-2">Informasi Transaksi</h5>
                 <div class="p-4 mb-4 bg-read-only rounded-4 shadow-sm border border-primary-subtle">
                     <div class="row g-3">
-                        <!-- Kode Transaksi (Readonly) -->
                         <div class="col-md-6">
                             <label for="kode_transaksi" class="form-label text-muted">Kode Transaksi</label>
                             <input type="text" class="form-control form-control-lg bg-light rounded-pill shadow-sm" name="kode_transaksi" id="kode_transaksi" value="{{ old('kode_transaksi', $transaksi->kode_transaksi) }}" readonly />
                         </div>
 
-                        <!-- Tanggal Transaksi (Readonly) -->
                         <div class="col-md-6">
                             @php
                                 $today = date('Y-m-d');
@@ -85,34 +64,23 @@
                             @endphp
                             <label for="tanggal_transaksi" class="form-label text-muted">Tanggal Transaksi</label>
                             <input type="date" class="form-control form-control-lg bg-light rounded-pill shadow-sm @error('tanggal_transaksi') is-invalid @enderror" id="tanggal_transaksi" value="{{ old('tanggal_transaksi', \Carbon\Carbon::parse($transaksi->tanggal_transaksi)->format('Y-m-d')) }}" min="{{ $threeDaysAgo }}" max="{{ $today }}" readonly>
-                            {{-- Input hidden untuk tetap mengirim nilai tanggal_transaksi --}}
                             <input type="hidden" name="tanggal_transaksi" value="{{ old('tanggal_transaksi', \Carbon\Carbon::parse($transaksi->tanggal_transaksi)->format('Y-m-d')) }}">
                             @error('tanggal_transaksi')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
-                        <!-- Jam Transaksi (createdAt - Readonly) -->
                         <div class="col-md-6">
                             <label for="jam_transaksi" class="form-label text-muted">Jam Transaksi (Waktu Dibuat)</label>
                             <input type="text" class="form-control form-control-lg bg-light rounded-pill shadow-sm" id="jam_transaksi" value="{{ \Carbon\Carbon::parse($transaksi->created_at)->format('H:i:s') }}" readonly>
                         </div>
 
-                        <!-- Metode Pembayaran (Readonly) -->
                         <div class="col-md-6">
                             <label for="metode_pembayaran_display" class="form-label text-muted">Metode Pembayaran</label>
                             <input type="text" class="form-control form-control-lg bg-light rounded-pill shadow-sm" id="metode_pembayaran_display" value="{{ old('metode_pembayaran', $transaksi->metode_pembayaran) }}" readonly>
                             <input type="hidden" name="metode_pembayaran" value="{{ old('metode_pembayaran', $transaksi->metode_pembayaran) }}">
                         </div>
 
-                        <!-- Diskon (Persen - Readonly) -->
-                        <div class="col-md-6">
-                            <label for="diskon_persen_display" class="form-label text-muted">Diskon (%)</label>
-                            <input type="text" class="form-control form-control-lg bg-light rounded-pill shadow-sm" id="diskon_persen_display" value="{{ old('diskon_persen', $transaksi->diskon_persen) }}%" readonly>
-                            <input type="hidden" name="diskon_persen" value="{{ old('diskon_persen', $transaksi->diskon_persen) }}">
-                        </div>
-
-                        <!-- Keterangan (Readonly) -->
                         <div class="col-md-6">
                             <label for="keterangan" class="form-label text-muted">Keterangan (Opsional)</label>
                             <textarea class="form-control form-control-lg rounded-3 shadow-sm @error('keterangan') is-invalid @enderror" id="keterangan" name="keterangan" rows="3" placeholder="Masukkan detail transaksi tambahan..." readonly>{{ old('keterangan', $transaksi->keterangan) }}</textarea>
@@ -124,23 +92,21 @@
                     </div>
                 </div> {{-- End of Informasi Transaksi wrapper div --}}
 
-                <!-- Total Harga (Otomatis dari Harga Mobil - Diskon) - Prominent -->
                 <div class="col-md-12 mb-4 mt-4">
-                    <label class="form-label text-muted">Nominal yang harus dibayar</label>
-                    {{-- Menggunakan animate-glow-green untuk outline glow --}}
-                    <div class="p-3 bg-light rounded-4 shadow-sm border border-success d-flex align-items-center info-total-price-block w-100 animate-glow-green">
+                    <label class="form-label text-muted" id="nominal_label">Nominal yang harus dibayar</label>
+                    {{-- Default classes for "not Lunas" state --}}
+                    <div class="p-3 bg-light rounded-4 shadow-sm d-flex align-items-center info-total-price-block w-100 border border-success animate-glow-green justify-content-center" id="total_harga_block">
+                        {{-- Icon for "Lunas" state, initially hidden --}}
+                        <i class="bi bi-check-circle-fill me-2 fs-3 text-success" id="lunas_icon" style="display: none;"></i>
                         <input type="hidden" name="total_harga" id="total_harga_hidden" value="{{ old('total_harga', $transaksi->total_harga) }}">
-                        {{-- Nominal kedap-kedip --}}
                         <input type="text" class="form-control-plaintext text-center fw-bold fs-3 text-success animate-blink-text" id="total_harga_display" value="Rp 0" readonly />
                     </div>
                 </div>
 
                 {{-- Bagian Update Pembayaran (Fokus Utama untuk Edit) --}}
                 <h5 class="mb-4 fw-bold text-dark border-bottom pb-2 mt-5">Update Status & Bukti Pembayaran</h5>
-                {{-- Mengubah bg-light menjadi bg-payment-update-active untuk warna yang lebih kontras --}}
                 <div class="p-4 mb-4 bg-payment-update-active rounded-4 shadow-sm border border-info-subtle animate-glow-blue">
                     <div class="row g-3">
-                        <!-- Status Pembayaran -->
                         <div class="col-md-6">
                             <label for="status_pembayaran" class="form-label text-muted">Status Pembayaran</label>
                             <select class="form-control select2 form-select-lg rounded-pill shadow-sm @error('status_pembayaran') is-invalid @enderror" id="status_pembayaran" name="status_pembayaran" style="width: 100%" required>
@@ -155,10 +121,17 @@
                             @enderror
                         </div>
 
-                        <!-- Bukti Pembayaran (Upload File & Pratinjau) -->
+                        {{-- Input DP --}}
+                        <div class="col-md-6" id="dp_amount_group" style="display: none;">
+                            <label for="dp_amount" class="form-label text-muted">Jumlah DP</label>
+                            <input type="number" class="form-control form-control-lg rounded-pill shadow-sm @error('dp_jumlah') is-invalid @enderror" id="dp_amount" name="dp_jumlah" value="{{ old('dp_jumlah', $transaksi->dp_jumlah ?? '') }}" placeholder="Masukkan jumlah DP" min="0">
+                            @error('dp_jumlah')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         <div class="col-md-6">
                             <label for="bukti_pembayaran" class="form-label text-muted">Unggah Bukti Pembayaran (Opsional)</label>
-                            {{-- Input untuk unggahan file baru --}}
                             <input type="file" class="form-control form-control-lg rounded-pill shadow-sm @error('bukti_pembayaran') is-invalid @enderror" id="bukti_pembayaran" name="bukti_pembayaran" accept="image/*,application/pdf">
                             @error('bukti_pembayaran')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -166,10 +139,8 @@
 
                             {{-- Area Pratinjau File --}}
                             <div id="bukti_pembayaran_preview_area" class="mt-2 p-2 border rounded-3 bg-light text-center">
-                                {{-- Placeholder text, awalnya terlihat jika tidak ada bukti pembayaran --}}
                                 <p class="text-muted mb-0" id="bukti_pembayaran_placeholder_text" style="{{ $transaksi->bukti_pembayaran ? 'display: none;' : 'display: block;' }}">Tidak ada pratinjau file.</p>
 
-                                {{-- Kontainer pratinjau file yang sudah ada (visible by default if $transaksi->bukti_pembayaran exists) --}}
                                 <div id="existing_preview_container" style="{{ $transaksi->bukti_pembayaran ? 'display: block;' : 'display: none;' }}">
                                     @if ($transaksi->bukti_pembayaran)
                                         @php
@@ -190,7 +161,6 @@
                                     @endif
                                 </div>
 
-                                {{-- Elemen-elemen ini awalnya disembunyikan dan diatur oleh JS saat unggahan baru --}}
                                 <img id="bukti_pembayaran_preview_img_new" src="#" alt="Pratinjau Bukti Pembayaran" class="img-fluid rounded" style="max-height: 150px; display: none;" onerror="this.onerror=null;this.src='https://placehold.co/150x150/e9ecef/6c757d?text=Error';">
                                 <p class="mt-2 mb-0 text-muted small" id="bukti_pembayaran_file_info_new" style="display: none;"></p>
                                 <div id="bukti_pembayaran_pdf_preview_new" style="display: none;">
@@ -202,8 +172,6 @@
                                     <p class="mt-2 mb-0 text-muted small" id="bukti_pembayaran_generic_filename_new"></p>
                                 </div>
                             </div>
-                            {{-- Input hidden untuk menyimpan path file yang sudah ada, jika tidak ada unggahan baru --}}
-                            {{-- Ini penting agar backend tahu path file lama jika tidak ada unggahan baru --}}
                             <input type="hidden" name="existing_bukti_pembayaran" value="{{ $transaksi->bukti_pembayaran }}">
                         </div>
                     </div>
@@ -224,28 +192,36 @@
                                 <label class="form-label text-muted">Detail Mobil</label>
                                 <div class="p-3 bg-light rounded-4 shadow-sm border border-secondary-subtle info-detail-block">
                                     <div class="mb-1">
+                                        <label class="form-label small text-secondary mb-0">No. Plat</label>
+                                        <input type="text" class="form-control form-control-plaintext fw-bold" id="mobil_detail_nomorpolisi" value="{{ $transaksi->mobil->nomor_polisi ?? 'N/A' }}" readonly />
+                                    </div>
+                                    <div class="mb-1">
+                                        <label class="form-label small text-secondary mb-0">Jenis Mobil</label>
+                                        <input type="text" class="form-control form-control-plaintext" id="mobil_detail_jenis" value="{{ $transaksi->mobil->jenis_mobil ?? 'N/A' }}" readonly />
+                                    </div>
+                                    <div class="mb-1">
                                         <label class="form-label small text-secondary mb-0">Merek</label>
-                                        <input type="text" class="form-control form-control-plaintext fw-bold" id="mobil_detail_merek" readonly />
+                                        <input type="text" class="form-control form-control-plaintext" id="mobil_detail_merek" value="{{ $transaksi->mobil->merek_mobil ?? 'N/A' }}" readonly />
                                     </div>
                                     <div class="mb-1">
                                         <label class="form-label small text-secondary mb-0">Model / Tipe</label>
-                                        <input type="text" class="form-control form-control-plaintext" id="mobil_detail_tipe" readonly />
-                                    </div>
-                                    <div class="mb-1">
-                                        <label class="form-label small text-secondary mb-0">Transmisi</label>
-                                        <input type="text" class="form-control form-control-plaintext" id="mobil_detail_transmisi" readonly />
+                                        <input type="text" class="form-control form-control-plaintext" id="mobil_detail_tipe" value="{{ $transaksi->mobil->tipe_mobil ?? 'N/A' }}" readonly />
                                     </div>
                                     <div class="mb-1">
                                         <label class="form-label small text-secondary mb-0">Tahun</label>
-                                        <input type="text" class="form-control form-control-plaintext" id="mobil_detail_tahun" readonly />
+                                        <input type="text" class="form-control form-control-plaintext" id="mobil_detail_tahun" value="{{ $transaksi->mobil->tahun_pembuatan ?? 'N/A' }}" readonly />
                                     </div>
                                     <div class="mb-1">
-                                        <label class="form-label small text-secondary mb-0">No. Plat</label>
-                                        <input type="text" class="form-control form-control-plaintext" id="mobil_detail_nomorpolisi" readonly />
+                                        <label class="form-label small text-secondary mb-0">Nomor Rangka</label>
+                                        <input type="text" class="form-control form-control-plaintext" id="mobil_detail_nomorrangka" value="{{ $transaksi->mobil->nomor_rangka ?? 'N/A' }}" readonly />
+                                    </div>
+                                    <div class="mb-1">
+                                        <label class="form-label small text-secondary mb-0">Nomor Mesin</label>
+                                        <input type="text" class="form-control form-control-plaintext" id="mobil_detail_nomormesin" value="{{ $transaksi->mobil->nomor_mesin ?? 'N/A' }}" readonly />
                                     </div>
                                     <div>
                                         <label class="form-label small text-secondary mb-0">Warna</label>
-                                        <input type="text" class="form-control form-control-plaintext" id="mobil_detail_warna" readonly />
+                                        <input type="text" class="form-control form-control-plaintext" id="mobil_detail_warna" value="{{ $transaksi->mobil->warna ?? 'N/A' }}" readonly />
                                     </div>
                                 </div>
                             </div>
@@ -279,7 +255,6 @@
                     </div>
                 </div> {{-- End of Informasi Pihak Terkait wrapper div --}}
 
-                <!-- Button Simpan -->
                 <div class="mt-5 d-flex justify-content-end gap-3">
                     <button type="button" class="btn btn-success btn-lg px-4 rounded-pill shadow-sm animate__animated animate__pulse animate__infinite" id="confirmUpdateBtn">
                         <i class="bi bi-save me-2"></i> Update Transaksi Pembeli
@@ -290,7 +265,6 @@
     </div>
 </div>
 
-<!-- Konfirmasi Modal -->
 <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content rounded-4 shadow-lg">
@@ -317,10 +291,10 @@
                                 Metode Pembayaran: <span id="modal_metode_pembayaran" class="text-muted"></span>
                             </li>
                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Diskon: <span id="modal_diskon_persen" class="text-muted"></span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
                                 Status Pembayaran: <span id="modal_status_pembayaran" class="text-muted"></span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center" id="modal_dp_amount_item" style="display: none;">
+                                Jumlah DP: <span id="modal_dp_amount" class="text-muted"></span>
                             </li>
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 Bukti Pembayaran: <span id="modal_bukti_pembayaran" class="text-muted"></span>
@@ -381,7 +355,7 @@
     .select2-container--bootstrap-5.select2-container--focus .select2-selection, .select2-container--bootstrap-5.select2-container--open .select2-selection { border-color: #86b7fe; box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25), 0 2px 8px rgba(0,0,0,0.1); }
     .select2-container--bootstrap-5 .select2-selection__arrow { height: 100%; display: flex; align-items: center; padding-right: 0.75rem; }
     .select2-container--bootstrap-5 .select2-selection__placeholder { color: #6c757d; line-height: 1.5; }
-    .select2-container--bootstrap-5 .select2-selection__rendered { color: #495057; line-height: 1.5; padding-left: 0; } /* Removed redundant padding-left */
+    .select2-container--bootstrap-5 .select2-selection__rendered { color: #495057; line-height: 1.5; padding-left: 0; }
     .select2-container--bootstrap-5 .select2-dropdown { border-radius: 0.75rem; border: 1px solid #dee2e6; box-shadow: 0 5px 15px rgba(0,0,0,0.1); z-index: 1056; }
     .select2-container--bootstrap-5 .select2-results__option { padding: 0.75rem 1.25rem; font-size: 0.9rem; }
     .select2-container--bootstrap-5 .select2-results__option--highlighted.select2-results__option--selectable { background-color: #0d6efd; color: white; }
@@ -391,7 +365,7 @@
     .info-detail-block .form-control-plaintext.fw-bold { background-color: #e9ecef; }
     .info-detail-block .form-label.small { font-size: 0.75rem; margin-bottom: 0.2rem; color: #6c757d; }
     .info-total-price-block { min-height: calc(2.8rem + 2px); height: 100%; }
-    .info-total-price-block .form-control-plaintext { background-color: transparent; border: none; padding: 0; text-align: center; width: 100%; }
+    .info-total-price-block .form-control-plaintext { background-color: transparent; border: none; padding: 0; /* Remove default padding from form-control-plaintext */ text-align: center; width: 100%; } /* Center the text within its available space */
     .modal-header.bg-primary { background-color: #0d6efd !important; }
     .btn-close-white { filter: invert(1) brightness(2); }
     .list-group-item { font-size: 0.95rem; padding: 0.75rem 1rem; }
@@ -401,65 +375,68 @@
     /* Keyframes for glowing animation */
     @keyframes glow-green {
         0%, 100% {
-            box-shadow: 0 0 0px rgba(40, 167, 69, 0.4), 0 4px 10px rgba(0,0,0,0.05); /* subtle green glow or normal shadow */
+            box-shadow: 0 0 0px rgba(40, 167, 69, 0.4), 0 4px 10px rgba(0,0,0,0.05);
         }
         50% {
-            box-shadow: 0 0 15px rgba(40, 167, 69, 0.8), 0 4px 20px rgba(0,0,0,0.1); /* intense green glow */
+            box-shadow: 0 0 15px rgba(40, 167, 69, 0.8), 0 4px 20px rgba(0,0,0,0.1);
         }
     }
 
     @keyframes glow-blue {
         0%, 100% {
-            box-shadow: 0 0 0px rgba(23, 162, 184, 0.4), 0 4px 10px rgba(0,0,0,0.05); /* subtle blue glow or normal shadow */
+            box-shadow: 0 0 0px rgba(23, 162, 184, 0.4), 0 4px 10px rgba(0,0,0,0.05);
         }
         50% {
-            box-shadow: 0 0 15px rgba(23, 162, 184, 0.8), 0 4px 20px rgba(0,0,0,0.1); /* intense blue glow */
+            box-shadow: 0 0 15px rgba(23, 162, 184, 0.8), 0 4px 20px rgba(0,0,0,0.1);
         }
     }
 
     .animate-glow-green {
-        animation: glow-green 2s infinite alternate; /* Apply green glow animation */
+        animation: glow-green 2s infinite alternate;
     }
 
     .animate-glow-blue {
-        animation: glow-blue 2s infinite alternate; /* Apply blue glow animation */
+        animation: glow-blue 2s infinite alternate;
     }
 
     /* Custom background for read-only sections */
     .bg-read-only {
-        background-color: #eff2f5 !important; /* Slightly darker than bg-light */
+        background-color: #eff2f5 !important;
     }
 
     /* Ensure form controls inside bg-read-only also match or are clearly read-only */
     .bg-read-only .form-control[readonly],
     .bg-read-only .form-select[readonly],
-    .bg-read-only .form-control.bg-light { /* specifically target bg-light used inside for consistency */
-        background-color: #e9ecef !important; /* Keep a distinct read-only input background */
+    .bg-read-only .form-control.bg-light {
+        background-color: #e9ecef !important;
     }
 
     /* Custom background for the "Update Pembayaran" section */
     .bg-payment-update-active {
-        background-color: #ffffff !important; /* White background for stronger contrast */
+        background-color: #ffffff !important;
     }
 
     /* Keyframes for blinking text animation */
     @keyframes blink-text {
         0%, 100% { opacity: 1; }
-        50% { opacity: 0.4; } /* Make it more pronounced */
+        50% { opacity: 0.4; }
     }
 
     .animate-blink-text {
-        animation: blink-text 1.2s infinite alternate; /* Apply blinking text animation */
+        animation: blink-text 1.2s infinite alternate;
+    }
+
+    /* NEW: Class for "Lunas" total price background with subtle green */
+    .bg-paid-green {
+        background-color: #d4edda !important; /* A light, subtle green (similar to Bootstrap's alert-success background) */
+        border-color: #28a745 !important; /* Keep original success color for border */
+        border-width: 2px !important;
     }
 </style>
 
-<!-- Include jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- Include Select2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<!-- Include Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Include Moment.js for date formatting -->
 <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
 
 <script>
@@ -481,38 +458,117 @@
             }).format(amount);
         }
 
+        // Variabel untuk menyimpan total harga asli dari database.
+        // Ini penting karena kita akan menghitung ulang total harga berdasarkan DP.
+        const originalTotalHarga = parseFloat($('#total_harga_hidden').val()) || 0;
+
         // Fungsi untuk menghitung dan memperbarui tampilan total harga
         function updateTotalPriceDisplay() {
-            var totalHargaValue = parseFloat($('#total_harga_hidden').val()) || 0;
-            $('#total_harga_display').val(formatRupiah(totalHargaValue));
+            let currentTotal = originalTotalHarga;
+            const dpAmount = parseFloat($('#dp_amount').val()) || 0;
+
+            const metodePembayaran = $('#metode_pembayaran_display').val();
+
+            // Hanya kurangi total jika metode pembayaran adalah 'Kredit'
+            // dan DP dimasukkan.
+            if (metodePembayaran === 'Kredit') {
+                currentTotal = originalTotalHarga - dpAmount;
+                // Pastikan total tidak kurang dari nol jika DP melebihi total harga asli
+                if (currentTotal < 0) {
+                    currentTotal = 0;
+                }
+            }
+
+            $('#total_harga_display').val(formatRupiah(currentTotal));
+            $('#total_harga_hidden').val(currentTotal); // Perbarui juga nilai di input tersembunyi
         }
 
+        // Fungsi untuk menampilkan/menyembunyikan input DP
+        function toggleDpInput() {
+            var metodePembayaran = $('#metode_pembayaran_display').val();
+            if (metodePembayaran === 'Kredit') {
+                $('#dp_amount_group').show();
+            } else {
+                $('#dp_amount_group').hide();
+                $('#dp_amount').val(''); // Kosongkan nilai DP jika disembunyikan
+            }
+            updateTotalPriceDisplay(); // Hitung ulang total harga saat visibilitas input DP berubah
+        }
+
+        // Fungsi untuk mengubah teks label nominal, tampilan total harga, dan ikon berdasarkan status pembayaran
+        function updateNominalLabelAndDisplay() {
+            const statusPembayaran = $('#status_pembayaran').val();
+            const nominalLabel = $('#nominal_label');
+            const totalHargaDisplay = $('#total_harga_display');
+            const totalHargaBlock = $('#total_harga_block');
+            const lunasIcon = $('#lunas_icon'); // Dapatkan elemen ikon
+
+            // Setel ulang semua kelas dinamis terlebih dahulu untuk menghindari konflik
+            totalHargaBlock.removeClass('animate-glow-green bg-light border border-success bg-paid-green justify-content-start border-danger');
+            totalHargaDisplay.removeClass('animate-blink-text text-success text-dark text-danger text-muted');
+            lunasIcon.hide(); // Selalu sembunyikan secara default, lalu tampilkan jika Lunas
+
+            if (statusPembayaran === 'Lunas') {
+                nominalLabel.text('Nominal telah dibayar');
+                totalHargaDisplay.addClass('text-dark');
+                totalHargaBlock.addClass('bg-paid-green justify-content-start');
+                lunasIcon.show();
+            } else if (statusPembayaran === 'Dibatalkan') {
+                nominalLabel.text('Transaksi dibatalkan');
+                totalHargaDisplay.addClass('text-danger'); // Teks merah
+                totalHargaBlock.addClass('bg-light border border-danger justify-content-center'); // Latar belakang terang, border merah
+            } else { // 'Belum Lunas', 'Menunggu Pembayaran'
+                nominalLabel.text('Nominal yang harus dibayar');
+                totalHargaDisplay.addClass('animate-blink-text text-success'); // Teks hijau berkedip
+                totalHargaBlock.addClass('animate-glow-green bg-light border border-success justify-content-center'); // Blok hijau bercahaya
+            }
+        }
+
+        // Panggil toggleDpInput dan updateNominalLabelAndDisplay saat halaman dimuat
+        toggleDpInput();
+        updateNominalLabelAndDisplay(); // Panggil saat inisialisasi untuk mengatur label dan tampilan awal
+
+        // Dengarkan perubahan pada dropdown status_pembayaran
+        $('#status_pembayaran').on('change', function() {
+            updateNominalLabelAndDisplay(); // Panggil saat status berubah
+        });
+
+        // Dengarkan perubahan pada input dp_amount
+        $('#dp_amount').on('input', function() {
+            updateTotalPriceDisplay(); // Panggil saat nilai DP berubah
+        });
+
+
         // Auto-fill Informasi Mobil saat halaman dimuat (untuk data yang sudah ada)
-        // Mengisi detail mobil ke input readonly
         (function() {
             var mobilSelectedId = $('input[name="mobil_id"]').val();
             if (mobilSelectedId) {
+                // Dalam aplikasi nyata, Anda akan mengambil data ini melalui AJAX
+                // Untuk demonstrasi, menggunakan nilai hardcode dari skrip asli
                 var selectedMobilData = {
-                    merek: "{{ $transaksi->mobil->merek_mobil ?? '' }}",
-                    tipe: "{{ $transaksi->mobil->tipe_mobil ?? '' }}",
-                    transmisi: "{{ $transaksi->mobil->transmisi ?? '' }}",
-                    tahun: "{{ $transaksi->mobil->tahun_pembuatan ?? '' }}",
-                    nomorpolisi: "{{ $transaksi->mobil->nomor_polisi ?? '' }}",
-                    warna: "{{ $transaksi->mobil->warna_mobil ?? '' }}"
+                    nomorpolisi: "{{ $transaksi->mobil->nomor_polisi ?? 'N/A' }}",
+                    jenis: "{{ $transaksi->mobil->jenis_mobil ?? 'N/A' }}",
+                    merek: "{{ $transaksi->mobil->merek_mobil ?? 'N/A' }}",
+                    tipe: "{{ $transaksi->mobil->tipe_mobil ?? 'N/A' }}",
+                    tahun: "{{ $transaksi->mobil->tahun_pembuatan ?? 'N/A' }}",
+                    nomorrangka: "{{ $transaksi->mobil->nomor_rangka ?? 'N/A' }}",
+                    nomormesin: "{{ $transaksi->mobil->nomor_mesin ?? 'N/A' }}",
+                    warna: "{{ $transaksi->mobil->warna ?? 'N/A' }}",
                 };
 
+                $('#mobil_detail_nomorpolisi').val(selectedMobilData.nomorpolisi);
+                $('#mobil_detail_jenis').val(selectedMobilData.jenis);
                 $('#mobil_detail_merek').val(selectedMobilData.merek);
                 $('#mobil_detail_tipe').val(selectedMobilData.tipe);
-                $('#mobil_detail_transmisi').val(selectedMobilData.transmisi);
                 $('#mobil_detail_tahun').val(selectedMobilData.tahun);
-                $('#mobil_detail_nomorpolisi').val(selectedMobilData.nomorpolisi);
+                $('#mobil_detail_nomorrangka').val(selectedMobilData.nomorrangka);
+                $('#mobil_detail_nomormesin').val(selectedMobilData.nomormesin);
                 $('#mobil_detail_warna').val(selectedMobilData.warna);
             }
         })();
 
 
         // Auto-fill Informasi Pembeli saat halaman dimuat (untuk data yang sudah ada)
-        // Mengisi detail pembeli ke input readonly
         (function() {
             var pembeliSelectedId = $('input[name="pembeli_id"]').val();
             if (pembeliSelectedId) {
@@ -548,7 +604,7 @@
             buktiPembayaranPlaceholderText.style.display = 'none';
             existingPreviewContainer.style.display = 'none';
             newImgPreview.style.display = 'none';
-            newImgPreview.src = '#'; // Reset src gambar
+            newImgPreview.src = '#';
             newFileInfo.style.display = 'none';
             newFileInfo.innerHTML = '';
             newPdfPreview.style.display = 'none';
@@ -559,16 +615,14 @@
 
         // Fungsi untuk memperbarui tampilan pratinjau file berdasarkan input
         function updateFilePreview() {
-            resetAllPreviews(); // Mulai dengan menyembunyikan semua
+            resetAllPreviews();
 
-            const file = buktiPembayaranInput.files[0]; // Dapatkan file yang saat ini dipilih
+            const file = buktiPembayaranInput.files[0];
 
             if (file) {
-                // File baru dipilih
                 const fileType = file.type;
                 const fileName = file.name;
                 const fileUrl = URL.createObjectURL(file);
-                console.log('File baru dipilih. Tipe:', fileType, 'Nama:', fileName, 'URL:', fileUrl);
 
                 if (fileType.startsWith('image/')) {
                     newImgPreview.style.display = 'block';
@@ -585,26 +639,19 @@
                                                     <p class="mt-2 mb-0 text-muted small">File baru: <a href="${fileUrl}" target="_blank" download="${fileName}" class="text-decoration-none fw-bold">${fileName}</a> (Klik untuk melihat/mengunduh)</p>`;
                 }
             } else {
-                // Tidak ada file baru yang dipilih, periksa keberadaan file yang sudah ada
                 if (existingBuktiPathOnLoad) {
                     existingPreviewContainer.style.display = 'block';
-                    console.log('Tidak ada file baru dipilih. Menampilkan pratinjau yang sudah ada.');
                 } else {
                     buktiPembayaranPlaceholderText.style.display = 'block';
-                    console.log('Tidak ada file yang sudah ada dan tidak ada file baru. Menampilkan teks placeholder.');
                 }
             }
         }
 
-        // Panggil fungsi `updateFilePreview` saat DOM dimuat untuk mengatur status awal
         updateFilePreview();
-
-        // Dengarkan perubahan pada input file
         buktiPembayaranInput.addEventListener('change', updateFilePreview);
 
         // --- Logika Modal Konfirmasi ---
         $('#confirmUpdateBtn').on('click', function() {
-            // Validasi form sebelum membuka modal
             if (!$('#transaksiEditForm')[0].checkValidity()) {
                 $('#transaksiEditForm')[0].reportValidity();
                 return;
@@ -612,13 +659,23 @@
 
             // Mengisi modal dengan data form saat ini
             $('#modal_kode_transaksi').text($('#kode_transaksi').val());
-            $('#modal_tanggal_transaksi').text(moment($('#tanggal_transaksi').val()).format('DD MMMM YYYY'));
+            $('#modal_tanggal_transaksi').text(moment($('#tanggal_transaksi').val()).format('DD MMMMYYYY'));
             $('#modal_jam_transaksi').text($('#jam_transaksi').val());
             $('#modal_metode_pembayaran').text($('#metode_pembayaran_display').val());
-            $('#modal_diskon_persen').text($('#diskon_persen_display').val());
-            $('#modal_total_harga').text($('#total_harga_display').val());
+            $('#modal_total_harga').text($('#total_harga_display').val()); // Gunakan nilai yang sedang ditampilkan (sudah dikurangi DP)
             $('#modal_keterangan').text($('#keterangan').val() || '-');
             $('#modal_status_pembayaran').text($('#status_pembayaran option:selected').text());
+
+            // Menangani DP untuk modal
+            var metodePembayaran = $('#metode_pembayaran_display').val();
+            // Periksa apakah input DP terlihat dan memiliki nilai
+            if (metodePembayaran === 'Kredit' && $('#dp_amount').val()) {
+                $('#modal_dp_amount_item').show();
+                $('#modal_dp_amount').text(formatRupiah(parseFloat($('#dp_amount').val()) || 0));
+            } else {
+                $('#modal_dp_amount_item').hide();
+                $('#modal_dp_amount').text('');
+            }
 
             // Menangani Bukti Pembayaran untuk modal
             let modalBuktiPembayaranText = 'Tidak ada';
@@ -629,14 +686,18 @@
             }
             $('#modal_bukti_pembayaran').text(modalBuktiPembayaranText);
 
-            // Detail Mobil untuk modal (diambil langsung dari input readonly)
+            // Detail Mobil untuk modal
+            // Pastikan data ini diambil langsung dari nilai input di halaman, bukan placeholder
             $('#modal_mobil_merek_tipe').text($('#mobil_detail_merek').val() + ' ' + $('#mobil_detail_tipe').val());
-            $('#modal_mobil_transmisi').text($('#mobil_detail_transmisi').val());
             $('#modal_mobil_tahun').text($('#mobil_detail_tahun').val());
             $('#modal_mobil_nomorpolisi').text($('#mobil_detail_nomorpolisi').val());
             $('#modal_mobil_warna').text($('#mobil_detail_warna').val());
+            $('#modal_mobil_jenis').text($('#mobil_detail_jenis').val());
+            $('#modal_mobil_nomorrangka').text($('#mobil_detail_nomorrangka').val());
+            $('#modal_mobil_nomormesin').text($('#mobil_detail_nomormesin').val());
 
-            // Detail Pembeli untuk modal (diambil langsung dari input readonly)
+            // Detail Pembeli untuk modal
+            // Pastikan data ini diambil langsung dari nilai input di halaman, bukan placeholder
             $('#modal_pembeli_nama_email').text($('#pembeli_info_nama_email_detail').val());
             $('#modal_pembeli_telepon').text($('#pembeli_info_telepon_detail').val());
             $('#modal_pembeli_alamat').text($('#pembeli_info_alamat_detail').val());
@@ -649,13 +710,6 @@
         $('#confirmSubmitBtn').on('click', function() {
             const form = document.getElementById('transaksiEditForm');
             const formData = new FormData(form);
-
-            // Debugging: Log semua entri FormData ke konsol
-            console.log('--- Isi FormData Sebelum Pengiriman ---');
-            for (let pair of formData.entries()) {
-                console.log(pair[0] + ': ' + pair[1]);
-            }
-            console.log('--- Akhir Isi FormData ---');
 
             // Kirim form
             form.submit();

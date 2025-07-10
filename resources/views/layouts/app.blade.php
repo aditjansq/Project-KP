@@ -1,798 +1,1048 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@yield('title', 'Dashboard')</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    {{-- Font Poppins --}}
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    {{-- Bootstrap CSS --}}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    {{-- Bootstrap Icons --}}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
 
     <style>
         :root {
-            --sidebar-width-lg: 260px; /* Lebar sidebar di desktop */
-            --sidebar-width-sm: 80px;  /* Lebar sidebar di mobile (hanya ikon) */
-            --sidebar-bg: #222B40;
-            --text-color-light: #F0F2F5;
-            --text-color-muted: #A0A4B3;
-            --hover-bg: rgba(255, 255, 255, 0.08);
-            --active-bg: #3A4762;
-            --active-indicator: #00A2E8;
-            --border-color: rgba(255, 255, 255, 0.1);
-            --main-bg: #EAEFF4;
-            --link-icon-size: 1.1rem;
+            /* --- Main App Colors (Adjusted for Dark Theme Consistency) --- */
+            --primary-color: #0d6efd; /* Vibrant Blue for accents (Bootstrap primary) */
+            --primary-color-rgb: 13, 110, 253; /* RGB for rgba use */
+            --secondary-app-color: #bdc3c7; /* Lighter gray for secondary elements (used for default icon color, etc.) */
+            --bg-light: #f8f9fa; /* General light background for body (main content area) */
+            --border-color: #e0e0e0; /* General border color */
+            --text-app-dark: #f0f0f0; /* General light text for dark themes (used for brand, active text) */
+            --text-light: #fff; /* White text */
+            --user-role-color: #D0D0D0; /* Warna terang untuk teks peran pengguna di sidebar gelap */
+
+            /* --- Sidebar Specific Colors (Dark Theme - Elegant) --- */
+            --sidebar-bg-light: #0D0D0D; /* Warna latar belakang sidebar lebih gelap */
+            --sidebar-brand-text: #F0F0F0; /* Sedikit off-white untuk teks merek */
+            --sidebar-link-text: #B0B0B0; /* Abu-abu terang kusam untuk tautan */
+            --sidebar-icon-color: #CDCDCD; /* Abu-abu sedikit lebih terang untuk ikon */
+            --sidebar-active-bg: #004085; /* Biru tua elegan untuk latar belakang aktif */
+            --sidebar-active-text: var(--text-light); /* Putih untuk teks aktif */
+            --sidebar-hover-bg: rgba(255, 255, 255, 0.05); /* Sedikit nuansa putih untuk hover */
+            --sidebar-light-tint: rgba(255, 255, 255, 0.03); /* Nuansa yang hampir tidak terlihat untuk latar belakang info pengguna */
+            --sidebar-border-color: rgba(255, 255, 255, 0.1); /* Batas putih halus untuk pemisahan */
+
+            /* Sidebar Widths for responsiveness */
+            --sidebar-width-expanded: 250px;
+            --sidebar-width-collapsed: 70px;
+
+            /* Mapping old variables to new ones for consistency */
+            --primary-app-color: var(--primary-color);
+            --text-dark: var(--sidebar-link-text); /* Used for non-active text on dark sidebar */
+            --primary-light: var(--sidebar-light-tint); /* Used for user info background */
+            --secondary-color: var(--sidebar-icon-color); /* Used for default icon color */
+            --hover-light: var(--sidebar-hover-bg); /* Used for link hover background */
         }
 
-        html, body {
-            height: 100%;
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-light);
             margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif; /* Changed to Poppins */
-            background-color: var(--main-bg);
-            overflow-x: hidden; /* Prevent horizontal scrollbar on the entire page */
-        }
-
-        /* Main container for flexbox layout */
-        .main-layout-container {
-            display: flex;
-            flex-direction: row;
-            min-height: 100vh; /* Ensure it takes full viewport height */
-            width: 100%; /* Take full width */
-        }
-
-        /* Sidebar Styling */
-        .sidebar {
-            width: var(--sidebar-width-lg);
-            min-width: var(--sidebar-width-lg); /* Ensure minimum width */
-            height: 100vh; /* Full viewport height */
-            background-color: var(--sidebar-bg);
-            position: fixed; /* Sidebar remains fixed */
-            top: 0;
-            left: 0;
             display: flex;
             flex-direction: column;
-            padding: 20px 15px;
-            z-index: 1000;
-            transition: width 0.3s ease;
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-            overflow-y: auto; /* Vertical scroll for the entire sidebar */
-            overflow-x: hidden; /* Ensure NO horizontal scroll in sidebar */
+            min-height: 100vh;
+            color: var(--text-app-dark);
+            overflow-x: hidden; /* Prevent horizontal scroll when sidebar collapses */
         }
 
-        .brand {
+        /* Simple Scrollbar Design for Webkit browsers (Chrome, Safari, Edge) */
+        ::-webkit-scrollbar {
+            width: 8px; /* Width for vertical scrollbar */
+            height: 8px; /* Height for horizontal scrollbar */
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #2A2A2A; /* Darker background for the track, complements dark sidebar */
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #6C757D; /* Medium grey for the thumb, subtle and cool */
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #868E96; /* Slightly lighter grey on hover for interaction */
+        }
+
+
+        /* --- Sidebar Desktop Styles --- */
+        .sidebar-desktop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width-expanded); /* Use variable for width */
+            height: 100vh;
+            background: var(--sidebar-bg-light);
+            border-right: 1px solid var(--sidebar-border-color);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.08);
+            padding: 0.5rem 0;
+            overflow-y: auto;
+            z-index: 1045;
+            display: flex;
+            flex-direction: column;
+            font-size: 0.95rem;
+            transition: width 0.3s ease-in-out;
+        }
+
+        .sidebar-desktop.collapsed {
+            width: var(--sidebar-width-collapsed); /* Use variable for collapsed width */
+        }
+
+        .sidebar-desktop .brand {
             font-weight: 700;
-            font-size: 1.3rem !important; /* Smaller font size and stronger */
-            color: var(--text-color-light);
-            margin-bottom: 2.5rem;
+            font-size: 1.4rem;
+            margin-top: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--sidebar-brand-text);
+            padding: 0 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            justify-content: flex-start;
+        }
+
+        .sidebar-desktop .brand i {
+            display: none;
+        }
+
+        .sidebar-desktop.collapsed .brand {
+            justify-content: center;
+            padding: 0 0.5rem;
+        }
+
+        .sidebar-desktop.collapsed .brand span {
+            display: none;
+        }
+
+        /* User Info Styling */
+        .sidebar-desktop .user-info {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--sidebar-border-color);
+            background-color: var(--sidebar-light-tint);
+            border-radius: 0.5rem;
+            margin: 0 0.75rem 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.3s ease-in-out;
+            flex-shrink: 0;
+        }
+
+        .sidebar-desktop.collapsed .user-info {
+            flex-direction: column;
+            padding: 0.75rem 0.5rem;
+            margin: 0 0.5rem 1rem;
             text-align: center;
-            letter-spacing: 0.5px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-            white-space: nowrap !important; /* Prevent text from wrapping to a new line and stronger */
-            overflow: hidden; /* Hide overflowing content */
-            text-overflow: ellipsis; /* Add ellipsis if text is truncated */
-            flex-shrink: 0; /* Prevent brand element from shrinking in flex container */
-            min-width: 0; /* Allow overflow: hidden to work on flex item */
+            justify-content: center;
         }
 
-        /* User Info (Dropdown container) */
-        .user-info {
-            position: relative; /* Important for dropdown-menu positioning */
-            margin-bottom: 2rem;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid var(--border-color);
+        .sidebar-desktop .user-info .avatar-container {
+            position: relative;
+            margin-right: 15px;
+            flex-shrink: 0;
         }
 
-        /* User Info Dropdown Toggle */
-        .user-info .dropdown-toggle {
-            display: flex; /* Use flexbox for layout */
-            align-items: center; /* Vertically center items */
-            gap: 15px; /* Spacing between avatar, details, and settings icon */
-            padding: 1rem; /* Padding for clickable area */
-            background-color: #374151; /* Profile block background color */
-            border-radius: 0.75rem;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
-            color: var(--text-color-light);
-            text-decoration: none;
-            cursor: pointer;
-            width: 100%; /* Full width */
-            border: none;
-            text-align: left;
-            transition: background-color 0.2s ease-in-out;
+        .sidebar-desktop.collapsed .user-info .avatar-container {
+            margin-right: 0;
+            margin-bottom: 5px;
         }
 
-        .user-info .dropdown-toggle:hover {
-            background-color: var(--hover-bg);
+        .sidebar-desktop .user-info .avatar-container img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-color);
+            padding: 2px;
         }
 
-        /* Hide default Bootstrap Dropdown arrow, will be replaced with JS if needed */
-        .user-info .dropdown-toggle::after {
-            display: inline-block;
-            margin-left: auto; /* Push arrow to the right */
-            vertical-align: 0.255em;
-            content: "";
-            border-top: 0.3em solid;
-            border-right: 0.3em solid transparent;
-            border-bottom: 0;
-            border-left: 0.3em solid transparent;
-            transition: transform 0.2s ease-in-out;
+        .sidebar-desktop.collapsed .user-info .avatar-container img {
+            width: 40px;
+            height: 40px;
         }
 
-        .user-info .dropdown-toggle[aria-expanded="true"]::after {
-            transform: rotate(-180deg); /* Rotate arrow when open */
+        .online-dot {
+            position: absolute;
+            bottom: 0px;
+            right: 0px;
+            width: 12px;
+            height: 12px;
+            background-color: #28a745;
+            border-radius: 50%;
+            border: 2px solid var(--text-light);
         }
 
-        .user-avatar {
-            width: 48px;
-            height: 48px;
-            background-color: #00A2E8;
+        .sidebar-desktop.collapsed .online-dot {
+            width: 10px;
+            height: 10px;
+            border: 1.5px solid var(--text-light);
+        }
+
+        .sidebar-desktop .user-info .details {
+            font-size: 1rem;
+            color: var(--sidebar-link-text);
+            flex-grow: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-desktop.collapsed .user-info .details {
+            display: none;
+        }
+
+        .sidebar-desktop .user-info .details div:first-child {
+            font-weight: 600;
+            font-size: 1.1rem;
+            line-height: 1.2;
+            color: var(--text-app-dark);
+        }
+        .sidebar-desktop .user-info .details div:last-child {
+            color: var(--user-role-color);
+            font-size: 0.9rem;
+            line-height: 1.2;
+        }
+
+        /* Nav Links */
+        .sidebar-desktop .nav {
+            padding: 0 0.75rem;
+        }
+
+        .sidebar-desktop .nav-item {
+            margin-bottom: 0.25rem;
+        }
+
+        .sidebar-desktop .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 1rem;
+            border-radius: 0.375rem;
+            color: var(--sidebar-link-text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            user-select: none;
+            font-weight: 500;
+            transition: background-color 0.2s, color 0.2s, box-shadow 0.2s, padding 0.3s ease-in-out;
+            justify-content: flex-start;
+        }
+
+        .sidebar-desktop.collapsed .nav-link {
+            justify-content: center;
+            padding: 0.6rem 0.5rem;
+            text-align: center;
+        }
+
+        .sidebar-desktop .nav-link i {
+            font-size: 1.2rem;
+            min-width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+            color: var(--sidebar-icon-color);
+        }
+
+        .sidebar-desktop.collapsed .nav-link span {
+            display: none;
+        }
+
+        .sidebar-desktop .nav-link.active {
+            background-color: var(--sidebar-active-bg);
+            color: var(--sidebar-active-text);
+            box-shadow: none; /* Removed box-shadow for consistency */
+            padding: 0.6rem 1rem; /* Ensure consistent padding for active state */
+        }
+        .sidebar-desktop.collapsed .nav-link.active {
+            box-shadow: none;
+            padding: 0.6rem 0.5rem; /* Ensure consistent padding for active collapsed state */
+        }
+
+        .sidebar-desktop .nav-link.active i {
+            color: var(--sidebar-active-text);
+        }
+
+        .sidebar-desktop .nav-link:hover {
+            background-color: var(--sidebar-hover-bg);
+            color: var(--sidebar-link-text);
+        }
+        .sidebar-desktop .nav-link:hover i {
+             color: var(--primary-color);
+        }
+        .sidebar-desktop .nav-link.active:hover {
+            background-color: var(--sidebar-active-bg);
+            color: var(--sidebar-active-text);
+        }
+
+        /* Submenu styles */
+        .sidebar-desktop .nav .submenu {
+            padding-left: 0;
+            list-style: none;
+            overflow: hidden;
+        }
+
+        .sidebar-desktop .nav .submenu a {
+            padding-left: 2.25rem;
+            font-size: 0.88rem;
+            color: var(--sidebar-link-text);
+            background-color: #2A2A2A;
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.25rem;
+            gap: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: background-color 0.2s, color 0.2s, box-shadow 0.2s, padding 0.3s ease-in-out;
+            border-radius: 0.375rem;
+        }
+
+        .sidebar-desktop.collapsed .nav .submenu {
+            display: none;
+        }
+        .sidebar-desktop.collapsed .nav .submenu a {
+            padding-left: 0.5rem;
+            justify-content: center;
+        }
+        .sidebar-desktop.collapsed .nav .submenu a span {
+            display: none;
+        }
+
+        .sidebar-desktop .nav .submenu li:last-child a {
+            margin-bottom: 0;
+        }
+
+        .sidebar-desktop .nav .submenu a i {
+            font-size: 1rem;
+            min-width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+            color: var(--sidebar-icon-color);
+        }
+
+        .sidebar-desktop .nav .submenu a:hover {
+            background-color: #3A3A3A;
+            color: #ffffff;
+        }
+        .sidebar-desktop .nav .submenu a:hover i {
+            color: #8fd3f4;
+        }
+        .sidebar-desktop .nav .submenu a.active {
+            background-color: var(--sidebar-active-bg);
             color: #ffffff;
             font-weight: 600;
+            box-shadow: none; /* Removed box-shadow for consistency */
+            padding-left: 2.25rem; /* Ensure consistent padding for active submenu */
+        }
+        .sidebar-desktop .nav .submenu a.active i {
+            color: var(--primary-color);
+        }
+
+        /* Menu Section Label Styles */
+        .menu-section-label {
+            font-size: 0.7rem;
+            color: #8ac0ff; /* Changed color to light blue */
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 0.75rem 1.25rem 0.25rem 1.25rem;
+            margin-top: 0.5rem; /* Reduced top margin as requested */
+            margin-bottom: 0.25rem; /* Reduced for less space below */
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-desktop.collapsed .menu-section-label {
+            display: none;
+        }
+
+        .offcanvas .menu-section-label {
+            padding: 1rem 1.25rem 0.5rem 1.25rem;
+            margin-top: 0.5rem; /* Consistent with desktop */
+            margin-bottom: 0.25rem; /* Consistent with desktop */
+        }
+
+        /* --- Toggle Button for Desktop Sidebar --- */
+        .sidebar-toggle-desktop {
+            position: fixed;
+            top: 100px;
+            left: calc(var(--sidebar-width-expanded) + 10px); /* Position relative to sidebar when expanded */
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 50%;
-            font-size: 1.4rem;
-            flex-shrink: 0;
-            position: relative; /* Added for positioning the status indicator */
-        }
-
-        /* Status indicator for online/offline */
-        .status-indicator {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            border: 2px solid var(--sidebar-bg); /* Border color matching sidebar background */
-            background-color: #ccc; /* Default (offline) color */
-            transition: background-color 0.3s ease;
-        }
-
-        .status-indicator.online {
-            background-color: #28a745; /* Green for online */
-        }
-
-        .status-indicator.offline {
-            background-color: #6c757d; /* Grey for offline */
-        }
-
-
-        .user-info .user-details {
-            flex-grow: 1;
-            overflow: hidden; /* Important for ellipsis */
-        }
-
-        .user-info .fw-semibold {
-            font-size: 0.95rem;
-            color: #C0C4D3;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-bottom: 0;
-        }
-
-        .user-info .text-muted { /* This targets the 'Posisi' text */
-            color: #8BC34A !important; /* Changed to a shade of green with !important */
-            font-size: 0.75rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-bottom: 0;
-        }
-
-        /* Dropdown Menu Styling */
-        .user-info .dropdown-menu {
-            background-color: var(--sidebar-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            padding: 0.5rem 0;
-            min-width: 100%; /* So dropdown width matches toggle */
-            z-index: 1051; /* Higher than modal backdrop */
-            /* Position properties will be set by JavaScript */
-        }
-
-        .user-info .dropdown-item {
-            color: var(--text-color-light);
-            padding: 0.75rem 1.5rem;
-            font-size: 0.9rem;
-            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .user-info .dropdown-item:hover,
-        .user-info .dropdown-item:active {
-            background-color: var(--hover-bg);
-            color: white;
-        }
-
-        .user-info .dropdown-item i {
-            font-size: var(--link-icon-size);
-        }
-
-        .user-info .dropdown-divider {
-            border-top-color: rgba(255, 255, 255, 0.15);
-            margin: 0.5rem 0;
-        }
-
-
-        /* Navigation Links */
-        .nav-link {
-            color: var(--text-color-muted);
-            padding: 10px 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.9rem;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            border-radius: 6px;
-            margin-bottom: 6px;
-            position: relative;
-            overflow: hidden; /* Important for ellipsis text */
-        }
-
-        .nav-link:hover {
-            background-color: var(--hover-bg);
-            color: var(--text-color-light);
-            transform: translateX(2px);
-        }
-
-        .nav-link.active {
-            background-color: var(--active-bg);
-            color: var(--text-color-light);
-            font-weight: 600;
-            transform: translateX(0);
-        }
-
-        .nav-link.active::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            height: 70%;
-            width: 3px;
-            background-color: var(--active-indicator);
-            border-radius: 2px;
-            opacity: 1;
-            transition: all 0.2s ease;
-        }
-
-        .nav-link i:first-child {
-            font-size: var(--link-icon-size);
-            flex-shrink: 0;
-        }
-
-        .nav-link span {
-            flex-grow: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .nav-link .ms-auto {
-            margin-left: auto !important;
-            flex-shrink: 0;
             font-size: 1rem;
-            padding-left: 5px;
-            line-height: 1;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1046;
+            transition: transform 0.3s ease-in-out, left 0.3s ease-in-out;
         }
 
-        /* Submenu Items */
-        .nav-item .collapse .nav-link {
-            padding-left: 40px;
-            font-size: 0.85rem;
-            color: rgba(255, 255, 255, 0.5);
-            border-radius: 5px;
-            gap: 8px;
+        .sidebar-desktop.collapsed + .sidebar-toggle-desktop {
+            left: calc(var(--sidebar-width-collapsed) + 10px); /* Position relative to sidebar when collapsed */
+            transform: rotate(180deg);
         }
 
-        .nav-item .collapse .nav-link:hover {
-            background-color: rgba(255, 255, 255, 0.05);
-            color: #ffffff;
-            transform: translateX(1px);
+        /* --- Main Content & Header Adjustments --- */
+        #pageHeader {
+            padding: 1rem;
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: padding-left 0.3s ease-in-out;
         }
 
-        .nav-item .collapse .nav-link.active {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: #ffffff;
-            font-weight: 500;
-        }
-
-        .nav-item .collapse .nav-link i {
-            font-size: 0.9rem;
-        }
-
-        /* Nav container inside sidebar - ensure it doesn't try to scroll itself horizontally */
-        .sidebar .nav {
+        #mainContent {
+            margin-top: 1.5rem; /* Increased top margin for more space */
+            margin-bottom: 1.5rem; /* Increased bottom margin for more space */
+            margin-left: 0.5rem;
+            margin-right: 0.5rem;
+            padding: 1rem;
             flex-grow: 1;
-            padding-right: 8px; /* For scrollbar visual space */
-            margin-bottom: 1.5rem;
-            min-height: 0;
-            overflow: visible; /* Important: so submenu content extends downwards */
-            /* overflow-y and overflow-x are controlled by .sidebar parent */
-        }
-
-        /* Custom Scrollbar for Sidebar */
-        .sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .sidebar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .sidebar::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-            border: 2px solid transparent;
-            background-clip: padding-box;
-        }
-
-        .sidebar::-webkit-scrollbar-thumb:hover {
-            background-color: rgba(255, 255, 255, 0.3);
-        }
-
-        /* Main Content Area */
-        .main-content {
-            flex-grow: 1;
-            overflow-y: auto;
-            /* Add margin-left to give space for the sidebar */
-            margin-left: var(--sidebar-width-lg);
-            width: calc(100% - var(--sidebar-width-lg)); /* Ensure it takes remaining width */
-            height: 100vh; /* Full viewport height for scrollbar to work */
-            background-color: var(--main-bg);
-            transition: margin-left 0.3s ease, width 0.3s ease;
+            min-height: calc(100vh - 70px);
+            user-select: none;
             display: flex;
             flex-direction: column;
-            padding: 1rem; /* Padding around the white content area */
+            background-color: var(--text-light);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border-radius: 0.75rem;
+            transition: margin-left 0.3s ease-in-out;
         }
 
-        /* Style for the main content container, to have a white background, rounded, and shadow */
-        .main-content-wrapper {
-            background-color: #ffffff;
-            border-radius: 1rem;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-            padding: 2rem; /* Internal padding for content inside */
-            flex-grow: 1; /* Ensure it fills available space */
-            overflow-y: auto; /* If content inside is too long */
+        /* Desktop specific styles for header and main content */
+        @media (min-width: 992px) {
+            #pageHeader.expanded-sidebar {
+                padding-left: calc(var(--sidebar-width-expanded) + 1.5rem);
+            }
+            #pageHeader.collapsed-sidebar {
+                padding-left: calc(var(--sidebar-width-collapsed) + 1.5rem);
+            }
+
+            #mainContent.expanded-sidebar {
+                margin-left: calc(var(--sidebar-width-expanded) + 1.5rem);
+                margin-right: 1.5rem;
+                margin-top: 1.5rem; /* Ensure consistent top margin */
+                margin-bottom: 1.5rem; /* Ensure consistent bottom margin */
+            }
+            #mainContent.collapsed-sidebar {
+                margin-left: calc(var(--sidebar-width-collapsed) + 1.5rem);
+                margin-right: 1.5rem;
+                margin-top: 1.5rem; /* Ensure consistent top margin */
+                margin-bottom: 1.5rem; /* Ensure consistent bottom margin */
+            }
         }
 
-
-        /* Custom Scrollbar for Main Content */
-        .main-content::-webkit-scrollbar {
-            width: 8px;
+        /* --- Mobile Specific Styles (Offcanvas) --- */
+        @media (max-width: 991.98px) {
+            .sidebar-desktop {
+                display: none;
+            }
+            .sidebar-toggle-desktop {
+                display: none;
+            }
+            #pageHeader, #mainContent {
+                margin-left: 0.5rem;
+                margin-right: 0.5rem;
+                padding-left: 1rem;
+            }
+            #pageHeader.expanded-sidebar,
+            #pageHeader.collapsed-sidebar,
+            #mainContent.expanded-sidebar,
+            #mainContent.collapsed-sidebar {
+                margin-left: 0.5rem;
+                margin-right: 0.5rem;
+                padding-left: 1rem;
+            }
+            #mainContent {
+                margin-top: 1rem; /* Slightly less for mobile devices */
+                margin-bottom: 1rem; /* Slightly less for mobile devices */
+            }
         }
 
-        .main-content::-webkit-scrollbar-track {
-            background: transparent;
+        /* Navbar Toggler for Mobile */
+        .navbar-toggler {
+            font-size: 1.25rem;
+            padding: 0.25rem;
+            border: none;
+            background: none;
+            color: var(--primary-app-color);
         }
 
-        .main-content::-webkit-scrollbar-thumb {
-            background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-            border: 2px solid transparent;
-            background-clip: padding-box;
+        @media (max-width: 576px) {
+            .page-title {
+                display: none;
+            }
         }
 
-        .main-content::-webkit-scrollbar-thumb:hover {
-            background-color: rgba(0, 0, 0, 0.35);
+        /* --- Offcanvas Specific Styles --- */
+        .offcanvas-backdrop.show {
+            opacity: 0.5;
+            background-color: rgba(0, 0, 0, 0.4);
         }
 
-        /* Modal z-index Fix */
         .modal-backdrop.show {
-            z-index: 1040 !important;
-        }
-        .modal-dialog {
-            z-index: 1050 !important;
+            opacity: 0.5;
+            background-color: rgba(0, 0, 0, 0.4);
         }
 
-        /* Table responsiveness (unchanged, good as is) */
-        .table-responsive {
-            overflow-x: auto;
+        .offcanvas {
+            width: 280px;
+            background-color: var(--sidebar-bg-light);
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            border-right: 1px solid var(--sidebar-border-color);
+            z-index: 1045;
+        }
+        .offcanvas-header {
+            padding: 0.5rem 1.25rem;
+            border-bottom: 1px solid var(--sidebar-border-color);
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--sidebar-light-tint);
+        }
+        .offcanvas-header .offcanvas-title {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--sidebar-brand-text);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .offcanvas-header .offcanvas-title i {
+            display: none;
+        }
+        /* Style for the custom close button using Bootstrap Icons */
+        .offcanvas-header .btn-close-custom {
+            background-color: transparent;
+            border: 0;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1; /* Ensure it's fully visible */
         }
 
-        /* Adjustments for small screens (Mobile) */
-        @media (max-width: 768px) {
-            .main-layout-container {
-                flex-direction: column; /* Sidebar and content stack in mobile */
-            }
-            html, body {
-                padding-left: 0; /* On mobile, sidebar is no longer fixed, so no need for body padding */
-                display: block; /* Change to block so sidebar and content are stacked */
-            }
-            .sidebar {
-                width: 100%; /* Sidebar takes full width on mobile */
-                height: auto; /* Height adjusts to content */
-                position: relative; /* No longer fixed */
-                padding: 1rem;
-                flex-direction: row; /* Sidebar items layout horizontally */
-                flex-wrap: wrap; /* Allow items to wrap */
-                justify-content: center; /* Center items */
-                border-bottom: 1px solid var(--border-color);
-            }
-            .sidebar .brand {
-                width: 100%; /* Brand takes full width */
-                margin-bottom: 1rem;
-                text-align: center; /* Ensure it's centered on mobile */
-                white-space: nowrap !important; /* Keep nowrap on mobile too and stronger */
-                overflow: hidden; /* Keep hidden on mobile too */
-                text-overflow: ellipsis; /* Keep ellipsis on mobile too */
-            }
-            .sidebar .user-info {
-                width: auto; /* Let its width adjust to content */
-                margin-bottom: 1rem;
-                padding-bottom: 0;
-                border-bottom: none;
-                flex-basis: 100%; /* Ensure user info dropdown takes full row */
-            }
-            .sidebar .user-info .dropdown-toggle {
-                width: auto; /* Adjust width to content */
-                padding: 0.5rem 1rem; /* Reduce padding */
-                margin: 0 auto; /* Center toggle */
-            }
-            .sidebar .user-avatar {
-                width: 38px;
-                height: 38px;
-                font-size: 1.1rem;
-                margin-right: 0.75rem; /* Give some space */
-            }
-            .sidebar .user-info .user-details {
-                display: block; /* Show user details again */
-                flex-grow: 1; /* Allow it to fill space */
-            }
-            .sidebar .dropdown-toggle::after {
-                display: inline-block; /* Show dropdown arrow again */
-            }
-
-            .sidebar .nav {
-                flex-direction: row; /* Menu items side by side on mobile */
-                flex-wrap: wrap; /* Allow items to wrap */
-                justify-content: center; /* Center items */
-                margin-bottom: 0;
-                padding-right: 0;
-                width: 100%; /* Take full width */
-            }
-            .sidebar .nav-item {
-                flex-basis: 48%; /* Two items per row */
-                margin-right: 2%; /* Space between items */
-                margin-bottom: 1rem;
-            }
-            .sidebar .nav-item:nth-child(2n) {
-                margin-right: 0; /* Remove margin on even items */
-            }
-            .sidebar .nav-link {
-                justify-content: center; /* Center icon and text */
-                flex-direction: column; /* Icon above text */
-                padding: 0.75rem 0.5rem;
-                font-size: 0.8rem;
-                text-align: center;
-                height: 100%; /* Ensure consistent height */
-            }
-            .sidebar .nav-link i {
-                margin-right: 0; /* Remove icon margin */
-                margin-bottom: 0.5rem; /* Add space to text */
-                font-size: 1.2rem;
-            }
-            .sidebar .nav-link span {
-                white-space: normal; /* Allow text to wrap */
-            }
-            .sidebar .nav-link .ms-auto {
-                display: none; /* Hide dropdown chevron in mobile main menu */
-            }
-            .sidebar .nav-item .collapse .nav-link {
-                padding-left: 1rem; /* Reduce submenu indentation */
-                font-size: 0.75rem;
-            }
-            .sidebar .nav-item .collapse .nav-link i {
-                font-size: 0.8rem;
-            }
-
-            .main-content {
-                margin-left: 0; /* No left margin on mobile */
-                width: 100%; /* Full width */
-                height: auto; /* Auto height */
-                padding: 1rem;
-                margin: 0; /* Remove margin on mobile */
-                border-radius: 0; /* Remove border-radius on mobile if not desired */
-                box-shadow: none; /* Remove shadow on mobile */
-            }
-            .main-content-wrapper {
-                border-radius: 0; /* Remove border-radius on mobile */
-                box-shadow: none; /* Remove shadow on mobile */
-            }
-            /* User info dropdown position on mobile */
-            .user-info .dropdown-menu {
-                left: 50% !important; /* Center dropdown */
-                transform: translateX(-50%) translateY(5px) !important; /* Shift to center and give some space */
-                width: auto !important; /* Let width adjust to content */
-                min-width: 150px; /* Minimum width */
-            }
+        .offcanvas-header .btn-close-custom i.bi-x-lg {
+            font-size: 1.5rem; /* Adjust size as needed */
+            color: #dc3545; /* Red color */
+            line-height: 1; /* Ensure proper vertical alignment */
         }
+
+        /* Remove default Bootstrap btn-close styles that might conflict if not using .btn-close-custom everywhere */
+        .offcanvas-header .btn-close {
+            background-image: none;
+            filter: none;
+            opacity: 1;
+        }
+
+        .offcanvas-body {
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            background: var(--sidebar-bg-light);
+        }
+
+        /* Offcanvas User Info */
+        .offcanvas .user-info {
+            display: flex;
+            align-items: center;
+            padding: 1.25rem 1.25rem;
+            border-bottom: 1px solid var(--sidebar-border-color);
+            background-color: var(--sidebar-light-tint);
+            margin-bottom: 1rem;
+            border-radius: 0;
+            margin-left: 0;
+            margin-right: 0;
+        }
+        .offcanvas .user-info .avatar-container {
+            position: relative;
+            margin-right: 15px;
+        }
+        .offcanvas .user-info .avatar-container img {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary-color);
+            padding: 2px;
+        }
+        .offcanvas .user-info .details {
+            font-size: 1rem;
+            color: var(--sidebar-link-text);
+            flex-grow: 1;
+        }
+        .offcanvas .user-info .details div:first-child {
+            font-weight: 600;
+            font-size: 1.1rem;
+            line-height: 1.2;
+            color: var(--text-app-dark);
+        }
+        .offcanvas .user-info .details div:last-child {
+            color: var(--user-role-color);
+            font-size: 0.9rem;
+            line-height: 1.2;
+        }
+
+        /* Offcanvas Nav Links */
+        .offcanvas .nav {
+            padding: 0;
+            margin: 0 0.75rem;
+        }
+        .offcanvas .nav-item {
+            margin-bottom: 0.25rem;
+        }
+        .offcanvas .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
+            color: var(--sidebar-link-text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            user-select: none;
+            font-weight: 500;
+            transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+        }
+        .offcanvas .nav-link i {
+            font-size: 1.3rem;
+            min-width: 28px;
+            text-align: center;
+            flex-shrink: 0;
+            color: var(--sidebar-icon-color);
+        }
+        .offcanvas .nav-link.active {
+            background-color: var(--sidebar-active-bg);
+            color: var(--sidebar-active-text);
+            box-shadow: none;
+            padding: 0.75rem 1rem; /* Ensure consistent padding for active state */
+        }
+        .offcanvas .nav-link.active i {
+            color: var(--sidebar-active-text);
+        }
+        .offcanvas .nav-link:hover {
+            background-color: var(--sidebar-hover-bg);
+            color: var(--sidebar-link-text);
+        }
+        .offcanvas .nav-link:hover i {
+            color: var(--primary-color);
+        }
+        .offcanvas .nav-link.active:hover {
+            background-color: #0b5ed7;
+            color: var(--sidebar-active-text);
+        }
+
+        /* Offcanvas Submenu */
+        .offcanvas .nav .submenu {
+            padding-left: 0;
+            list-style: none;
+        }
+        .offcanvas .nav .submenu a {
+            padding-left: 2.5rem;
+            font-size: 0.88rem;
+            color: var(--sidebar-link-text);
+            background-color: #2A2A2A;
+            margin-bottom: 0.25rem;
+            gap: 0.5rem;
+            transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+            border-radius: 0.375rem;
+        }
+        .offcanvas .nav .submenu li:last-child a {
+            margin-bottom: 0;
+        }
+        .offcanvas .nav .submenu a i {
+            font-size: 1rem;
+            min-width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+            color: var(--sidebar-icon-color);
+        }
+        .offcanvas .nav .submenu a:hover {
+            background-color: #3A3A3A;
+            color: #ffffff;
+        }
+        .offcanvas .nav .submenu a:hover i {
+            color: #8fd3f4;
+        }
+        .offcanvas .nav .submenu a.active {
+            background-color: var(--sidebar-active-bg);
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: none; /* Removed box-shadow for consistency */
+            padding-left: 2.5rem; /* Ensure consistent padding for active submenu */
+        }
+        .offcanvas .nav .submenu a.active i {
+            color: var(--primary-color);
+        }
+
+        /* Submenu Arrow Rotation for "Laporan" */
+        .sidebar-desktop .nav-link .submenu-arrow,
+        .offcanvas .nav-link .submenu-arrow {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .sidebar-desktop .nav-link.collapsed .submenu-arrow,
+        .offcanvas .nav-link.collapsed .submenu-arrow {
+            transform: rotate(0deg); /* Down arrow for collapsed state */
+        }
+
+        .sidebar-desktop .nav-link:not(.collapsed) .submenu-arrow,
+        .offcanvas .nav-link:not(.collapsed) .submenu-arrow {
+            transform: rotate(180deg); /* Up arrow for expanded state */
+        }
+
+
     </style>
 </head>
 <body>
 
-<div class="main-layout-container">
-    <div class="sidebar" id="sidebar">
-        <div class="brand">
-            Centra Mobilindo
+    <header id="pageHeader">
+        <div class="container-fluid">
+            <div class="d-flex align-items-center">
+                <button class="navbar-toggler d-lg-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar" aria-label="Toggle navigation">
+                    <i class="bi bi-list"></i>
+                </button>
+                <h1 class="mb-0 fs-4 text-start text-dark flex-grow-1 page-title">@yield('title', 'Dashboard')</h1>
+                <button class="btn btn-outline-danger btn-sm ms-auto" id="logoutBtn" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal" aria-label="Logout">
+                    <i class="bi bi-box-arrow-right"></i> <span class="d-none d-sm-inline">Keluar</span>
+                </button>
+            </div>
         </div>
 
-        <div class="dropdown user-info">
-            <a class="dropdown-toggle" href="#" role="button" id="userInfoDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                <div class="user-avatar">
-                    {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
-                    <div class="status-indicator" id="statusIndicator"></div>
+        {{-- Hidden logout form --}}
+        <form
+            id="logout-form"
+            action="{{ route('logout') }}"
+            method="POST"
+            class="d-none"
+        >
+            @csrf
+        </form>
+    </header>
+
+    {{-- Desktop Sidebar --}}
+    <nav class="sidebar-desktop" id="sidebarDesktop" aria-label="Sidebar navigation">
+        <div class="brand">
+            <span>Centra Mobilindo</span>
+        </div>
+
+        <div class="user-info">
+            <div class="avatar-container">
+                <img
+                    src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name ?? 'Pengguna') }}&background=0D6EFD&color=fff"
+                    alt="Avatar"
+                    loading="lazy"
+                />
+                <span class="online-dot"></span>
+            </div>
+            <div class="details">
+                <div><strong>{{ auth()->user()->name ?? 'Pengguna' }}</strong></div>
+                <div class="small" style="color: var(--user-role-color);">{{ auth()->user()->job ?? 'Posisi' }}</div>
+            </div>
+        </div>
+
+        <ul class="nav flex-column">
+            <h6 class="menu-section-label">Utama</h6>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+                    <i class="bi bi-house-door-fill"></i> <span>Dashboard</span>
+                </a>
+            </li>
+            <h6 class="menu-section-label">Mobil</h6>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('servis.*') ? 'active' : '' }}" href="{{ route('servis.index') }}">
+                    <i class="bi bi-tools"></i> <span>Servis</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('mobil.*') ? 'active' : '' }}" href="{{ route('mobil.index') }}">
+                    <i class="bi bi-car-front-fill"></i> <span>Mobil</span>
+                </a>
+            </li>
+            <h6 class="menu-section-label">Transaksi</h6>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('transaksi-pembelian.*') ? 'active' : '' }}" href="{{ route('transaksi-pembelian.index') }}">
+                    <i class="bi bi-cart-check-fill"></i> <span>Transaksi Pembelian</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('transaksi-penjualan.*') ? 'active' : '' }}" href="{{ route('transaksi-penjualan.index') }}">
+                    <i class="bi bi-cash-coin"></i> <span>Transaksi Penjualan</span>
+                </a>
+            </li>
+            <h6 class="menu-section-label">Pihak Terkait</h6>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('pembeli.*') ? 'active' : '' }}" href="{{ route('pembeli.index') }}">
+                    <i class="bi bi-person-fill"></i> <span>Pembeli</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('penjual.*') ? 'active' : '' }}" href="{{ route('penjual.index') }}">
+                    <i class="bi bi-shop"></i> <span>Penjual</span>
+                </a>
+            </li>
+
+            <h6 class="menu-section-label">Laporan</h6>
+            <li class="nav-item">
+                <a
+                    class="nav-link d-flex justify-content-between align-items-center {{ request()->routeIs('laporan.*') ? '' : 'collapsed' }}"
+                    data-bs-toggle="collapse"
+                    href="#submenuLaporanDesktop"
+                    role="button"
+                    aria-expanded="{{ request()->routeIs('laporan.*') ? 'true' : 'false' }}"
+                    aria-controls="submenuLaporanDesktop"
+                >
+                    <span><i class="bi bi-bar-chart-fill"></i> <span>Laporan</span></span>
+                    <i class="bi bi-chevron-down ms-auto submenu-arrow"></i>
+                </a>
+                <div class="collapse {{ request()->routeIs('laporan.*') ? 'show' : '' }}" id="submenuLaporanDesktop">
+                    <ul class="nav flex-column ps-3 submenu">
+                        <li><a class="nav-link {{ request()->routeIs('laporan.mobil_terjual') ? 'active' : '' }}" href="{{ route('laporan.mobil_terjual') }}"><i class="bi bi-graph-up-arrow"></i> <span>Mobil Terjual</span></a></li>
+                        <li><a class="nav-link {{ request()->routeIs('laporan.mobil_dibeli') ? 'active' : '' }}" href="{{ route('laporan.mobil_dibeli') }}"><i class="bi bi-graph-down-arrow"></i> <span>Mobil Dibeli</span></a></li>
+                    </ul>
                 </div>
-                <div class="user-details">
-                    <div class="fw-semibold">{{ auth()->user()->name }}</div>
-                    <div class="text-muted">{{ auth()->user()->job ?? 'Posisi' }}</div>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('settings') ? 'active' : '' }}" href="{{ route('settings') }}">
+                    <i class="bi bi-gear-fill"></i> <span>Pengaturan</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    {{-- Desktop Sidebar Toggle Button (moved outside) --}}
+    <button class="sidebar-toggle-desktop" id="sidebarToggleDesktop" aria-label="Toggle sidebar">
+        <i class="bi bi-chevron-left"></i>
+    </button>
+
+    {{-- Offcanvas Sidebar for Mobile --}}
+    <div
+        class="offcanvas offcanvas-start"
+        tabindex="-1"
+        id="offcanvasSidebar"
+        aria-labelledby="offcanvasSidebarLabel"
+        data-bs-backdrop="static"
+        data-bs-scroll="true"
+    >
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="offcanvasSidebarLabel">
+                Centra Mobilindo
+            </h5>
+            <button
+                type="button"
+                class="btn-close-custom" {{-- Changed class to custom --}}
+                data-bs-dismiss="offcanvas"
+                aria-label="Tutup"
+            >
+                <i class="bi bi-x-lg"></i> {{-- Changed icon to bi-x-lg --}}
+            </button>
+        </div>
+        <div class="offcanvas-body">
+            <div class="user-info d-flex align-items-center">
+                <div class="avatar-container">
+                    <img
+                        src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name ?? 'Pengguna') }}&background=0D6EFD&color=fff"
+                        alt="Avatar"
+                        class="rounded-circle"
+                        loading="lazy"
+                    />
+                    <span class="online-dot"></span>
                 </div>
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="userInfoDropdown">
-                <li>
-                    <a class="dropdown-item" href="{{ route('settings') }}">
-                        <i class="bi bi-gear-fill"></i> Pengaturan
+                <div class="ms-2 details">
+                    <div><strong>{{ auth()->user()->name ?? 'Pengguna' }}</strong></div>
+                    <div class="small" style="color: var(--user-role-color);">{{ auth()->user()->job ?? 'Posisi' }}</div>
+                </div>
+            </div>
+
+            <ul class="nav flex-column">
+                <h6 class="menu-section-label">Utama</h6>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+                        <i class="bi bi-house-door-fill"></i> <span>Dashboard</span>
                     </a>
                 </li>
-                <li><hr class="dropdown-divider"></li>
+                <h6 class="menu-section-label">Mobil</h6>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('servis.*') ? 'active' : '' }}" href="{{ route('servis.index') }}">
+                        <i class="bi bi-tools"></i> <span>Servis</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('mobil.*') ? 'active' : '' }}" href="{{ route('mobil.index') }}">
+                        <i class="bi bi-car-front-fill"></i> <span>Mobil</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('transaksi-pembelian.*') ? 'active' : '' }}" href="{{ route('transaksi-pembelian.index') }}">
+                        <i class="bi bi-cart-check-fill"></i> <span>Transaksi Pembelian</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('transaksi-penjualan.*') ? 'active' : '' }}" href="{{ route('transaksi-penjualan.index') }}">
+                        <i class="bi bi-cash-coin"></i> <span>Transaksi Penjualan</span>
+                    </a>
+                </li>
+                <h6 class="menu-section-label">Pihak Terkait</h6>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('pembeli.*') ? 'active' : '' }}" href="{{ route('pembeli.index') }}">
+                        <i class="bi bi-person-fill"></i> <span>Pembeli</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('penjual.*') ? 'active' : '' }}" href="{{ route('penjual.index') }}">
+                        <i class="bi bi-shop"></i> <span>Penjual</span>
+                    </a>
+                </li>
+
+                <h6 class="menu-section-label">Laporan</h6>
                 <li>
-                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
-                        <i class="bi bi-box-arrow-right"></i> Logout
+                    <a
+                        class="nav-link d-flex justify-content-between align-items-center {{ request()->routeIs('laporan.*') ? '' : 'collapsed' }}"
+                        data-bs-toggle="collapse"
+                        href="#submenuLaporanMobile"
+                        role="button"
+                        aria-expanded="{{ request()->routeIs('laporan.*') ? 'true' : 'false' }}"
+                        aria-controls="submenuLaporanMobile"
+                    >
+                        <span><i class="bi bi-bar-chart-fill"></i> <span>Laporan</span></span>
+                        <i class="bi bi-chevron-down ms-auto submenu-arrow"></i>
+                    </a>
+                    <div
+                        class="collapse {{ request()->routeIs('laporan.*') ? 'show' : '' }}"
+                        id="submenuLaporanMobile"
+                    >
+                        <ul class="nav flex-column ps-3 submenu">
+                            <li><a class="nav-link {{ request()->routeIs('laporan.mobil_terjual') ? 'active' : '' }}" href="{{ route('laporan.mobil_terjual') }}"><i class="bi bi-graph-up-arrow"></i> <span>Mobil Terjual</span></a></li>
+                            <li><a class="nav-link {{ request()->routeIs('laporan.mobil_dibeli') ? 'active' : '' }}" href="{{ route('laporan.mobil_dibeli') }}"><i class="bi bi-graph-down-arrow"></i> <span>Mobil Dibeli</span></a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('settings') ? 'active' : '' }}" href="{{ route('settings') }}">
+                        <i class="bi bi-gear-fill"></i> <span>Pengaturan</span>
                     </a>
                 </li>
             </ul>
         </div>
-
-        @php
-            $job = strtolower(auth()->user()->job ?? '');
-            $route = Route::currentRouteName();
-        @endphp
-
-        <ul class="nav flex-column flex-grow-1">
-            <li>
-                <a href="{{ url('/dashboard/' . str_replace(' ', '-', $job)) }}" class="nav-link {{ request()->is('dashboard*') ? 'active' : '' }}">
-                    <i class="bi bi-house-door-fill"></i> <span>Dashboard</span>
-                </a>
-            </li>
-
-            {{-- Mobil (Daftar Mobil, Tambah Mobil) - Sales, Admin, & Manajer --}}
-            @if(in_array($job, ['manajer', 'admin', 'sales']))
-            <li class="nav-item">
-                <a class="nav-link"
-                   data-bs-toggle="collapse" href="#mobilSubmenu" role="button"
-                   aria-expanded="{{ str_starts_with($route, 'mobil') ? 'true' : 'false' }}" aria-controls="mobilSubmenu">
-                    <i class="bi bi-truck-front-fill"></i> <span>Mobil</span> <i class="bi bi-chevron-down ms-auto"></i>
-                </a>
-                <div class="collapse {{ str_starts_with($route, 'mobil') ? 'show' : '' }}" id="mobilSubmenu">
-                    <a href="{{ route('mobil.index') }}" class="nav-link {{ $route === 'mobil.index' || str_starts_with($route, 'mobil.edit') ? 'active' : '' }}">
-                        <i class="bi bi-list-ul"></i> <span>Daftar Mobil</span>
-                    </a>
-                    {{-- Tambah Mobil hanya untuk Admin --}}
-                    @if(in_array($job, ['admin']))
-                    <a href="{{ route('mobil.create') }}" class="nav-link {{ $route === 'mobil.create' ? 'active' : '' }}">
-                        <i class="bi bi-plus-circle"></i> <span>Tambah Mobil</span>
-                    </a>
-                    @endif
-                </div>
-            </li>
-            @endif
-
-            {{-- Pembeli (Daftar Pembeli, Tambah Pembeli) - Admin --}}
-            @if(in_array($job, ['admin']))
-            <li class="nav-item">
-                <a class="nav-link"
-                   data-bs-toggle="collapse" href="#pembeliSubmenu" role="button"
-                   aria-expanded="{{ str_starts_with($route, 'pembeli') ? 'true' : 'false' }}" aria-controls="pembeliSubmenu">
-                    <i class="bi bi-people-fill"></i> <span>Pembeli</span> <i class="bi bi-chevron-down ms-auto"></i>
-                </a>
-                <div class="collapse {{ str_starts_with($route, 'pembeli') ? 'show' : '' }}" id="pembeliSubmenu">
-                    <a href="{{ route('pembeli.index') }}" class="nav-link {{ $route === 'pembeli.index' || str_starts_with($route, 'pembeli.edit') ? 'active' : '' }}">
-                        <i class="bi bi-list-ul"></i> <span>Daftar Pembeli</span>
-                    </a>
-                    <a href="{{ route('pembeli.create') }}" class="nav-link {{ $route === 'pembeli.create' ? 'active' : '' }}">
-                        <i class="bi bi-person-plus-fill"></i> <span>Tambah Pembeli</span>
-                    </a>
-                </div>
-            </li>
-            @endif
-
-            {{-- Penjual (Daftar Penjual, Tambah Penjual) - Admin --}}
-            @if(in_array($job, ['admin']))
-            <li class="nav-item">
-                <a class="nav-link"
-                   data-bs-toggle="collapse" href="#penjualSubmenu" role="button"
-                   aria-expanded="{{ str_starts_with($route, 'penjual') ? 'true' : 'false' }}" aria-controls="penjualSubmenu">
-                    <i class="bi bi-person-plus-fill"></i> <span>Penjual</span> <i class="bi bi-chevron-down ms-auto"></i>
-                </a>
-                <div class="collapse {{ str_starts_with($route, 'penjual') ? 'show' : '' }}" id="penjualSubmenu">
-                    <a href="{{ route('penjual.index') }}" class="nav-link {{ $route === 'penjual.index' || str_starts_with($route, 'penjual.edit') ? 'active' : '' }}">
-                        <i class="bi bi-person-fill"></i> <span>Daftar Penjual</span>
-                    </a>
-                    <a href="{{ route('penjual.create') }}" class="nav-link {{ $route === 'penjual.create' ? 'active' : '' }}">
-                        <i class="bi bi-person-plus-fill"></i> <span>Tambah Penjual</span>
-                    </a>
-                </div>
-            </li>
-            @endif
-
-            {{-- Transaksi (Daftar Transaksi) - Manajer & Admin --}}
-            @if(in_array($job, ['manajer', 'admin']))
-            <li class="nav-item">
-                <a class="nav-link"
-                   data-bs-toggle="collapse" href="#transaksiSubmenu" role="button"
-                   aria-expanded="{{ str_starts_with($route, 'transaksi') ? 'true' : 'false' }}" aria-controls="transaksiSubmenu">
-                    <i class="bi bi-receipt"></i> <span>Transaksi</span> <i class="bi bi-chevron-down ms-auto"></i>
-                </a>
-                <div class="collapse {{ str_starts_with($route, 'transaksi') ? 'show' : '' }}" id="transaksiSubmenu">
-                    {{-- Submenu Daftar Transaksi --}}
-                    <a href="{{ route('transaksi.index') }}" class="nav-link {{ $route === 'transaksi.index' ? 'active' : '' }}">
-                        <i class="bi bi-list-ul"></i> <span>Daftar Transaksi Umum</span>
-                    </a>
-                    {{-- Submenu Transaksi Pembeli --}}
-                    <a href="{{ route('transaksi.pembeli.index') }}" class="nav-link {{ str_starts_with($route, 'transaksi.pembeli') ? 'active' : '' }}">
-                        <i class="bi bi-person-fill"></i> <span>Transaksi Pembeli</span>
-                    </a>
-                    {{-- Submenu Transaksi Penjual --}}
-                    <a href="{{ route('transaksi.penjual.index') }}" class="nav-link {{ str_starts_with($route, 'transaksi.penjual') ? 'active' : '' }}">
-                        <i class="bi bi-person-circle"></i> <span>Transaksi Penjual</span>
-                    </a>
-                </div>
-            </li>
-            @endif
-
-
-            {{-- Servis (Daftar Servis, Tambah Servis) - Manajer & Admin --}}
-            @if(in_array($job, ['manajer', 'admin']))
-            <li class="nav-item">
-                <a class="nav-link"
-                   data-bs-toggle="collapse" href="#servisSubmenu" role="button"
-                   aria-expanded="{{ str_starts_with($route, 'servis') ? 'true' : 'false' }}" aria-controls="servisSubmenu">
-                    <i class="bi bi-wrench"></i> <span>Servis</span> <i class="bi bi-chevron-down ms-auto"></i>
-                </a>
-                <div class="collapse {{ str_starts_with($route, 'servis') ? 'show' : '' }}" id="servisSubmenu">
-                    <a href="{{ route('servis.index') }}" class="nav-link {{ $route === 'servis.index' || str_starts_with($route, 'servis.edit') ? 'active' : '' }}">
-                        <i class="bi bi-list-ul"></i> <span>Daftar Servis</span>
-                    </a>
-                    {{-- Tambah Servis HANYA untuk Admin --}}
-                    @if($job === 'admin') {{-- Perubahan ada di sini: hanya 'admin' --}}
-                    <a href="{{ route('servis.create') }}" class="nav-link {{ $route === 'servis.create' ? 'active' : '' }}">
-                        <i class="bi bi-plus-circle"></i> <span>Tambah Servis</span>
-                    </a>
-                    @endif
-                </div>
-            </li>
-            @endif
-
-            {{-- Laporan (Mobil Terjual, Mobil Dibeli) - Manajer & Admin --}}
-            @if(in_array($job, ['manajer', 'admin']))
-            <li class="nav-item">
-                <a class="nav-link"
-                   data-bs-toggle="collapse" href="#laporanSubmenu" role="button"
-                   aria-expanded="{{ str_starts_with($route, 'laporan') ? 'true' : 'false' }}" aria-controls="laporanSubmenu">
-                    <i class="bi bi-file-earmark-bar-graph"></i> <span>Laporan</span> <i class="bi bi-chevron-down ms-auto"></i>
-                </a>
-                <div class="collapse {{ str_starts_with($route, 'laporan') ? 'show' : '' }}" id="laporanSubmenu">
-                    <a href="{{ route('laporan.mobil_terjual') }}" class="nav-link {{ $route === 'laporan.mobil_terjual' ? 'active' : '' }}">
-                        <i class="bi bi-currency-dollar"></i> <span>Mobil Terjual</span>
-                    </a>
-                    <a href="{{ route('laporan.mobil_dibeli') }}" class="nav-link {{ $route === 'laporan.mobil_dibeli' ? 'active' : '' }}">
-                        <i class="bi bi-cart-plus"></i> <span>Mobil Dibeli</span>
-                    </a>
-                </div>
-            </li>
-            @endif
-        </ul>
     </div>
 
-    <div class="main-content" id="main-content">
-        <div class="main-content-wrapper">
-            @yield('content')
-        </div>
-    </div>
-</div>
+    {{-- Main Content --}}
+    <main class="main-content" id="mainContent">
+        @yield('content')
+    </main>
 
-<div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="logoutModalLabel">Konfirmasi Logout</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Apakah Anda yakin ingin keluar?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="btn btn-danger">Logout</button>
-                </form>
+    {{-- Logout Confirmation Modal --}}
+    <div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-labelledby="logoutConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="logoutConfirmModalLabel">Konfirmasi Keluar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Apakah Anda yakin ingin keluar dari akun ini?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-danger" id="confirmLogoutBtn">Keluar</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    {{-- Bootstrap Bundle JS --}}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        function updateChevronIcon(collapseElement) {
-            const toggleLink = document.querySelector(`a[href="#${collapseElement.id}"]`);
-            if (toggleLink) {
-                const icon = toggleLink.querySelector('i.bi-chevron-down, i.bi-chevron-up');
-                if (icon) {
-                    if (collapseElement.classList.contains('show')) {
-                        icon.classList.remove('bi-chevron-down');
-                        icon.classList.add('bi-chevron-up');
-                    } else {
-                        icon.classList.remove('bi-chevron-up');
-                        icon.classList.add('bi-chevron-down');
-                    }
-                }
-            }
-        }
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarDesktop = document.getElementById('sidebarDesktop');
+            const sidebarToggleDesktop = document.getElementById('sidebarToggleDesktop');
+            const mainContent = document.getElementById('mainContent');
+            const pageHeader = document.getElementById('pageHeader');
 
-        document.querySelectorAll('.collapse').forEach((collapseElement) => {
-            collapseElement.addEventListener('shown.bs.collapse', function() {
-                updateChevronIcon(this);
-            });
-            collapseElement.addEventListener('hidden.bs.collapse', function() {
-                updateChevronIcon(this);
-            });
-            // Initial check for chevron icon on page load if submenu is already open
-            updateChevronIcon(collapseElement);
-        });
-
-        document.querySelectorAll('.nav-item a[data-bs-toggle="collapse"]').forEach((toggleLink) => {
-            toggleLink.addEventListener('click', function (event) {
-                const targetCollapseId = this.getAttribute('href');
-                const targetCollapseElement = document.querySelector(targetCollapseId);
-
-                // Close other open submenus if they are not the target
-                document.querySelectorAll('.nav-item .collapse.show').forEach((openCollapseElement) => {
-                    if (openCollapseElement !== targetCollapseElement) {
-                        const bsCollapse = bootstrap.Collapse.getInstance(openCollapseElement);
-                        if (bsCollapse) {
-                            bsCollapse.hide();
-                        }
-                    }
-                });
-            });
-        });
-
-        // Ensure dropdown menu does not get hidden by overflow in sidebar on mobile
-        const userInfoDropdown = document.getElementById('userInfoDropdown');
-        if (userInfoDropdown) {
-            userInfoDropdown.addEventListener('shown.bs.dropdown', function () {
-                const dropdownMenu = this.nextElementSibling;
-                const toggleRect = userInfoDropdown.getBoundingClientRect();
-                const sidebarRect = document.getElementById('sidebar').getBoundingClientRect();
-            });
-        }
-
-        // Live user status (you might have this in another script, but I'll put a placeholder)
-        function updateStatusIndicator() {
-            const statusIndicator = document.getElementById('statusIndicator');
-            if (statusIndicator) {
-                if ({{ auth()->check() ? 'true' : 'false' }}) {
-                    statusIndicator.classList.add('online');
-                    statusIndicator.classList.remove('offline');
+            // Function to set the sidebar and content state
+            function setSidebarState(isCollapsed) {
+                if (isCollapsed) {
+                    sidebarDesktop.classList.add('collapsed');
+                    mainContent.classList.remove('expanded-sidebar');
+                    mainContent.classList.add('collapsed-sidebar');
+                    pageHeader.classList.remove('expanded-sidebar');
+                    pageHeader.classList.add('collapsed-sidebar');
                 } else {
-                    statusIndicator.classList.add('offline');
-                    statusIndicator.classList.remove('online');
+                    sidebarDesktop.classList.remove('collapsed');
+                    mainContent.classList.remove('collapsed-sidebar');
+                    mainContent.classList.add('expanded-sidebar');
+                    pageHeader.classList.remove('collapsed-sidebar');
+                    pageHeader.classList.add('expanded-sidebar');
                 }
             }
-        }
-        updateStatusIndicator();
-    });
-</script>
+
+            // Set initial state based on localStorage or default (desktop: open, mobile: offcanvas)
+            function initializeSidebar() {
+                if (window.innerWidth >= 992) { // Desktop view
+                    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                    setSidebarState(isCollapsed);
+                } else { // Mobile view
+                    // Ensure desktop classes are removed for mobile
+                    sidebarDesktop.classList.remove('collapsed');
+                    mainContent.classList.remove('collapsed-sidebar', 'expanded-sidebar');
+                    pageHeader.classList.remove('collapsed-sidebar', 'expanded-sidebar');
+                }
+            }
+
+            // Call on load
+            initializeSidebar();
+
+            // Handle resize to adjust sidebar state
+            window.addEventListener('resize', initializeSidebar);
+
+            // Toggle sidebar on desktop
+            if (sidebarToggleDesktop) {
+                sidebarToggleDesktop.addEventListener('click', function() {
+                    const isCollapsed = !sidebarDesktop.classList.contains('collapsed'); // Determine new state
+                    setSidebarState(isCollapsed);
+                    localStorage.setItem('sidebarCollapsed', isCollapsed); // Save preference
+                });
+            }
+
+            // Logout button functionality
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                // This button triggers the modal, no direct logout here
+            });
+
+            // Event listener for 'Keluar' button in modal
+            document.getElementById('confirmLogoutBtn').addEventListener('click', () => {
+                document.getElementById('logout-form').submit();
+            });
+        });
+    </script>
 </body>
 </html>

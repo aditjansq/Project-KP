@@ -61,16 +61,17 @@
                             <option value="">Pilih Mobil (Tahun - Merek - Tipe - No. Polisi)</option>
                             @foreach($mobils as $mobil)
                                 <option
-                                    value="{{ $mobil->kode_mobil }}"
+                                    value="{{ $mobil->id }}"   {{-- pakai id --}}
                                     data-merek="{{ $mobil->merek_mobil }}"
                                     data-tipe="{{ $mobil->tipe_mobil ?? '' }}"
                                     data-nomorpolisi="{{ $mobil->nomor_polisi }}"
                                     data-tahunpembuatan="{{ $mobil->tahun_pembuatan ?? '' }}"
-                                    {{ $old('mobil_id', $servis->mobil->kode_mobil ?? '') == $mobil->kode_mobil ? 'selected' : '' }}>
+                                    {{ old('mobil_id', $servis->mobil->id ?? '') == $mobil->id ? 'selected' : '' }}>
                                     {{ $mobil->tahun_pembuatan ?? '' }} {{ $mobil->merek_mobil }} {{ $mobil->tipe_mobil ?? '' }} - {{ $mobil->nomor_polisi }}
                                 </option>
                             @endforeach
                         </select>
+
                     </div>
 
                     <!-- Informasi Mobil (Auto Fill) -->
@@ -91,7 +92,7 @@
                         <select class="form-control form-select-lg rounded-pill shadow-sm" id="metode_pembayaran" name="metode_pembayaran" required>
                             <option value="Transfer Bank" {{ $old('metode_pembayaran', $servis->metode_pembayaran) == 'Transfer Bank' ? 'selected' : '' }}>Transfer Bank</option>
                             <option value="Cash" {{ $old('metode_pembayaran', $servis->metode_pembayaran) == 'Cash' ? 'selected' : '' }}>Cash</option>
-                            <option value="Kartu Kredit" {{ $old('metode_pembayaran', $servis->metode_pembayaran) == 'Kartu Kredit' ? 'selected' : '' }}>Kartu Kredit</option>
+                            {{-- <option value="Kartu Kredit" {{ $old('metode_pembayaran', $servis->metode_pembayaran) == 'Kartu Kredit' ? 'selected' : '' }}>Kartu Kredit</option> --}}
                         </select>
                     </div>
 
@@ -144,8 +145,8 @@
                                     <td><input type="number" class="form-control form-control-sm qty" name="item_qty[]" min="1" value="{{ $old('item_qty.' . $key, $item->item_qty) }}" required></td>
                                     <td><input type="number" class="form-control form-control-sm price" name="item_price[]" min="0" value="{{ $old('item_price.' . $key, $item->item_price) }}" required></td>
                                     <td><input type="number" class="form-control form-control-sm discount" name="item_discount[]" min="0" max="100" value="{{ $old('item_discount.' . $key, $item->item_discount) }}" required></td>
-                                    <td><input type="text" class="form-control form-control-sm discount_value" name="item_discount_value[]" value="{{ number_format($old('item_discount_value.' . $key, $item->item_discount_value), 2, ',', '.') }}" readonly></td>
-                                    <td><input type="text" class="form-control form-control-sm total" name="item_total[]" value="{{ number_format($old('item_total.' . $key, $item->item_total), 2, ',', '.') }}" readonly></td>
+                                    <td><input type="text" class="form-control form-control-sm discount_value" name="item_discount_value[]" value="{{ number_format((float) old('item_discount_value.' . $key, $item->item_discount_value), 2, ',', '.') }}" readonly></td>
+                                    <td><input type="text" class="form-control form-control-sm total" name="item_total[]" value="{{ number_format((float) $old('item_total.' . $key, $item->item_total), 2, ',', '.') }}" readonly></td>
                                     <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-item rounded-pill"><i class="bi bi-x"></i></button></td>
                                 </tr>
                                 @endforeach

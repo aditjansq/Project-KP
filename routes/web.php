@@ -8,16 +8,20 @@ use App\Http\Controllers\MobilController;
 use App\Http\Controllers\PembeliController;
 use App\Http\Controllers\PenjualController;
 use App\Http\Controllers\TransaksiController;
+use App\Http\Controllers\TransaksiPenjualanController;
+use App\Http\Controllers\TransaksiPembelianController;
 use App\Http\Controllers\ServisController;
 use App\Http\Controllers\AccountSettingsController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\AdminController;
 
 // ------------------------
 // 👤 RUTE UNTUK TAMU (GUEST ROUTES)
 // ------------------------
 Route::middleware('guest')->group(function () {
     Route::get('/', function () {
-        return view('welcome'); // Halaman depan jika pengguna belum login
+        return view('welcome');
     });
 
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -31,7 +35,6 @@ Route::middleware('guest')->group(function () {
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])->name('otp.verify');
 });
 
-
 // ------------------------
 // ✅ RUTE TERLINDUNGI (AUTH + VERIFIED ROUTES)
 // ------------------------
@@ -40,7 +43,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/settings', [AccountSettingsController::class, 'show'])->name('settings');
     Route::post('/settings', [AccountSettingsController::class, 'update'])->name('settings.update');
 
-    // ✅ Redirect dinamis ke dashboard sesuai job
     Route::get('/dashboard', function () {
         if (!auth()->check() || !auth()->user()->is_verified) {
             return redirect()->route('otp.form')->withErrors([
@@ -60,61 +62,76 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('pembeli', PembeliController::class)
         ->middleware('role:manajer,admin');
 
-    // CRUD DATA PENJUAL
+    // ✅ CRUD Data Penjual
     Route::resource('penjual', PenjualController::class)
         ->middleware('role:manajer,admin');
 
-    // ✅ Transaksi - hanya manajer dan admin
-    Route::get('/transaksi', [TransaksiController::class, 'index'])
-        ->middleware('role:manajer,admin')
-        ->name('transaksi.index');
+    // ✅ Rute Resource untuk Transaksi Pembelian Mobil
+    Route::resource('transaksi-pembelian', TransaksiPembelianController::class)
+        ->middleware('role:manajer,admin,sales');
 
-    // Menambahkan rute untuk submenu Transaksi Pembeli dan Penjual
-    Route::get('/transaksi/pembeli', [TransaksiController::class, 'indexPembeli'])
-        ->middleware('role:manajer,admin')
-        ->name('transaksi.pembeli.index');
-    Route::get('/transaksi/pembeli/create', [TransaksiController::class, 'createPembeli'])
-        ->middleware('role:manajer,admin')
-        ->name('transaksi.pembeli.create');
-    Route::post('/transaksi/pembeli', [TransaksiController::class, 'storePembeli'])
-        ->middleware('role:manajer,admin')
-        ->name('transaksi.pembeli.store');
-    // Rute baru untuk edit dan update transaksi pembeli
-    Route::get('/transaksi/pembeli/{transaksi}/edit', [TransaksiController::class, 'editPembeli'])
-        ->middleware('role:manajer,admin')
-        ->name('transaksi.pembeli.edit');
-    Route::patch('/transaksi/pembeli/{transaksi}', [TransaksiController::class, 'updatePembeli'])
-        ->middleware('role:manajer,admin')
-        ->name('transaksi.pembeli.update');
-    // Rute untuk menampilkan detail transaksi (digunakan oleh modal detail di index)
-    Route::get('/transaksi/{transaksi}', [TransaksiController::class, 'show'])
-        ->middleware('role:manajer,admin')
-        ->name('transaksi.show');
+    // ✅ Rute Resource untuk Transaksi Penjualan Mobil
+    Route::resource('transaksi-penjualan', TransaksiPenjualanController::class)
+        ->parameters(['transaksi-penjualan' => 'transaksi_penjualan'])
+        ->middleware('role:manajer,admin,sales');
 
+    // ----------------------------------------------------
+    // START: RUTE TRANSAKSI (Prefix 'transaksi')
+    // ----------------------------------------------------
+    Route::prefix('transaksi')->name('transaksi.')->group(function () {
+        Route::get('/', [TransaksiController::class, 'index'])
+            ->middleware('role:manajer,admin')
+            ->name('index');
 
-    Route::get('/transaksi/penjual', [TransaksiController::class, 'indexPenjual'])
-        ->middleware('role:manajer,admin')
-        ->name('transaksi.penjual.index');
-    Route::get('/transaksi/penjual/create', [TransaksiController::class, 'createPenjual'])
-        ->middleware('role:manajer,admin')
-        ->name('transaksi.penjual.create');
-    Route::post('/transaksi/penjual', [TransaksiController::class, 'storePenjual'])
-        ->middleware('role:manajer,admin')
-        ->name('transaksi.penjual.store');
+        Route::get('/pembeli', [TransaksiController::class, 'indexPembeli'])
+            ->middleware('role:manajer,admin')
+            ->name('pembeli.index');
+
+        Route::get('/pembeli/create', [TransaksiController::class, 'createPembeli'])
+            ->middleware('role:manajer,admin')
+            ->name('pembeli.create');
+        Route::post('/pembeli', [TransaksiController::class, 'storePembeli'])
+            ->middleware('role:manajer,admin')
+            ->name('pembeli.store');
+        Route::get('/pembeli/{transaksi}/edit', [TransaksiController::class, 'editPembeli'])
+            ->middleware('role:manajer,admin')
+            ->name('pembeli.edit');
+        Route::patch('/pembeli/{transaksi}', [TransaksiController::class, 'updatePembeli'])
+            ->middleware('role:manajer,admin')
+            ->name('pembeli.update');
+
+        // Rute Resource untuk Transaksi Penjual (dalam prefix transaksi)
+        Route::resource('penjual', TransaksiPenjualController::class)
+            ->middleware('role:manajer,admin');
+
+        // Detail servis (AJAX)
+        Route::get('/get-servis-details', [TransaksiController::class, 'getServisDetails'])
+            ->middleware('role:manajer,admin')
+            ->name('getServisDetails');
+
+        // Detail transaksi & delete
+        Route::get('/{transaksi}', [TransaksiController::class, 'show'])
+            ->middleware('role:manajer,admin')
+            ->name('show');
+        Route::delete('/{transaksi}', [TransaksiController::class, 'destroy'])
+            ->middleware('role:manajer,admin')
+            ->name('destroy');
+    });
+    // ----------------------------------------------------
+    // END: RUTE TRANSAKSI
+    // ----------------------------------------------------
 
     // ✅ Servis Routes - CRUD Servis
     Route::resource('servis', ServisController::class)
-        ->parameters(['servis' => 'servis']) // Explicitly define parameter name for 'servis' resource
+        ->parameters(['servis' => 'servis'])
         ->middleware('role:manajer,admin');
 
     // ----------------------------------------------------
     // START: RUTE LAPORAN
     // ----------------------------------------------------
-    // ✅ Laporan - hanya manajer dan admin
     Route::prefix('laporan')->name('laporan.')->group(function () {
         Route::get('/mobil-terjual', [LaporanController::class, 'mobilTerjual'])->name('mobil_terjual');
         Route::get('/mobil-dibeli', [LaporanController::class, 'mobilDibeli'])->name('mobil_dibeli');
-        // Tambahkan rute laporan lain di sini jika diperlukan
     });
     // ----------------------------------------------------
     // END: RUTE LAPORAN
@@ -123,18 +140,25 @@ Route::middleware(['auth'])->group(function () {
     // ✅ Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // ✅ Dashboard per Role
-    Route::middleware('role:manajer')->get('/dashboard/manajer', function () {
-        return view('roles.manajer');
-    });
+    // ====================================================
+    // START: RUTE PENGELOLAAN PENGGUNA (USERS MANAGEMENT)
+    // ====================================================
+    Route::resource('users', UserController::class)
+        ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'])
+        ->middleware('role:manajer,admin');
 
-    Route::middleware('role:admin')->get('/dashboard/admin', function () {
-        return view('roles.admin');
-    });
+    Route::middleware('role:manajer')->get('/dashboard/manajer', [UserController::class, 'index'])->name('dashboard.manajer');
+
+    // ====================================================
+    // END: RUTE PENGELOLAAN PENGGUNA (USERS MANAGEMENT)
+    // ====================================================
+
+    // ✅ Dashboard per Role lainnya
+    Route::middleware('role:admin')->get('/dashboard/admin', [AdminController::class, 'index'])->name('dashboard.admin');
 
     Route::middleware('role:sales')->get('/dashboard/sales', function () {
         return view('roles.sales');
-    });
+    })->name('dashboard.sales');
 });
 
 // ------------------------

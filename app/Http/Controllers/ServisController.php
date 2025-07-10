@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Servis;
 use App\Models\Item;
 use App\Models\Mobil;
+use App\Models\Transaksi;
+use App\Models\TransaksiPembelian;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ServisController extends Controller
 {
@@ -16,9 +19,9 @@ class ServisController extends Controller
      */
     public function index()
     {
-        $servis = Servis::with('mobil', 'items')
-                        ->orderBy('tanggal_servis', 'desc') // Mengurutkan berdasarkan tanggal_servis terbaru
-                        ->orderBy('id', 'desc') // Menambahkan pengurutan berdasarkan ID terbaru sebagai tie-breaker
+        $servis = Servis::with(['mobil', 'items', 'mobil.transaksiPembelian'])
+                        ->orderBy('tanggal_servis', 'desc')
+                        ->orderBy('id', 'desc')
                         ->paginate(10);
 
         return view('servis.index', compact('servis'));
@@ -30,113 +33,150 @@ class ServisController extends Controller
      */
     public function create()
     {
-        $mobils = Mobil::all(); // Mengambil data mobil
-        $lastServis = Servis::latest()->first();
-        $lastId = $lastServis ? (int) substr($lastServis->kode_servis, -4) : 0;
-        $kode_servis = 'SV-' . date('Y') . '-' . str_pad($lastId + 1, 4, '0', STR_PAD_LEFT); // Generate kode servis
+        $mobils = Mobil::all();
+
+        $currentYear = date('Y');
+        $prefix = 'SV-' . $currentYear . '-';
+
+        $lastServis = Servis::where('kode_servis', 'like', $prefix . '%')
+                            ->orderBy('kode_servis', 'desc')
+                            ->first();
+
+        $newSequence = 1;
+        if ($lastServis) {
+            $lastSequence = (int) substr($lastServis->kode_servis, -3);
+            $newSequence = $lastSequence + 1;
+        }
+
+        $kode_servis = $prefix . str_pad($newSequence, 3, '0', STR_PAD_LEFT);
 
         return view('servis.create', compact('mobils', 'kode_servis'));
     }
 
     /**
      * Menyimpan servis baru ke database.
-     * Melakukan validasi input, mencari ID mobil, menyimpan data servis,
-     * menyimpan item-item terkait, dan menghitung total harga.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
-        // Validasi input servis dan item
         $request->validate([
-            'mobil_id' => 'required|exists:mobils,kode_mobil',
-            'tanggal_servis' => 'required|date',
-            'metode_pembayaran' => 'required|string',
-            'status' => 'nullable|in:proses,selesai,batal', // Validasi kolom status baru
-            'item_name.*' => 'required|string',
-            'item_package.*' => 'nullable|string',
-            'item_qty.*' => 'required|numeric|min:1',
+            'mobil_id' => 'required|exists:mobils,id',
+            'tanggal_servis' => 'required|date|before_or_equal:today|after_or_equal:' . date('Y-m-d', strtotime('-1 month')),
+            'kode_servis' => 'required|string|unique:servis,kode_servis',
+            'metode_pembayaran' => 'required|string|in:Transfer Bank,Cash',
+            'status' => 'nullable|string|in:proses,selesai,batal',
+            'keterangan' => 'nullable|string',
+
+            // Validasi untuk item-item, pastikan nama field sesuai dengan input di Blade
+            'item_name' => 'required|array|min:1',
+            'item_name.*' => 'required|string|max:255',
+            'item_package' => 'required|array|min:1',
+            'item_package.*' => 'required|string',
+            'item_qty' => 'required|array|min:1',
+            'item_qty.*' => 'required|integer|min:1',
+            'item_price' => 'required|array|min:1',
             'item_price.*' => 'required|numeric|min:0',
-            'item_discount.*' => 'nullable|numeric|min:0|max:100',
+            'item_discount' => 'required|array|min:1',
+            'item_discount.*' => 'required|numeric|min:0|max:100',
         ]);
 
-        // Cari ID mobil berdasarkan kode mobil
-        $mobil = Mobil::where('kode_mobil', $request->mobil_id)->first();
+        return DB::transaction(function () use ($request) {
+            $totalHargaServis = 0;
 
-        if (!$mobil) {
-            return redirect()->back()->with('error', 'Mobil tidak ditemukan.')->withInput();
-        }
-
-        // Menyimpan data servis awal
-        $servis = Servis::create([
-            'mobil_id' => $mobil->id,
-            'kode_servis' => $request->kode_servis,
-            'tanggal_servis' => $request->tanggal_servis,
-            'metode_pembayaran' => $request->metode_pembayaran,
-            'total_harga' => 0, // Menggunakan total_harga
-            'status' => $request->status, // Menggunakan kolom 'status' baru dari request
-        ]);
-
-        $totalHargaServis = 0; // Menggunakan totalHargaServis
-
-        // Menyimpan item-item terkait dan menghitung total harga
-        foreach ($request->item_name as $key => $itemName) {
-            $qty = (float)$request->item_qty[$key];
-            $price = (float)$request->item_price[$key];
-            $discountPercentage = (float)$request->item_discount[$key];
-
-            $itemDiscountValue = ($discountPercentage / 100) * ($price * $qty);
-            $itemTotal = ($price * $qty) - $itemDiscountValue;
-
-            // Simpan item ke tabel items
-            $servis->items()->create([
-                'item_name' => $itemName,
-                'item_package' => $request->item_package[$key] ?? null,
-                'item_qty' => $qty,
-                'item_price' => $price,
-                'item_discount' => $discountPercentage,
-                'item_discount_value' => $itemDiscountValue,
-                'item_total' => $itemTotal,
-                'service_date' => $request->tanggal_servis,
+            // Buat entri servis utama
+            $servis = Servis::create([
+                'mobil_id' => $request->mobil_id,
+                'tanggal_servis' => $request->tanggal_servis,
                 'kode_servis' => $request->kode_servis,
+                'metode_pembayaran' => $request->metode_pembayaran,
+                'status' => $request->status ?? 'proses',
+                'keterangan' => $request->keterangan,
+                'total_harga' => 0,
+                'total_biaya_keseluruhan' => 0,
             ]);
 
-            // Menambahkan item total ke total harga servis
-            $totalHargaServis += $itemTotal;
-        }
+            // Tambahkan item-item servis
+            foreach ($request->item_name as $key => $itemName) {
+                $qty = $request->item_qty[$key]; // Qty sudah divalidasi sebagai integer
 
-        // Update total harga ke tabel servis
-        $servis->update(['total_harga' => $totalHargaServis]);
+                // Untuk price, cek apakah nilainya bilangan bulat, jika ya, cast ke integer
+                $price = $request->item_price[$key];
+                if (is_numeric($price) && fmod($price, 1) == 0) {
+                    $price = (int) $price;
+                } else {
+                    $price = (float) $price;
+                }
 
-        return redirect()->route('servis.index')->with('success', 'Servis dan item berhasil disimpan.');
+                // Untuk discountPercentage, cek apakah nilainya bilangan bulat, jika ya, cast ke integer
+                $discountPercentage = $request->item_discount[$key];
+                if (is_numeric($discountPercentage) && fmod($discountPercentage, 1) == 0) {
+                    $discountPercentage = (int) $discountPercentage;
+                } else {
+                    $discountPercentage = (float) $discountPercentage;
+                }
+
+                $subtotal = $price * $qty;
+                $discountValue = ($discountPercentage / 100) * $subtotal;
+                $itemTotal = $subtotal - $discountValue;
+
+                // Gunakan nama kolom yang sesuai dengan skema tabel 'items' Anda
+                $servis->items()->create([
+                    'item_name' => $itemName,
+                    'item_package' => $request->item_package[$key],
+                    'item_qty' => $qty,
+                    'item_price' => $price,
+                    'item_discount' => $discountPercentage,
+                    'item_discount_value' => $discountValue,
+                    'item_total' => $itemTotal,
+                    'service_date' => $request->tanggal_servis,
+                ]);
+                $totalHargaServis += $itemTotal;
+            }
+
+            // Update total harga ke tabel servis setelah semua item ditambahkan
+            $servis->update(['total_harga' => $totalHargaServis]);
+
+            // Dapatkan harga_beli_mobil_final dari transaksi pembelian terakhir untuk mobil ini
+            $hargaBeliMobilFinal = 0;
+            $latestTransaksiPembelian = TransaksiPembelian::where('mobil_id', $servis->mobil_id)
+                                                            ->latest()
+                                                            ->first();
+
+            if ($latestTransaksiPembelian) {
+                $hargaBeliMobilFinal = $latestTransaksiPembelian->harga_beli_mobil_final;
+            }
+
+            // Hitung total_biaya_keseluruhan
+            $totalBiayaKeseluruhan = $servis->total_harga + $hargaBeliMobilFinal;
+
+            // Update total_biaya_keseluruhan ke tabel servis
+            $servis->update(['total_biaya_keseluruhan' => $totalBiayaKeseluruhan]);
+
+            return redirect()->route('servis.index')->with('success', 'Servis berhasil ditambahkan.');
+        });
     }
 
     /**
-     * Menampilkan detail servis tertentu berdasarkan ID.
-     * Mengambil data servis dengan eager loading dan mengembalikan sebagai response JSON.
+     * Menampilkan detail servis tertentu.
+     *
+     * @param  \App\Models\Servis  $servis
+     * @return \Illuminate\View\View
      */
-    public function show($id)
+    public function show(Servis $servis)
     {
-        // Ambil data servis berdasarkan ID dan sertakan data mobil serta items terkait
-        $servis = Servis::with('mobil', 'items')->find($id);
+        $servis->load(['mobil', 'items', 'mobil.transaksiPembelian']);
 
-        if ($servis) {
-            // Mengembalikan response JSON dengan total_harga sebagai nilai numerik mentah
-            // agar bisa diformat di sisi client (JavaScript)
-            return response()->json([
-                'kode_servis' => $servis->kode_servis,
-                'tanggal_servis' => $servis->tanggal_servis,
-                'mobil' => [
-                    'merek_mobil' => $servis->mobil->merek_mobil ?? 'N/A',
-                    'nomor_polisi' => $servis->mobil->nomor_polisi ?? 'N/A',
-                ],
-                'metode_pembayaran' => $servis->metode_pembayaran,
-                'total_harga' => $servis->total_harga, // Mengembalikan sebagai nilai numerik
-                'status' => $servis->status, // Menggunakan kolom 'status' baru
-                // 'tanggal_selesai_servis' => $servis->tanggal_selesai_servis, // Kolom ini mungkin tidak ada lagi atau belum ditambahkan
-                'items' => $servis->items
-            ]);
-        }
+        // Hitung total_harga_mobil_dibeli dari relasi transaksiPembelian yang sudah dimuat
+        $totalHargaMobilDibeli = optional($servis->mobil->transaksiPembelian)->sum('harga_beli_mobil_final') ?? 0;
 
-        return response()->json(['error' => 'Servis tidak ditemukan'], 404);
+        // Tambahkan atribut ini ke objek servis yang akan di-JSON-kan
+        // Ini memastikan data tersedia di respons JSON
+        $servis->setAttribute('total_harga_mobil_dibeli', $totalHargaMobilDibeli);
+
+        // Mengembalikan data sebagai JSON
+        return response()->json($servis);
     }
 
     /**
@@ -147,10 +187,8 @@ class ServisController extends Controller
      */
     public function edit(Servis $servis)
     {
-        $mobils = Mobil::all(); // Mengambil semua data mobil untuk dropdown
-        // Eager load items jika diperlukan di formulir edit (misal: untuk mengedit item)
+        $mobils = Mobil::all();
         $servis->load('items');
-
         return view('servis.edit', compact('servis', 'mobils'));
     }
 
@@ -163,69 +201,118 @@ class ServisController extends Controller
      */
     public function update(Request $request, Servis $servis)
     {
-        // Validasi input servis dan item
         $request->validate([
-            'mobil_id' => 'required|exists:mobils,kode_mobil',
-            'tanggal_servis' => 'required|date',
-            'metode_pembayaran' => 'required|string',
-            'status' => 'nullable|in:proses,selesai,batal', // Validasi kolom status baru
-            'item_name.*' => 'required|string',
-            'item_package.*' => 'nullable|string',
-            'item_qty.*' => 'required|numeric|min:1',
+            'mobil_id' => 'required|exists:mobils,id',
+            'tanggal_servis' => 'required|date|before_or_equal:today|after_or_equal:' . date('Y-m-d', strtotime('-1 month')),
+            'kode_servis' => 'required|string|unique:servis,kode_servis,' . $servis->id,
+            'metode_pembayaran' => 'required|string|in:Transfer Bank,Cash',
+            'status' => 'nullable|string|in:proses,selesai,batal',
+            'keterangan' => 'nullable|string',
+
+            'item_name' => 'required|array|min:1',
+            'item_name.*' => 'required|string|max:255',
+            'item_package' => 'required|array|min:1',
+            'item_package.*' => 'required|string',
+            'item_qty' => 'required|array|min:1',
+            'item_qty.*' => 'required|integer|min:1',
+            'item_price' => 'required|array|min:1',
             'item_price.*' => 'required|numeric|min:0',
-            'item_discount.*' => 'nullable|numeric|min:0|max:100',
+            'item_discount' => 'required|array|min:1',
+            'item_discount.*' => 'required|numeric|min:0|max:100',
         ]);
 
-        // Cari ID mobil berdasarkan kode mobil
-        $mobil = Mobil::where('kode_mobil', $request->mobil_id)->first();
-
-        if (!$mobil) {
-            return redirect()->back()->with('error', 'Mobil tidak ditemukan.')->withInput();
-        }
-
-        // Update data servis utama
-        $servis->update([
-            'mobil_id' => $mobil->id,
-            'kode_servis' => $request->kode_servis, // Kode servis biasanya tidak diubah setelah dibuat
-            'tanggal_servis' => $request->tanggal_servis,
-            'metode_pembayaran' => $request->metode_pembayaran,
-            'status' => $request->status,
-        ]);
-
-        $totalHargaServis = 0;
-
-        // Hapus semua item yang ada untuk servis ini, lalu buat ulang dari request
-        // Ini adalah cara yang lebih sederhana untuk mengelola relasi many-to-one pada update
-        // jika item tidak memiliki ID unik yang dikirimkan kembali dari form edit.
-        $servis->items()->delete();
-
-        // Menyimpan (atau membuat ulang) item-item terkait dan menghitung total harga
-        foreach ($request->item_name as $key => $itemName) {
-            $qty = (float)$request->item_qty[$key];
-            $price = (float)$request->item_price[$key];
-            $discountPercentage = (float)$request->item_discount[$key];
-
-            $itemDiscountValue = ($discountPercentage / 100) * ($price * $qty);
-            $itemTotal = ($price * $qty) - $itemDiscountValue;
-
-            $servis->items()->create([
-                'item_name' => $itemName,
-                'item_package' => $request->item_package[$key] ?? null,
-                'item_qty' => $qty,
-                'item_price' => $price,
-                'item_discount' => $discountPercentage,
-                'item_discount_value' => $itemDiscountValue,
-                'item_total' => $itemTotal,
-                'service_date' => $request->tanggal_servis,
-                'kode_servis' => $request->kode_servis, // Simpan kembali kode servis di item
+        return DB::transaction(function () use ($request, $servis) {
+            // Perbarui data servis utama
+            $servis->update([
+                'mobil_id' => $request->mobil_id,
+                'tanggal_servis' => $request->tanggal_servis,
+                'kode_servis' => $request->kode_servis,
+                'metode_pembayaran' => $request->metode_pembayaran,
+                'status' => $request->status ?? 'proses',
+                'keterangan' => $request->keterangan,
             ]);
 
-            $totalHargaServis += $itemTotal;
-        }
+            // Hapus item-item lama
+            $servis->items()->delete();
+            $totalHargaServis = 0;
 
-        // Update total harga ke tabel servis setelah semua item diperbarui
-        $servis->update(['total_harga' => $totalHargaServis]);
+            // Tambahkan item-item baru
+            foreach ($request->item_name as $key => $itemName) {
+                $qty = $request->item_qty[$key]; // Qty sudah divalidasi sebagai integer
 
-        return redirect()->route('servis.index')->with('success', 'Servis berhasil diperbarui.');
+                // Untuk price, cek apakah nilainya bilangan bulat, jika ya, cast ke integer
+                $price = $request->item_price[$key];
+                if (is_numeric($price) && fmod($price, 1) == 0) {
+                    $price = (int) $price;
+                } else {
+                    $price = (float) $price;
+                }
+
+                // Untuk discountPercentage, cek apakah nilainya bilangan bulat, jika ya, cast ke integer
+                $discountPercentage = $request->item_discount[$key];
+                if (is_numeric($discountPercentage) && fmod($discountPercentage, 1) == 0) {
+                    $discountPercentage = (int) $discountPercentage;
+                } else {
+                    $discountPercentage = (float) $discountPercentage;
+                }
+
+                $subtotal = $price * $qty;
+                $discountValue = ($discountPercentage / 100) * $subtotal;
+                $itemTotal = $subtotal - $discountValue;
+
+                // Gunakan nama kolom yang sesuai dengan skema tabel 'items' Anda
+                $servis->items()->create([
+                    'item_name' => $itemName,
+                    'item_package' => $request->item_package[$key],
+                    'item_qty' => $qty,
+                    'item_price' => $price,
+                    'item_discount' => $discountPercentage,
+                    'item_discount_value' => $discountValue,
+                    'item_total' => $itemTotal,
+                    'service_date' => $request->tanggal_servis,
+                ]);
+                $totalHargaServis += $itemTotal;
+            }
+
+            // Update total harga ke tabel servis setelah semua item diperbarui
+            $servis->update(['total_harga' => $totalHargaServis]);
+
+            // Dapatkan mobil terkait untuk mengakses transaksi pembelian
+            $mobil = Mobil::find($request->mobil_id);
+
+            $hargaBeliMobilFinal = 0;
+            if ($mobil) {
+                $latestTransaksiPembelian = TransaksiPembelian::where('mobil_id', $mobil->id)
+                                                                ->latest()
+                                                                ->first();
+                if ($latestTransaksiPembelian) {
+                    $hargaBeliMobilFinal = $latestTransaksiPembelian->harga_beli_mobil_final;
+                }
+            }
+
+            // Hitung total_biaya_keseluruhan
+            $totalBiayaKeseluruhan = $servis->total_harga + $hargaBeliMobilFinal;
+
+            // Update total_biaya_keseluruhan ke tabel servis
+            $servis->update(['total_biaya_keseluruhan' => $totalBiayaKeseluruhan]);
+
+            return redirect()->route('servis.index')->with('success', 'Servis berhasil diperbarui.');
+        });
+    }
+
+    /**
+     * Menghapus servis tertentu dari database.
+     *
+     * @param  \App\Models\Servis  $servis
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function destroy(Servis $servis)
+    {
+        return DB::transaction(function () use ($servis) {
+            $servis->items()->delete();
+            $servis->delete();
+
+            return redirect()->route('servis.index')->with('success', 'Servis berhasil dihapus.');
+        });
     }
 }

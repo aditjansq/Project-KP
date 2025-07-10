@@ -20,5 +20,8 @@ class Penjual extends Model
         'pekerjaan',
         'alamat',
         'no_telepon',
+        'ktp_pasangan',   // Tambahkan baris ini
+        'kartu_keluarga', // Tambahkan baris ini
+        'slip_gaji',      // Tambahkan baris ini
     ];
 }

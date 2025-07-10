@@ -4,57 +4,80 @@ namespace App\Http\Controllers;
 
 use App\Models\Pembeli;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class PembeliController extends Controller
 {
     // Menampilkan daftar pembeli
     public function index()
     {
-        $pembelis = Pembeli::paginate(10); // Ini akan mengembalikan Paginator
+        $pembelis = Pembeli::paginate(10);
         return view('pembeli.index', compact('pembelis'));
     }
 
     // Menampilkan form untuk membuat pembeli baru
     public function create()
     {
-        // Ambil kode pembeli terakhir yang ada di database
         $lastPembeli = Pembeli::latest()->first();
-
-        // Jika ada pembeli sebelumnya, ambil kode terakhir dan tambahkan angka berikutnya
         if ($lastPembeli) {
             $lastKode = $lastPembeli->kode_pembeli;
-            $newCode = 'PLB-' . str_pad((int) substr($lastKode, 4) + 1, 4, '0', STR_PAD_LEFT);
+            if (str_starts_with($lastKode, 'PLB-')) {
+                $lastNumber = (int) substr($lastKode, 4);
+            } else {
+                $lastNumber = 0;
+            }
+            $newCode = 'PLB-' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
         } else {
-            // Jika belum ada pembeli, mulai dari kode PLB-0001
-            $newCode = 'PLB-0001';
+            $newCode = 'PLB-' . str_pad(1, 4, '0', STR_PAD_LEFT); // Gunakan 1 bukan 0
         }
-
-        // Kirim kode pembeli ke tampilan create
         return view('pembeli.create', compact('newCode'));
     }
-
 
     // Menyimpan data pembeli baru
     public function store(Request $request)
     {
-        // Validasi data yang dimasukkan
-        $validated = $request->validate([
-            'nama' => 'required|string|min:3|regex:/^[A-Za-z\s]+$/', // Nama harus minimal 3 huruf dan hanya huruf
-            'no_telepon' => 'required|digits_between:10,15', // No Telepon hanya angka dan panjangnya 10 hingga 15
-            'alamat' => 'required|string|min:4', // Alamat minimal 4 karakter
-            'pekerjaan' => 'required|string|min:4|regex:/^[A-Za-z\s]+$/', // Pekerjaan minimal 4 huruf dan hanya huruf
-            'tanggal_lahir' => 'required|date|before:today', // Tanggal Lahir harus sebelum hari ini
+        $validatedData = $request->validate([
+            'kode_pembeli' => 'required|string|unique:pembelis,kode_pembeli|max:255',
+            'nama' => 'required|string|min:3|regex:/^[A-Za-z\s]+$/',
+            'tanggal_lahir' => 'required|date|before_or_equal:today',
+            'no_telepon' => 'nullable|digits_between:10,15',
+            'alamat' => 'required|string|min:4',
+            'pekerjaan' => 'nullable|string|min:4|regex:/^[A-Za-z\s]+$/',
+            'ktp_pasangan' => 'nullable|file|mimes:jpeg,png,pdf|max:2048',
+            'kartu_keluarga' => 'nullable|file|mimes:jpeg,png,pdf|max:2048',
+            'slip_gaji' => 'nullable|file|mimes:jpeg,png,pdf|max:2048',
         ]);
 
-        // Menyimpan data pembeli
-        Pembeli::create([
-            'kode_pembeli' => $request->kode_pembeli, // Gunakan kode yang sudah di-generate
-            'nama' => $request->nama,
-            'no_telepon' => $request->no_telepon,
-            'alamat' => $request->alamat,
-            'pekerjaan' => $request->pekerjaan,
-            'tanggal_lahir' => $request->tanggal_lahir,
-        ]);
+        $data = $request->except(['_token', 'ktp_pasangan', 'kartu_keluarga', 'slip_gaji']);
+        $kodePembeli = $request->input('kode_pembeli');
+
+        // Jalur penyimpanan dasar relatif terhadap root disk 'public' (storage/app/public)
+        $storageFolder = 'documents/pembeli';
+
+        // Tangani unggahan KTP Pasangan
+        if ($request->hasFile('ktp_pasangan')) {
+            $file = $request->file('ktp_pasangan');
+            $fileName = $kodePembeli . '-KTP_PASANGAN-' . Carbon::now()->format('YmdHis') . '.' . $file->getClientOriginalExtension();
+            // Simpan file ke dalam 'documents/pembeli' di disk 'public'
+            $data['ktp_pasangan'] = Storage::disk('public')->putFileAs($storageFolder, $file, $fileName);
+        }
+
+        // Tangani unggahan Kartu Keluarga
+        if ($request->hasFile('kartu_keluarga')) {
+            $file = $request->file('kartu_keluarga');
+            $fileName = $kodePembeli . '-KARTU_KELUARGA-' . Carbon::now()->format('YmdHis') . '.' . $file->getClientOriginalExtension();
+            $data['kartu_keluarga'] = Storage::disk('public')->putFileAs($storageFolder, $file, $fileName);
+        }
+
+        // Tangani unggahan Slip Gaji
+        if ($request->hasFile('slip_gaji')) {
+            $file = $request->file('slip_gaji');
+            $fileName = $kodePembeli . '-SLIP_GAJI-' . Carbon::now()->format('YmdHis') . '.' . $file->getClientOriginalExtension();
+            $data['slip_gaji'] = Storage::disk('public')->putFileAs($storageFolder, $file, $fileName);
+        }
+
+        Pembeli::create($data);
 
         return redirect()->route('pembeli.index')->with('success', 'Pembeli berhasil ditambahkan.');
     }
@@ -68,23 +91,57 @@ class PembeliController extends Controller
     // Memperbarui data pembeli
     public function update(Request $request, Pembeli $pembeli)
     {
-        // Validasi data yang dimasukkan
-        $validated = $request->validate([
-            'nama' => 'required|string|min:3|regex:/^[A-Za-z\s]+$/', // Nama harus minimal 3 huruf dan hanya huruf
-            'no_telepon' => 'required|digits_between:10,15', // No Telepon hanya angka dan panjangnya 10 hingga 15
-            'alamat' => 'required|string|min:4', // Alamat minimal 4 karakter
-            'pekerjaan' => 'required|string|min:4|regex:/^[A-Za-z\s]+$/', // Pekerjaan minimal 4 huruf dan hanya huruf
-            'tanggal_lahir' => 'required|date|before:today', // Tanggal Lahir harus sebelum hari ini
+        $validatedData = $request->validate([
+            'nama' => 'required|string|min:3|regex:/^[A-Za-z\s]+$/',
+            'tanggal_lahir' => 'required|date|before_or_equal:today',
+            'no_telepon' => 'nullable|digits_between:10,15',
+            'alamat' => 'required|string|min:4',
+            'pekerjaan' => 'nullable|string|min:4|regex:/^[A-Za-z\s]+$/',
+            'ktp_pasangan' => 'nullable|file|mimes:jpeg,png,pdf|max:2048',
+            'kartu_keluarga' => 'nullable|file|mimes:jpeg,png,pdf|max:2048',
+            'slip_gaji' => 'nullable|file|mimes:jpeg,png,pdf|max:2048',
         ]);
 
-        // Memperbarui data pembeli
-        $pembeli->update([
-            'nama' => $request->nama,
-            'no_telepon' => $request->no_telepon,
-            'alamat' => $request->alamat,
-            'pekerjaan' => $request->pekerjaan,
-            'tanggal_lahir' => $request->tanggal_lahir, // Menyimpan tanggal lahir yang baru
-        ]);
+        $data = $request->except(['_token', '_method', 'ktp_pasangan', 'kartu_keluarga', 'slip_gaji']);
+        $kodePembeli = $pembeli->kode_pembeli;
+
+        // Jalur penyimpanan dasar relatif terhadap root disk 'public' (storage/app/public)
+        $storageFolder = 'documents/pembeli';
+
+        // Tangani unggahan KTP Pasangan
+        if ($request->hasFile('ktp_pasangan')) {
+            // Hapus file lama jika ada
+            if ($pembeli->ktp_pasangan && Storage::disk('public')->exists($pembeli->ktp_pasangan)) {
+                Storage::disk('public')->delete($pembeli->ktp_pasangan);
+            }
+            $file = $request->file('ktp_pasangan');
+            $fileName = $kodePembeli . '-KTP_PASANGAN-' . Carbon::now()->format('YmdHis') . '.' . $file->getClientOriginalExtension();
+            $data['ktp_pasangan'] = Storage::disk('public')->putFileAs($storageFolder, $file, $fileName);
+        }
+
+        // Tangani unggahan Kartu Keluarga
+        if ($request->hasFile('kartu_keluarga')) {
+            // Hapus file lama jika ada
+            if ($pembeli->kartu_keluarga && Storage::disk('public')->exists($pembeli->kartu_keluarga)) {
+                Storage::disk('public')->delete($pembeli->kartu_keluarga);
+            }
+            $file = $request->file('kartu_keluarga');
+            $fileName = $kodePembeli . '-KARTU_KELUARGA-' . Carbon::now()->format('YmdHis') . '.' . $file->getClientOriginalExtension();
+            $data['kartu_keluarga'] = Storage::disk('public')->putFileAs($storageFolder, $file, $fileName);
+        }
+
+        // Tangani unggahan Slip Gaji
+        if ($request->hasFile('slip_gaji')) {
+            // Hapus file lama jika ada
+            if ($pembeli->slip_gaji && Storage::disk('public')->exists($pembeli->slip_gaji)) {
+                Storage::disk('public')->delete($pembeli->slip_gaji);
+            }
+            $file = $request->file('slip_gaji');
+            $fileName = $kodePembeli . '-SLIP_GAJI-' . Carbon::now()->format('YmdHis') . '.' . $file->getClientOriginalExtension();
+            $data['slip_gaji'] = Storage::disk('public')->putFileAs($storageFolder, $file, $fileName);
+        }
+
+        $pembeli->update($data);
 
         return redirect()->route('pembeli.index')->with('success', 'Pembeli berhasil diperbarui.');
     }
@@ -92,7 +149,17 @@ class PembeliController extends Controller
     // Menghapus data pembeli
     public function destroy(Pembeli $pembeli)
     {
-        // Hapus pembeli
+        // Hapus file terkait sebelum menghapus pembeli
+        if ($pembeli->ktp_pasangan && Storage::disk('public')->exists($pembeli->ktp_pasangan)) {
+            Storage::disk('public')->delete($pembeli->ktp_pasangan);
+        }
+        if ($pembeli->kartu_keluarga && Storage::disk('public')->exists($pembeli->kartu_keluarga)) {
+            Storage::disk('public')->delete($pembeli->kartu_keluarga);
+        }
+        if ($pembeli->slip_gaji && Storage::disk('public')->exists($pembeli->slip_gaji)) {
+            Storage::disk('public')->delete($pembeli->slip_gaji);
+        }
+
         $pembeli->delete();
         return redirect()->route('pembeli.index')->with('success', 'Pembeli berhasil dihapus.');
     }

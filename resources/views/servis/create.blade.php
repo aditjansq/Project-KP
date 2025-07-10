@@ -60,13 +60,11 @@
                             <option value="">Pilih Mobil (Tahun - Merek - Tipe - No. Polisi)</option>
                             @foreach($mobils as $mobil)
                                 <option
-                                    value="{{ $mobil->kode_mobil }}"
-                                    data-merek="{{ $mobil->merek_mobil }}"
+                                    value="{{ $mobil->id }}" data-merek="{{ $mobil->merek_mobil }}"
                                     data-tipe="{{ $mobil->tipe_mobil ?? '' }}"
                                     data-nomorpolisi="{{ $mobil->nomor_polisi }}"
                                     data-tahunpembuatan="{{ $mobil->tahun_pembuatan ?? '' }}"
-                                    {{ old('mobil_id') == $mobil->kode_mobil ? 'selected' : '' }}>
-                                    {{ $mobil->tahun_pembuatan ?? '' }} {{ $mobil->merek_mobil }} {{ $mobil->tipe_mobil ?? '' }} - {{ $mobil->nomor_polisi }}
+                                    {{ old('mobil_id') == $mobil->id ? 'selected' : '' }}> {{ $mobil->tahun_pembuatan ?? '' }} {{ $mobil->merek_mobil }} {{ $mobil->tipe_mobil ?? '' }} - {{ $mobil->nomor_polisi }}
                                 </option>
                             @endforeach
                         </select>
@@ -92,7 +90,7 @@
                         <select class="form-control form-select-lg rounded-pill shadow-sm" id="metode_pembayaran" name="metode_pembayaran" required>
                             <option value="Transfer Bank" {{ $old('metode_pembayaran') == 'Transfer Bank' ? 'selected' : '' }}>Transfer Bank</option>
                             <option value="Cash" {{ $old('metode_pembayaran') == 'Cash' ? 'selected' : '' }}>Cash</option>
-                            <option value="Kartu Kredit" {{ $old('metode_pembayaran') == 'Kartu Kredit' ? 'selected' : '' }}>Kartu Kredit</option>
+                            {{-- <option value="Kartu Kredit" {{ $old('metode_pembayaran') == 'Kartu Kredit' ? 'selected' : '' }}>Kartu Kredit</option> --}}
                         </select>
                     </div>
 
@@ -145,8 +143,7 @@
                                     <td><input type="number" class="form-control form-control-sm qty" name="item_qty[]" min="1" value="{{ $old('item_qty.' . $key, 1) }}" required></td>
                                     <td><input type="number" class="form-control form-control-sm price" name="item_price[]" min="0" value="{{ $old('item_price.' . $key, 0) }}" required></td>
                                     <td><input type="number" class="form-control form-control-sm discount" name="item_discount[]" min="0" max="100" value="{{ $old('item_discount.' . $key, 0) }}" required></td>
-                                    <td><input type="text" class="form-control form-control-sm discount_value" name="item_discount_value[]" value="{{ number_format($old('item_discount_value.' . $key, 0), 2, ',', '.') }}" readonly></td>
-                                    <td><input type="text" class="form-control form-control-sm total" name="item_total[]" value="{{ number_format($old('item_total.' . $key, 0), 2, ',', '.') }}" readonly></td>
+                                    <td><input type="text" class="form-control form-control-sm discount_value" name="item_discount_value[]" value="{{ number_format(floatval(str_replace(',', '.', old('item_discount_value.' . $key, $item->item_discount_value ?? 0))), 0, '', '.') }}" readonly></td>                                    <td><input type="text" class="form-control form-control-sm total" name="item_total[]" value="{{ number_format((float) str_replace(',', '.', $old('item_total.' . $key, 0)), 2, ',', '.') }}" readonly></td>
                                     <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-item rounded-pill"><i class="bi bi-x"></i></button></td>
                                 </tr>
                                 @endforeach

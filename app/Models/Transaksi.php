@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\TransaksiPembayaranDetail; // Import model baru
 
 class Transaksi extends Model
 {
@@ -32,7 +33,8 @@ class Transaksi extends Model
 
     /**
      * The attributes that are mass assignable.
-     * PASTIKAN 'bukti_pembayaran' ADA DI DAFTAR INI DENGAN NAMA KOLOM YANG SAMA PERSIS DI DB.
+     * Kolom 'metode_pembayaran', 'dp_jumlah', dan 'bukti_pembayaran' dihapus dari fillable
+     * karena detail pembayaran akan ditangani oleh relasi ke TransaksiPembayaranDetail.
      *
      * @var array
      */
@@ -42,12 +44,13 @@ class Transaksi extends Model
         'penjual_id',
         'kode_transaksi',
         'tanggal_transaksi',
-        'metode_pembayaran',
+        'tempo_angsuran', // Tetap dipertahankan jika relevan untuk transaksi kredit/angsuran keseluruhan
         'diskon_persen',
         'total_harga',
         'keterangan',
-        'status_pembayaran', // Pastikan nama kolom ini benar di DB Anda
-        'bukti_pembayaran',  // <---- INI ADALAH KUNCI UTAMA ---->
+        'status_pembayaran',
+        'servis_id',
+        'modal',
     ];
 
     /**
@@ -58,6 +61,14 @@ class Transaksi extends Model
     protected $casts = [
         'tanggal_transaksi' => 'date',
     ];
+
+    /**
+     * Define the relationship to the User model.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class); // Asumsi nama model User adalah User
+    }
 
     /**
      * Get the Mobil that owns the Transaksi.
@@ -81,6 +92,24 @@ class Transaksi extends Model
     public function penjual()
     {
         return $this->belongsTo(Penjual::class, 'penjual_id');
+    }
+
+    /**
+     * Get the Servis that owns the Transaksi.
+     * Ini mendefinisikan relasi one-to-one atau many-to-one di mana Transaksi merujuk ke Servis.
+     */
+    public function servis()
+    {
+        return $this->belongsTo(Servis::class, 'servis_id');
+    }
+
+    /**
+     * Get the payment details for the Transaksi.
+     * Ini mendefinisikan relasi one-to-many ke TransaksiPembayaranDetail.
+     */
+    public function pembayaranDetails()
+    {
+        return $this->hasMany(TransaksiPembayaranDetail::class, 'transaksi_id');
     }
 
     /**

@@ -3,9 +3,18 @@
 @section('title', 'Tambah Penjual')
 
 @section('content')
+{{-- Pindahkan pernyataan use ke sini, di awal file --}}
+@php
+    // Meskipun Storage::url tidak digunakan secara langsung di form create untuk menampilkan file lama,
+    // disertakan untuk konsistensi struktur dengan edit.blade.php jika diperlukan di masa depan.
+    use Illuminate\Support\Facades\Storage;
+@endphp
+
 <head>
     {{-- Animate.css for subtle animations --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    {{-- Font Awesome untuk ikon file --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <div class="container-fluid py-4 px-3 px-md-4">
     <div class="row mb-4 align-items-center">
@@ -14,8 +23,7 @@
             <small class="text-secondary">Silakan lengkapi form berikut dengan data yang benar.</small>
         </div>
         <div class="col-md-4 text-md-end">
-            {{-- Tombol Kembali di Header --}}
-            <a href="{{ route('penjual.index') }}" class="btn btn-outline-secondary rounded-pill animate__animated animate__fadeInRight"> {{-- Kelas btn-lg dihapus --}}
+            <a href="{{ route('penjual.index') }}" class="btn btn-outline-secondary rounded-pill animate__animated animate__fadeInRight">
                 <i class="bi bi-arrow-left me-2"></i> Kembali ke Daftar Penjual
             </a>
         </div>
@@ -34,58 +42,72 @@
 
     <div class="card border-0 shadow-xl rounded-4 animate__animated animate__fadeInUp">
         <div class="card-body p-lg-5 p-md-4 p-3">
-            <form method="POST" action="{{ route('penjual.store') }}">
+            <form method="POST" action="{{ route('penjual.store') }}" novalidate enctype="multipart/form-data">
                 @csrf
 
                 <h5 class="mb-4 fw-bold text-dark border-bottom pb-2">Informasi Penjual</h5>
                 <div class="row g-3 mb-4">
-                    <!-- Kode Penjual -->
                     <div class="col-md-6">
                         <label for="kode_penjual" class="form-label text-muted">Kode Penjual</label>
                         <input type="text" id="kode_penjual" name="kode_penjual" class="form-control form-control-lg bg-light-subtle rounded-pill border-0 shadow-sm" value="{{ $newCode }}" readonly>
                     </div>
 
-                    <!-- Nama Penjual -->
                     <div class="col-md-6">
                         <label for="nama" class="form-label text-muted">Nama Penjual</label>
-                        <input type="text" id="nama" name="nama" class="form-control form-control-lg rounded-pill shadow-sm" value="{{ old('nama') }}" placeholder="Masukkan nama penjual" required
-                               minlength="3"
-                               pattern="[A-Za-z\s]+"
-                               title="Nama penjual harus terdiri dari huruf dan minimal 3 karakter">
+                        <input type="text" id="nama" name="nama" class="form-control form-control-lg rounded-pill shadow-sm" value="{{ old('nama') }}" required>
+                        @error('nama')
+                            <div class="text-danger mt-1">{{ $message }}</div>
+                        @enderror
                     </div>
 
-                    <!-- Tanggal Lahir -->
                     <div class="col-md-6">
                         <label for="tanggal_lahir" class="form-label text-muted">Tanggal Lahir</label>
                         <input type="date" id="tanggal_lahir" name="tanggal_lahir" class="form-control form-control-lg rounded-pill shadow-sm" value="{{ old('tanggal_lahir') }}" max="{{ date('Y-m-d') }}" required>
+                        @error('tanggal_lahir')
+                            <div class="text-danger mt-1">{{ $message }}</div>
+                        @enderror
                     </div>
 
-                    <!-- No Telepon -->
                     <div class="col-md-6">
                         <label for="no_telepon" class="form-label text-muted">No. Telepon</label>
-                        <input type="text" id="no_telepon" name="no_telepon" class="form-control form-control-lg rounded-pill shadow-sm" value="{{ old('no_telepon') }}" placeholder="Masukkan nomor telepon"
-                               pattern="\d{10,15}"
-                               title="No Telepon harus berisi angka dan terdiri dari 10 hingga 15 digit.">
+                        <input type="text" id="no_telepon" name="no_telepon" class="form-control form-control-lg rounded-pill shadow-sm" value="{{ old('no_telepon') }}">
+                        @error('no_telepon')
+                            <div class="text-danger mt-1">{{ $message }}</div>
+                        @enderror
                     </div>
 
-                    <!-- Alamat -->
                     <div class="col-12">
                         <label for="alamat" class="form-label text-muted">Alamat</label>
-                        <textarea id="alamat" name="alamat" class="form-control form-control-lg rounded-3 shadow-sm" rows="3" placeholder="Masukkan alamat lengkap" required
-                                 minlength="4"
-                                 title="Alamat harus memiliki minimal 4 karakter">{{ old('alamat') }}</textarea>
+                        <textarea id="alamat" name="alamat" class="form-control form-control-lg rounded-3 shadow-sm" rows="3" required>{{ old('alamat') }}</textarea>
+                        @error('alamat')
+                            <div class="text-danger mt-1">{{ $message }}</div>
+                        @enderror
                     </div>
 
-                    <!-- Pekerjaan -->
                     <div class="col-md-6">
                         <label for="pekerjaan" class="form-label text-muted">Pekerjaan</label>
-                        <input type="text" id="pekerjaan" name="pekerjaan" class="form-control form-control-lg rounded-pill shadow-sm" value="{{ old('pekerjaan') }}" placeholder="Masukkan pekerjaan (cth: Wiraswasta, Pegawai Swasta)"
-                               pattern="[A-Za-z\s]{4,}"
-                               title="Pekerjaan harus terdiri dari minimal 4 karakter yang hanya berisi huruf">
+                        <input type="text" id="pekerjaan" name="pekerjaan" class="form-control form-control-lg rounded-pill shadow-sm" value="{{ old('pekerjaan') }}">
+                        @error('pekerjaan')
+                            <div class="text-danger mt-1">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
 
-                {{-- Bagian tombol di bagian bawah form (hanya tombol Simpan Data) --}}
+                <h5 class="mb-4 fw-bold text-dark border-bottom pb-2 mt-5">Dokumen Pendukung</h5>
+                <div class="row g-3 mb-4">
+                    {{-- KTP Pasangan --}}
+                    <div class="col-md-6">
+                        <label for="ktp_pasangan" class="form-label text-muted">Upload KTP Suami/Istri (jika ada)</label>
+                        <input type="file" name="ktp_pasangan" id="ktp_pasangan" class="form-control form-control-lg rounded-pill shadow-sm" accept=".jpeg,.png,.pdf">
+                        <div id="ktp_pasangan_preview" class="mt-2 preview-container">
+                            {{-- Preview will be shown here by JavaScript --}}
+                        </div>
+                        @error('ktp_pasangan')
+                            <div class="text-danger mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+
                 <div class="mt-5 d-flex justify-content-end">
                     <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill shadow-sm animate__animated animate__pulse animate__infinite">
                         <i class="bi bi-save me-2"></i> Simpan Data
@@ -97,7 +119,7 @@
 </div>
 
 <style>
-    /* Add custom styles here for consistency */
+    /* Styling yang sudah ada dari edit.blade.php */
     body {
         background-color: #f8f9fa;
         font-family: 'Poppins', sans-serif;
@@ -122,7 +144,6 @@
         border: 1px solid #dee2e6; /* subtle border */
     }
 
-    /* Textarea doesn't get pill shape */
     textarea.form-control-lg {
         border-radius: 0.75rem !important;
     }
@@ -132,18 +153,22 @@
         box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25), 0 2px 8px rgba(0,0,0,0.1);
     }
 
+    input[type="file"].form-control-lg {
+        height: auto;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+
     .bg-light-subtle {
         background-color: #f8f9fa !important;
     }
 
-    /* Card Styling */
     .card {
         border-radius: 1rem !important;
         overflow: hidden;
         box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.09) !important;
     }
 
-    /* Alert Styling */
     .alert-danger {
         background-color: #fef2f2;
         color: #721c24;
@@ -162,7 +187,6 @@
         margin-bottom: 5px;
     }
 
-    /* Buttons */
     .btn-primary {
         background: linear-gradient(45deg, #0d6efd, #0b5ed7);
         border: none;
@@ -189,21 +213,6 @@
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
-    .btn-secondary { /* Added styling for btn-secondary as it's now used for the bottom back button */
-        background-color: #6c757d;
-        border-color: #6c757d;
-        color: white;
-        font-weight: 600;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
-    }
-    .btn-secondary:hover {
-        background-color: #5a6268;
-        border-color: #545b62;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
-
     .btn-success {
         background: linear-gradient(45deg, #28a745, #218838);
         border: none;
@@ -218,26 +227,147 @@
         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
     }
     .animate__pulse {
-        animation-duration: 2s; /* Increase animation duration */
+        animation-duration: 2s;
     }
 
-    /* Responsive adjustments */
     @media (max-width: 768px) {
         .btn-lg {
             width: 100%;
             margin-bottom: 1rem;
         }
-        .d-flex.justify-content-end.gap-3 { /* Keep this for the top header button if it stacks */
+        .d-flex.justify-content-end.gap-3 {
             flex-direction: column;
             gap: 1rem;
         }
-        .d-flex.justify-content-between { /* Adjust for the row with back/update buttons */
-            flex-direction: column-reverse; /* Put back button on top, then update */
+        .d-flex.justify-content-between {
+            flex-direction: column-reverse;
             gap: 1rem;
         }
     }
+
+    /* Style untuk Preview File */
+    .preview-container {
+        width: 100%;
+        max-width: 200px; /* Lebar maksimum untuk pratinjau */
+        height: auto;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column; /* Mengubah arah menjadi kolom untuk ikon dan tautan */
+        justify-content: center;
+        align-items: center;
+        background-color: #f9f9f9;
+        margin-top: 8px;
+        min-height: 100px; /* Tinggi minimum agar konsisten */
+    }
+
+    .preview-container img {
+        max-width: 100%;
+        max-height: 150px; /* Tinggi maksimum untuk gambar */
+        display: block;
+        object-fit: contain;
+    }
+
+    .preview-container .file-icon-preview {
+        padding: 20px;
+        text-align: center;
+        color: #6c757d;
+        flex-grow: 1; /* Agar mengambil ruang yang tersedia */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .preview-container .file-icon-preview i {
+        font-size: 3em;
+        margin-bottom: 5px;
+    }
+
+    .preview-container .file-icon-preview span {
+        display: block;
+        font-size: 0.8em;
+        word-break: break-all;
+    }
+
+    .preview-link {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        text-align: center;
+        font-size: 0.9em;
+        background-color: #e9ecef;
+        border-top: 1px solid #e0e0e0;
+        text-decoration: none;
+        color: #007bff;
+    }
+
+    .preview-link:hover {
+        background-color: #dee2e6;
+        color: #0056b3;
+    }
 </style>
 
-<!-- Include Bootstrap JS (Bundled with Popper for modals/dropdowns) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Hanya menyertakan ktp_pasangan karena itu satu-satunya input file yang ada
+        const fileInputs = ['ktp_pasangan'];
+
+        fileInputs.forEach(inputId => {
+            const inputElement = document.getElementById(inputId);
+            const previewContainer = document.getElementById(`${inputId}_preview`);
+
+            if (inputElement && previewContainer) {
+                inputElement.addEventListener('change', function() {
+                    previewContainer.innerHTML = ''; // Clear previous preview
+
+                    const file = this.files[0];
+                    if (file) {
+                        const fileType = file.type;
+                        const fileName = file.name;
+
+                        if (fileType.startsWith('image/')) {
+                            // Image Preview
+                            const img = document.createElement('img');
+                            img.src = URL.createObjectURL(file);
+                            img.alt = fileName;
+                            previewContainer.appendChild(img);
+                        } else if (fileType === 'application/pdf') {
+                            // PDF Preview (icon and link)
+                            const iconHtml = `
+                                <div class="file-icon-preview">
+                                    <i class="fas fa-file-pdf"></i>
+                                    <span>${fileName}</span>
+                                </div>
+                                <a href="${URL.createObjectURL(file)}" target="_blank" class="preview-link">Lihat PDF</a>
+                            `;
+                            previewContainer.innerHTML = iconHtml;
+                        } else {
+                            // Other file types (general icon)
+                            const iconHtml = `
+                                <div class="file-icon-preview">
+                                    <i class="fas fa-file"></i>
+                                    <span>${fileName}</span>
+                                </div>
+                            `;
+                            previewContainer.innerHTML = iconHtml;
+                        }
+                        // Add file name display for newly uploaded file
+                        const pathDisplay = document.createElement('small');
+                        pathDisplay.className = 'text-muted text-center mt-1';
+                        pathDisplay.style.cssText = 'font-size: 0.75em; word-break: break-all; padding: 0 5px;';
+                        pathDisplay.innerHTML = `Nama File: \`${fileName}\``;
+                        previewContainer.appendChild(pathDisplay);
+
+                    } else {
+                        // If no file is selected, clear the preview
+                        previewContainer.innerHTML = '';
+                    }
+                });
+            }
+        });
+    });
+</script>
 @endsection

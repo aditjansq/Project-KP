@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Mobil;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Http\JsonResponse; // Tambahkan ini untuk tipe kembalian JsonResponse
 
 class MobilController extends Controller
 {
@@ -27,11 +28,11 @@ class MobilController extends Controller
                   ->orWhere('tipe_mobil', 'like', '%' . $searchTerm . '%')
                   ->orWhere('merek_mobil', 'like', '%' . $searchTerm . '%')
                   ->orWhere('nomor_polisi', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('warna_mobil', 'like', '%' . $searchTerm . '%') // Tambahan filter warna
-                  ->orWhere('transmisi', 'like', '%' . $searchTerm . '%') // Tambahan filter transmisi
-                  ->orWhere('bahan_bakar', 'like', '%' . $searchTerm . '%') // Tambahan filter bahan bakar
-                  ->orWhere('status_mobil', 'like', '%' . $searchTerm . '%') // Tambahan filter status mobil
-                  ->orWhere('ketersediaan', 'like', '%' . $searchTerm . '%'); // Tambahan filter ketersediaan
+                  ->orWhere('warna_mobil', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('transmisi', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('bahan_bakar', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('status_mobil', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('ketersediaan', 'like', '%' . $searchTerm . '%');
             });
         }
 
@@ -111,7 +112,7 @@ class MobilController extends Controller
             'tipe_mobil' => 'required|string|max:255',
             'tahun_pembuatan' => 'required|integer|digits:4',
             'warna_mobil' => 'required|string|max:255',
-            'harga_mobil' => 'required|integer|min:135000000|max:500000000', // Diperbarui
+            'harga_mobil' => 'required|integer|min:0|max:500000000', // Diperbarui
             'bahan_bakar' => 'required|string|max:255',
             'transmisi' => 'required|in:manual,matic',
             'nomor_polisi' => ['required', Rule::unique('mobils', 'nomor_polisi')], // Menggunakan Rule::unique
@@ -119,8 +120,8 @@ class MobilController extends Controller
             'nomor_mesin' => ['required', 'string', 'min:6', 'max:15', Rule::unique('mobils', 'nomor_mesin')], // Diperbarui dan menggunakan Rule::unique
             'nomor_bpkb' => ['required', 'string', Rule::unique('mobils', 'nomor_bpkb')], // Menggunakan Rule::unique
             'tanggal_masuk' => 'required|date|before_or_equal:today', // Diperbarui
-            'status_mobil' => ['required', Rule::in(['baru', 'bekas', 'tersedia', 'terjual'])],
-            'ketersediaan' => ['required', Rule::in(['ada', 'tidak', 'servis'])],
+            'status_mobil' => ['required', Rule::in(['baru', 'bekas', 'lunas', 'belum lunas', 'menunggu pembayaran', 'dibatalkan'])], // 'tersedia' dihapus
+            'ketersediaan' => ['required', Rule::in(['ada', 'tidak', 'servis', 'terjual'])], // Validasi ketersediaan
             'masa_berlaku_pajak' => 'required|date|after_or_equal:today',
         ], [
             'transmisi.required' => 'Transmisi wajib diisi.',
@@ -148,6 +149,19 @@ class MobilController extends Controller
 
         // Redirect kembali ke halaman index dengan pesan sukses
         return redirect()->route('mobil.index')->with('success', 'Data mobil berhasil ditambahkan.');
+    }
+
+    /**
+     * Menampilkan detail mobil tertentu.
+     * Metode ini akan dipanggil ketika mengakses /mobil/{id}.
+     *
+     * @param  \App\Models\Mobil  $mobil
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function show(Mobil $mobil): \Illuminate\View\View
+    {
+        // ... kode Anda
+        return view('mobil.show', compact('mobil'));
     }
 
     /**
@@ -184,7 +198,7 @@ class MobilController extends Controller
             'tipe_mobil' => 'required|string|max:255',
             'tahun_pembuatan' => 'required|integer|digits:4|min:1901|max:2155', // Diperbarui
             'warna_mobil' => 'required|string|max:255',
-            'harga_mobil' => 'required|integer|min:135000000|max:500000000', // Diperbarui
+            'harga_mobil' => 'required|integer|min:0|max:500000000', // Diperbarui
             'bahan_bakar' => 'required|string|max:255',
             'transmisi' => 'required|in:manual,matic',
             'nomor_polisi' => ['required', Rule::unique('mobils', 'nomor_polisi')->ignore($mobil->id)], // Menggunakan Rule::unique
@@ -192,8 +206,8 @@ class MobilController extends Controller
             'nomor_mesin' => ['required', 'string', 'min:6', 'max:15', Rule::unique('mobils', 'nomor_mesin')->ignore($mobil->id)], // Diperbarui dan menggunakan Rule::unique
             'nomor_bpkb' => ['required', 'string', Rule::unique('mobils', 'nomor_bpkb')->ignore($mobil->id)], // Menggunakan Rule::unique
             'tanggal_masuk' => 'required|date|before_or_equal:today', // Diperbarui
-            'status_mobil' => ['required', Rule::in(['baru', 'bekas', 'tersedia', 'terjual'])],
-            'ketersediaan' => ['required', Rule::in(['ada', 'tidak', 'servis'])],
+            'status_mobil' => ['required', Rule::in(['baru', 'bekas', 'lunas', 'belum lunas', 'menunggu pembayaran', 'dibatalkan'])], // 'tersedia' dihapus
+            'ketersediaan' => ['required', Rule::in(['ada', 'tidak', 'servis', 'terjual'])], // Validasi ketersediaan
             'masa_berlaku_pajak' => 'required|date|after_or_equal:today',
         ], [
             'transmisi.required' => 'Transmisi wajib diisi.',

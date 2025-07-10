@@ -126,7 +126,7 @@
 
                     <div class="col-12 col-md-4">
                         <label for="harga_mobil" class="form-label mb-1 fw-semibold">Harga Mobil (IDR)</label>
-                        <input type="number" name="harga_mobil" class="form-control form-control-lg rounded-3" id="harga_mobil" min="150000000"
+                        <input type="number" name="harga_mobil" class="form-control form-control-lg rounded-3" id="harga_mobil" min="0"
                             value="{{ old('harga_mobil', isset($mobil) ? intval($mobil->harga_mobil) : '') }}"
                             placeholder="Contoh: 150000000" required>
                         @error('harga_mobil')
@@ -291,8 +291,12 @@
                     <div class="col-12 col-md-4">
                         <label for="status_mobil" class="form-label mb-1 fw-semibold">Status Mobil</label>
                         <select id="status_mobil" name="status_mobil" class="form-select form-select-lg rounded-3" required>
-                            <option value="baru" {{ $old('status_mobil') == 'baru' ? 'selected' : '' }}>Baru</option>
                             <option value="bekas" {{ $old('status_mobil') == 'bekas' ? 'selected' : '' }}>Bekas</option>
+                            <option value="baru" {{ $old('status_mobil') == 'baru' ? 'selected' : '' }}>Baru</option>
+                            <option value="dibatalkan" {{ $old('status_mobil') == 'dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
+                            <option value="menunggu pembayaran" {{ $old('status_mobil') == 'menunggu pembayaran' ? 'selected' : '' }}>Menunggu Pembayaran</option>
+                            <option value="lunas" {{ $old('status_mobil') == 'lunas' ? 'selected' : '' }}>Lunas</option>
+                            <option value="belum lunas" {{ $old('status_mobil') == 'belum lunas' ? 'selected' : '' }}>Belum Lunas</option>
                         </select>
                     </div>
 
@@ -303,6 +307,7 @@
                             <option value="ada" {{ $old('ketersediaan') == 'ada' ? 'selected' : '' }}>Ada</option>
                             <option value="tidak" {{ $old('ketersediaan') == 'tidak' ? 'selected' : '' }}>Tidak ada</option>
                             <option value="servis" {{ $old('ketersediaan') == 'servis' ? 'selected' : '' }}>Sedang Servis</option>
+                            <option value="terjual" {{ $old('ketersediaan') == 'terjual' ? 'selected' : '' }}>Terjual</option>
                         </select>
                     </div>
                 </div>
