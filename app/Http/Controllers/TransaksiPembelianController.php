@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon;
+use Carbon\Carbon; // Pastikan Carbon sudah diimpor
 
 class TransaksiPembelianController extends Controller
 {
@@ -32,13 +32,29 @@ class TransaksiPembelianController extends Controller
         $mobils = Mobil::all();
         $penjuals = Penjual::all();
 
-        $currentDate = now();
-        $dateFormatted = $currentDate->format('Ymd');
+        // Tanggal sekarang dengan format DDMMYY
+        $tanggalSekarang = now()->format('dmy');
 
-        $countTodayTransactions = TransaksiPembelian::whereDate('created_at', $currentDate->toDateString())->count();
-        $sequenceNumber = $countTodayTransactions + 1;
+        // Dapatkan nomor urut transaksi terakhir secara global
+        $lastTransaksi = TransaksiPembelian::latest('id')->first();
 
-        $kode_transaksi = 'CM-PO-' . $dateFormatted . '-' . str_pad($sequenceNumber, 3, '0', STR_PAD_LEFT);
+        $urutan = 1; // Default jika belum ada transaksi sama sekali
+        if ($lastTransaksi) {
+            // Asumsi format kode_transaksi: CM-PO-DDMMYY-XXX atau CM-PO-YYYYMMDD-XXX dari format sebelumnya
+            // Kita perlu mengambil bagian terakhir setelah tanda hubung terakhir
+            $parts = explode('-', $lastTransaksi->kode_transaksi);
+            if (count($parts) > 1) { // Pastikan ada setidaknya satu tanda hubung
+                $lastPart = end($parts); // Ambil bagian terakhir
+                // Coba konversi bagian terakhir ke integer, jika gagal, anggap 0
+                $lastUrutan = (int) $lastPart;
+                $urutan = $lastUrutan + 1;
+            }
+        }
+
+        // Format nomor urut menjadi 3 digit (misal: 001, 010, 100)
+        $nomorUrutFormatted = sprintf('%03d', $urutan);
+
+        $kode_transaksi = 'CM-PO-' . $tanggalSekarang . '-' . $nomorUrutFormatted;
 
         return view('transaksi_pembelian.create', compact('mobils', 'penjuals', 'kode_transaksi'));
     }
@@ -54,7 +70,8 @@ class TransaksiPembelianController extends Controller
             'penjual_id' => 'required|exists:penjuals,id',
             'tanggal_transaksi' => 'required|date',
             'harga_beli_mobil_final' => 'required|numeric|min:0',
-            'kode_transaksi' => 'required|string|max:255|unique:transaksi_pembelians,kode_transaksi',
+            // 'kode_transaksi' tidak lagi perlu 'unique' karena kita akan generate ulang di sini
+            'kode_transaksi' => 'required|string|max:255', // tetap required tapi unique akan dihandle oleh logic kita
             'keterangan' => 'nullable|string',
             'pembayaran_detail' => 'nullable|array',
             'pembayaran_detail.*.metode_pembayaran' => 'required_with:pembayaran_detail|string|max:50',
@@ -67,9 +84,28 @@ class TransaksiPembelianController extends Controller
         DB::beginTransaction();
 
         try {
+            // Tanggal sekarang dengan format DDMMYY
+            $tanggalSekarang = now()->format('dmy');
+
+            // Dapatkan nomor urut transaksi terakhir secara global
+            $lastTransaksi = TransaksiPembelian::latest('id')->first();
+
+            $urutan = 1; // Default jika belum ada transaksi sama sekali
+            if ($lastTransaksi) {
+                $parts = explode('-', $lastTransaksi->kode_transaksi);
+                if (count($parts) > 1) {
+                    $lastPart = end($parts);
+                    $lastUrutan = (int) $lastPart;
+                    $urutan = $lastUrutan + 1;
+                }
+            }
+            $nomorUrutFormatted = sprintf('%03d', $urutan);
+            $kode_transaksi_baru = 'CM-PO-' . $tanggalSekarang . '-' . $nomorUrutFormatted;
+
+
             // 2. Simpan Transaksi Pembelian Utama
             $transaksiPembelian = TransaksiPembelian::create([
-                'kode_transaksi' => $request->kode_transaksi,
+                'kode_transaksi' => $kode_transaksi_baru, // Menggunakan kode_transaksi yang baru digenerate
                 'tanggal_transaksi' => $request->tanggal_transaksi,
                 'mobil_id' => $request->mobil_id,
                 'penjual_id' => $request->penjual_id,
@@ -158,6 +194,7 @@ class TransaksiPembelianController extends Controller
             'penjual_id' => 'required|exists:penjuals,id',
             'tanggal_transaksi' => 'required|date',
             'harga_beli_mobil_final' => 'required|numeric|min:0',
+            // 'kode_transaksi' tidak perlu lagi divalidasi unique di sini
             'kode_transaksi' => 'required|string|max:255',
             'keterangan' => 'nullable|string',
             'pembayaran_detail' => 'nullable|array',
@@ -175,6 +212,7 @@ class TransaksiPembelianController extends Controller
 
         try {
             // 1. Update Transaksi Pembelian Utama
+            // Kita tidak perlu mengubah kode_transaksi di fungsi update, karena sudah digenerate saat create
             $transaksiPembelian->update([
                 'mobil_id' => $request->mobil_id,
                 'penjual_id' => $request->penjual_id,

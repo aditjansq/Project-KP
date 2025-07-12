@@ -83,7 +83,7 @@
                     </div>
                 </div>
                 <div class="card-footer bg-transparent border-0 px-4 pb-3">
-                    <a href="{{ route('transaksi.penjual.index') }}" class="text-danger fw-semibold small">Lihat Detail <i class="bi bi-arrow-right-short"></i></a>
+                    <a href="{{ route('transaksi-penjualan.index') }}" class="text-danger fw-semibold small">Lihat Detail <i class="bi bi-arrow-right-short"></i></a>
                 </div>
             </div>
         </div>

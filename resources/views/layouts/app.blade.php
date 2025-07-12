@@ -13,6 +13,8 @@
     {{-- Bootstrap Icons --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
 
+    {{-- @stack('styles') --}}
+
     <style>
         :root {
             /* --- Main App Colors (Adjusted for Dark Theme Consistency) --- */

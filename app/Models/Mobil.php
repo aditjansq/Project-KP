@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\TransaksiPembelian;
 use App\Models\Servis; // Pastikan ini juga ada jika belum
 use App\Models\Transaksi; // Ini diasumsikan adalah model Transaksi umum
-
+use App\Models\TransaksiPenjualan; // <-- TAMBAHKAN INI
 
 class Mobil extends Model
 {
@@ -50,22 +50,30 @@ class Mobil extends Model
     /**
      * Relasi satu ke banyak dengan TransaksiPembelian.
      * Satu mobil dapat memiliki banyak record transaksi pembelian.
-     * Nama metode diubah dari 'transaksis' menjadi 'transaksiPembelian'
-     * dan mengarah ke model TransaksiPembelian.
      */
+    public function transaksiPembelian()
+    {
+        return $this->hasMany(TransaksiPembelian::class, 'mobil_id'); // 'mobil_id' adalah foreign key di tabel transaksis_pembelian
+    }
 
-        /**
-     * Dapatkan transaksi-transaksi untuk mobil ini.
+    /**
+     * Relasi satu ke banyak dengan TransaksiPenjualan.
+     * Satu mobil dapat memiliki banyak record transaksi penjualan.
+     * Asumsi 'mobil_id' adalah foreign key di tabel 'transaksi_penjualans'.
+     */
+    public function transaksiPenjualan() // <-- TAMBAHKAN RELASI INI
+    {
+        return $this->hasMany(TransaksiPenjualan::class, 'mobil_id');
+    }
+
+    /**
+     * Dapatkan transaksi-transaksi umum untuk mobil ini.
+     * Jika Anda memiliki model Transaksi umum yang berbeda dari Pembelian/Penjualan, ini bisa tetap ada.
      */
     public function transaksis()
     {
         // Asumsi 'mobil_id' adalah foreign key di tabel 'transaksis'
         return $this->hasMany(Transaksi::class, 'mobil_id');
-    }
-
-    public function transaksiPembelian() // Diubah dari transaksis()
-    {
-        return $this->hasMany(TransaksiPembelian::class, 'mobil_id'); // 'mobil_id' adalah foreign key di tabel transaksis
     }
 
     /**

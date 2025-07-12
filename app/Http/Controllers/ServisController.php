@@ -69,17 +69,13 @@ class ServisController extends Controller
             'status' => 'nullable|string|in:proses,selesai,batal',
             'keterangan' => 'nullable|string',
 
-            // Validasi untuk item-item, pastikan nama field sesuai dengan input di Blade
+            // Validasi untuk item-item
             'item_name' => 'required|array|min:1',
             'item_name.*' => 'required|string|max:255',
-            'item_package' => 'required|array|min:1',
-            'item_package.*' => 'required|string',
             'item_qty' => 'required|array|min:1',
             'item_qty.*' => 'required|integer|min:1',
             'item_price' => 'required|array|min:1',
             'item_price.*' => 'required|numeric|min:0',
-            'item_discount' => 'required|array|min:1',
-            'item_discount.*' => 'required|numeric|min:0|max:100',
         ]);
 
         return DB::transaction(function () use ($request) {
@@ -99,9 +95,8 @@ class ServisController extends Controller
 
             // Tambahkan item-item servis
             foreach ($request->item_name as $key => $itemName) {
-                $qty = $request->item_qty[$key]; // Qty sudah divalidasi sebagai integer
+                $qty = $request->item_qty[$key];
 
-                // Untuk price, cek apakah nilainya bilangan bulat, jika ya, cast ke integer
                 $price = $request->item_price[$key];
                 if (is_numeric($price) && fmod($price, 1) == 0) {
                     $price = (int) $price;
@@ -109,26 +104,15 @@ class ServisController extends Controller
                     $price = (float) $price;
                 }
 
-                // Untuk discountPercentage, cek apakah nilainya bilangan bulat, jika ya, cast ke integer
-                $discountPercentage = $request->item_discount[$key];
-                if (is_numeric($discountPercentage) && fmod($discountPercentage, 1) == 0) {
-                    $discountPercentage = (int) $discountPercentage;
-                } else {
-                    $discountPercentage = (float) $discountPercentage;
-                }
+                $itemTotal = $price * $qty;
 
-                $subtotal = $price * $qty;
-                $discountValue = ($discountPercentage / 100) * $subtotal;
-                $itemTotal = $subtotal - $discountValue;
-
-                // Gunakan nama kolom yang sesuai dengan skema tabel 'items' Anda
                 $servis->items()->create([
                     'item_name' => $itemName,
-                    'item_package' => $request->item_package[$key],
+                    'item_package' => '',
                     'item_qty' => $qty,
                     'item_price' => $price,
-                    'item_discount' => $discountPercentage,
-                    'item_discount_value' => $discountValue,
+                    'item_discount' => 0, // <--- DITAMBAHKAN: Memberikan nilai default 0
+                    'item_discount_value' => 0, // <--- DITAMBAHKAN: Memberikan nilai default 0
                     'item_total' => $itemTotal,
                     'service_date' => $request->tanggal_servis,
                 ]);
@@ -172,7 +156,6 @@ class ServisController extends Controller
         $totalHargaMobilDibeli = optional($servis->mobil->transaksiPembelian)->sum('harga_beli_mobil_final') ?? 0;
 
         // Tambahkan atribut ini ke objek servis yang akan di-JSON-kan
-        // Ini memastikan data tersedia di respons JSON
         $servis->setAttribute('total_harga_mobil_dibeli', $totalHargaMobilDibeli);
 
         // Mengembalikan data sebagai JSON
@@ -211,14 +194,10 @@ class ServisController extends Controller
 
             'item_name' => 'required|array|min:1',
             'item_name.*' => 'required|string|max:255',
-            'item_package' => 'required|array|min:1',
-            'item_package.*' => 'required|string',
             'item_qty' => 'required|array|min:1',
             'item_qty.*' => 'required|integer|min:1',
             'item_price' => 'required|array|min:1',
             'item_price.*' => 'required|numeric|min:0',
-            'item_discount' => 'required|array|min:1',
-            'item_discount.*' => 'required|numeric|min:0|max:100',
         ]);
 
         return DB::transaction(function () use ($request, $servis) {
@@ -238,9 +217,8 @@ class ServisController extends Controller
 
             // Tambahkan item-item baru
             foreach ($request->item_name as $key => $itemName) {
-                $qty = $request->item_qty[$key]; // Qty sudah divalidasi sebagai integer
+                $qty = $request->item_qty[$key];
 
-                // Untuk price, cek apakah nilainya bilangan bulat, jika ya, cast ke integer
                 $price = $request->item_price[$key];
                 if (is_numeric($price) && fmod($price, 1) == 0) {
                     $price = (int) $price;
@@ -248,26 +226,15 @@ class ServisController extends Controller
                     $price = (float) $price;
                 }
 
-                // Untuk discountPercentage, cek apakah nilainya bilangan bulat, jika ya, cast ke integer
-                $discountPercentage = $request->item_discount[$key];
-                if (is_numeric($discountPercentage) && fmod($discountPercentage, 1) == 0) {
-                    $discountPercentage = (int) $discountPercentage;
-                } else {
-                    $discountPercentage = (float) $discountPercentage;
-                }
+                $itemTotal = $price * $qty;
 
-                $subtotal = $price * $qty;
-                $discountValue = ($discountPercentage / 100) * $subtotal;
-                $itemTotal = $subtotal - $discountValue;
-
-                // Gunakan nama kolom yang sesuai dengan skema tabel 'items' Anda
                 $servis->items()->create([
                     'item_name' => $itemName,
-                    'item_package' => $request->item_package[$key],
+                    'item_package' => '',
                     'item_qty' => $qty,
                     'item_price' => $price,
-                    'item_discount' => $discountPercentage,
-                    'item_discount_value' => $discountValue,
+                    'item_discount' => 0, // <--- DITAMBAHKAN: Memberikan nilai default 0
+                    'item_discount_value' => 0, // <--- DITAMBAHKAN: Memberikan nilai default 0
                     'item_total' => $itemTotal,
                     'service_date' => $request->tanggal_servis,
                 ]);

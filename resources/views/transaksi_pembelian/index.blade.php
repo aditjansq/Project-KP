@@ -335,7 +335,7 @@
                     <option value="">Semua Tahun</option>
                     @php
                         $currentYear = Carbon::now()->year;
-                        for ($year = $currentYear; $year >= 1990; $year--) {
+                        for ($year = $currentYear; $year >= 2018; $year--) {
                             echo "<option value='{$year}'>{$year}</option>";
                         }
                     @endphp

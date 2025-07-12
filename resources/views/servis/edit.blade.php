@@ -48,20 +48,18 @@
 
                 <h5 class="mb-4 fw-bold text-dark border-bottom pb-2">Informasi Servis Utama</h5>
                 <div class="row g-3 mb-4">
-                    <!-- Kode Servis (Readonly) -->
                     <div class="col-md-6">
                         <label for="kode_servis" class="form-label text-muted">Kode Servis</label>
                         <input type="text" class="form-control form-control-lg bg-light-subtle rounded-pill border-0 shadow-sm" name="kode_servis" id="kode_servis" value="{{ $old('kode_servis', $servis->kode_servis) }}" readonly />
                     </div>
 
-                    <!-- Pilih Mobil (Select2) -->
                     <div class="col-md-6">
                         <label for="mobil_id" class="form-label text-muted">Pilih Mobil</label>
                         <select class="form-control select2 form-select-lg rounded-pill shadow-sm" name="mobil_id" id="mobil_id" style="width: 100%" required>
                             <option value="">Pilih Mobil (Tahun - Merek - Tipe - No. Polisi)</option>
                             @foreach($mobils as $mobil)
                                 <option
-                                    value="{{ $mobil->id }}"   {{-- pakai id --}}
+                                    value="{{ $mobil->id }}"
                                     data-merek="{{ $mobil->merek_mobil }}"
                                     data-tipe="{{ $mobil->tipe_mobil ?? '' }}"
                                     data-nomorpolisi="{{ $mobil->nomor_polisi }}"
@@ -74,29 +72,24 @@
 
                     </div>
 
-                    <!-- Informasi Mobil (Auto Fill) -->
                     <div class="col-md-6">
                         <label for="merek_mobil" class="form-label text-muted">Informasi Mobil</label>
                         <input type="text" class="form-control form-control-lg bg-light-subtle rounded-pill border-0 shadow-sm" name="merek_mobil" id="merek_mobil" value="{{ $old('merek_mobil', ($servis->mobil ? $servis->mobil->tahun_pembuatan . ' ' . $servis->mobil->merek_mobil . ' ' . ($servis->mobil->tipe_mobil ?? '') . ' - ' . $servis->mobil->nomor_polisi : '')) }}" readonly />
                     </div>
 
-                    <!-- Tanggal Servis -->
                     <div class="col-md-6">
                         <label for="tanggal_servis" class="form-label text-muted">Tanggal Servis</label>
                         <input type="date" class="form-control form-control-lg rounded-pill shadow-sm" id="tanggal_servis" name="tanggal_servis" value="{{ $old('tanggal_servis', $servis->tanggal_servis) }}" max="{{ date('Y-m-d') }}" min="{{ $oneMonthAgo }}" required>
                     </div>
 
-                    <!-- Metode Pembayaran -->
                     <div class="col-md-6">
                         <label for="metode_pembayaran" class="form-label text-muted">Metode Pembayaran</label>
                         <select class="form-control form-select-lg rounded-pill shadow-sm" id="metode_pembayaran" name="metode_pembayaran" required>
                             <option value="Transfer Bank" {{ $old('metode_pembayaran', $servis->metode_pembayaran) == 'Transfer Bank' ? 'selected' : '' }}>Transfer Bank</option>
                             <option value="Cash" {{ $old('metode_pembayaran', $servis->metode_pembayaran) == 'Cash' ? 'selected' : '' }}>Cash</option>
-                            {{-- <option value="Kartu Kredit" {{ $old('metode_pembayaran', $servis->metode_pembayaran) == 'Kartu Kredit' ? 'selected' : '' }}>Kartu Kredit</option> --}}
                         </select>
                     </div>
 
-                    <!-- Status Servis -->
                     <div class="col-md-6">
                         <label for="status" class="form-label text-muted">Status Servis</label>
                         <select class="form-control form-select-lg rounded-pill shadow-sm" id="status" name="status">
@@ -113,14 +106,11 @@
                     <table class="table table-bordered table-hover align-middle custom-item-table" id="itemsTable">
                         <thead>
                             <tr class="table-light">
-                                <th style="width: 25%;">Nama Barang (Servis)</th>
-                                <th style="width: 15%;">Kemasan</th>
-                                <th style="width: 8%;" class="text-center">Qty</th>
-                                <th style="width: 15%;" class="text-end">Harga Satuan</th>
-                                <th style="width: 10%;" class="text-center">Diskon (%)</th>
-                                <th style="width: 12%;" class="text-end">Nilai Diskon</th>
-                                <th style="width: 15%;" class="text-end">Jumlah</th>
-                                <th style="width: 50px;">Aksi</th>
+                                <th style="width: 50%;">Nama Barang (Servis)</th>
+                                <th style="width: 15%;" class="text-center">Qty</th>
+                                <th style="width: 20%;" class="text-end">Harga Satuan</th>
+                                <th style="width: 10%;" class="text-end">Jumlah</th>
+                                <th style="width: 5%;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -128,25 +118,9 @@
                                 @foreach($servis->items as $key => $item)
                                 <tr>
                                     <td><input type="text" class="form-control form-control-sm" name="item_name[]" placeholder="Nama Barang" value="{{ $old('item_name.' . $key, $item->item_name) }}" required></td>
-                                    <td>
-                                        <select class="form-control form-control-sm" name="item_package[]" required>
-                                            <option value="">Pilih Kemasan</option>
-                                            <option value="Pcs" {{ $old('item_package.' . $key, $item->item_package) == 'Pcs' ? 'selected' : '' }}>Pcs</option>
-                                            <option value="Set" {{ $old('item_package.' . $key, $item->item_package) == 'Set' ? 'selected' : '' }}>Set</option>
-                                            <option value="Liter" {{ $old('item_package.' . $key, $item->item_package) == 'Liter' ? 'selected' : '' }}>Liter</option>
-                                            <option value="Botol" {{ $old('item_package.' . $key, $item->item_package) == 'Botol' ? 'selected' : '' }}>Botol</option>
-                                            <option value="Jasa" {{ $old('item_package.' . $key, $item->item_package) == 'Jasa' ? 'selected' : '' }}>Jasa</option>
-                                            <option value="Paket" {{ $old('item_package.' . $key, $item->item_package) == 'Paket' ? 'selected' : '' }}>Paket</option>
-                                            <option value="Unit" {{ $old('item_package.' . $key, $item->item_package) == 'Unit' ? 'selected' : '' }}>Unit</option>
-                                            <option value="Meter" {{ $old('item_package.' . $key, $item->item_package) == 'Meter' ? 'selected' : '' }}>Meter</option>
-                                            <option value="Jam" {{ $old('item_package.' . $key, $item->item_package) == 'Jam' ? 'selected' : '' }}>Jam</option>
-                                        </select>
-                                    </td>
                                     <td><input type="number" class="form-control form-control-sm qty" name="item_qty[]" min="1" value="{{ $old('item_qty.' . $key, $item->item_qty) }}" required></td>
                                     <td><input type="number" class="form-control form-control-sm price" name="item_price[]" min="0" value="{{ $old('item_price.' . $key, $item->item_price) }}" required></td>
-                                    <td><input type="number" class="form-control form-control-sm discount" name="item_discount[]" min="0" max="100" value="{{ $old('item_discount.' . $key, $item->item_discount) }}" required></td>
-                                    <td><input type="text" class="form-control form-control-sm discount_value" name="item_discount_value[]" value="{{ number_format((float) old('item_discount_value.' . $key, $item->item_discount_value), 2, ',', '.') }}" readonly></td>
-                                    <td><input type="text" class="form-control form-control-sm total" name="item_total[]" value="{{ number_format((float) $old('item_total.' . $key, $item->item_total), 2, ',', '.') }}" readonly></td>
+                                    <td><input type="text" class="form-control form-control-sm total" name="item_total[]" value="{{ number_format((float) $old('item_total.' . $key, $item->item_total), 0, '', '.') }}" readonly></td>
                                     <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-item rounded-pill"><i class="bi bi-x"></i></button></td>
                                 </tr>
                                 @endforeach
@@ -154,24 +128,8 @@
                                 {{-- Jika tidak ada item yang terkait, tampilkan baris kosong --}}
                                 <tr>
                                     <td><input type="text" class="form-control form-control-sm" name="item_name[]" placeholder="Nama Barang" required></td>
-                                    <td>
-                                        <select class="form-control form-control-sm" name="item_package[]" required>
-                                            <option value="">Pilih Kemasan</option>
-                                            <option value="Pcs">Pcs</option>
-                                            <option value="Set">Set</option>
-                                            <option value="Liter">Liter</option>
-                                            <option value="Botol">Botol</option>
-                                            <option value="Jasa">Jasa</option>
-                                            <option value="Paket">Paket</option>
-                                            <option value="Unit">Unit</option>
-                                            <option value="Meter">Meter</option>
-                                            <option value="Jam">Jam</option>
-                                        </select>
-                                    </td>
                                     <td><input type="number" class="form-control form-control-sm qty" name="item_qty[]" min="1" value="1" required></td>
                                     <td><input type="number" class="form-control form-control-sm price" name="item_price[]" min="0" value="0" required></td>
-                                    <td><input type="number" class="form-control form-control-sm discount" name="item_discount[]" min="0" max="100" value="0" required></td>
-                                    <td><input type="text" class="form-control form-control-sm discount_value" name="item_discount_value[]" value="0.00" readonly></td>
                                     <td><input type="text" class="form-control form-control-sm total" name="item_total[]" value="0.00" readonly></td>
                                     <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-item rounded-pill"><i class="bi bi-x"></i></button></td>
                                 </tr>
@@ -183,13 +141,11 @@
                     <i class="bi bi-plus-circle me-1"></i> Tambah Item
                 </button>
 
-                <!-- Total Harga Keseluruhan -->
                 <div class="mt-5 text-end">
                     <h5 class="fw-bold text-dark">Total Harga Servis: <span id="totalPrice" class="text-primary fs-3">Rp0,00</span></h5>
                     <small class="text-muted">Total biaya keseluruhan dari semua item servis.</small>
                 </div>
 
-                <!-- Button Simpan -->
                 <div class="mt-5 d-flex justify-content-end gap-3">
                     <button type="submit" class="btn btn-success btn-lg px-4 rounded-pill shadow-sm animate__animated animate__pulse animate__infinite">
                         <i class="bi bi-save me-2"></i> Update Servis
@@ -402,11 +358,8 @@
     }
 </style>
 
-<!-- Include jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- Include Select2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<!-- Include Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
@@ -457,13 +410,9 @@
         function calculateItemTotal(row) {
             const qty = parseFloat(row.querySelector(".qty").value) || 0;
             const price = parseFloat(row.querySelector(".price").value) || 0;
-            const discountPercentage = parseFloat(row.querySelector(".discount").value) || 0;
 
-            const subtotal = price * qty;
-            const discountValue = (discountPercentage / 100) * subtotal;
-            const total = subtotal - discountValue;
+            const total = price * qty;
 
-            row.querySelector(".discount_value").value = formatRupiah(discountValue);
             row.querySelector(".total").value = formatRupiah(total);
 
             return total;
@@ -486,24 +435,8 @@
             const newRowHtml = `
                 <tr>
                     <td><input type="text" class="form-control form-control-sm" name="item_name[]" placeholder="Nama Barang" required></td>
-                    <td>
-                        <select class="form-control form-control-sm" name="item_package[]" required>
-                            <option value="">Pilih Kemasan</option>
-                            <option value="Pcs">Pcs</option>
-                            <option value="Set">Set</option>
-                            <option value="Liter">Liter</option>
-                            <option value="Botol">Botol</option>
-                            <option value="Jasa">Jasa</option>
-                            <option value="Paket">Paket</option>
-                            <option value="Unit">Unit</option>
-                            <option value="Meter">Meter</option>
-                            <option value="Jam">Jam</option>
-                        </select>
-                    </td>
                     <td><input type="number" class="form-control form-control-sm qty" name="item_qty[]" min="1" value="1" required></td>
                     <td><input type="number" class="form-control form-control-sm price" name="item_price[]" min="0" value="0" required></td>
-                    <td><input type="number" class="form-control form-control-sm discount" name="item_discount[]" min="0" max="100" value="0" required></td>
-                    <td><input type="text" class="form-control form-control-sm discount_value" name="item_discount_value[]" value="${formatRupiah(0)}" readonly></td>
                     <td><input type="text" class="form-control form-control-sm total" name="item_total[]" value="${formatRupiah(0)}" readonly></td>
                     <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-item rounded-pill"><i class="bi bi-x"></i></button></td>
                 </tr>
@@ -528,7 +461,7 @@
         // Event delegation for input changes in item rows
         document.querySelector("#itemsTable").addEventListener("input", function(e) {
             const target = e.target;
-            if (target.classList.contains("qty") || target.classList.contains("price") || target.classList.contains("discount")) {
+            if (target.classList.contains("qty") || target.classList.contains("price")) {
                 const row = target.closest("tr");
                 calculateItemTotal(row);
                 calculateGrandTotal();

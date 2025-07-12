@@ -328,6 +328,14 @@
                                     Angsuran per bulan wajib diisi dan harus angka positif.
                                 </div>
                             </div>
+                            {{-- Inputan baru untuk Refund --}}
+                            <div class="col-md-6">
+                                <label for="refund" class="form-label text-muted">Jumlah Refund</label>
+                                <input type="number" id="refund" name="refund" class="form-control" value="{{ old('refund', 0) }}" min="0">
+                                <div class="invalid-feedback">
+                                    Jumlah refund harus berupa angka positif.
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -421,6 +429,10 @@
                                 <span class="label">Angsuran Per Bulan:</span>
                                 <span class="value" id="summary-angsuran-display">Rp0</span>
                             </div>
+                            <div class="summary-detail" id="summary-refund-row" style="display: none;">
+                                <span class="label">Jumlah Refund:</span>
+                                <span class="value" id="summary-refund-display">Rp 0</span>
+                            </div>
                             <div class="summary-detail">
                                 <span class="label">Leasing:</span>
                                 <span class="value" id="summary-leasing-display">-</span>
@@ -453,77 +465,106 @@
         let pembayaranIndex = 1;
 
         // Main calculation function
-        function calculateSummary() {
-            // Get selected car price
-            const mobilElement = document.getElementById('mobil_id');
-            const selectedMobil = mobilElement.options[mobilElement.selectedIndex];
-            const hargaMobil = selectedMobil && selectedMobil.dataset.harga ?
-                parseFloat(selectedMobil.dataset.harga) : 0;
+function calculateSummary() {
+    // Get selected car price
+    const mobilElement = document.getElementById('mobil_id');
+    const selectedMobil = mobilElement.options[mobilElement.selectedIndex];
+    const hargaMobil = selectedMobil && selectedMobil.dataset.harga ?
+        parseFloat(selectedMobil.dataset.harga) : 0;
 
-            // Get negotiated price
-            const hargaNegosiasi = parseFloat(document.getElementById('harga_negosiasi').value) || 0;
+    // Get negotiated price
+    const hargaNegosiasi = parseFloat(document.getElementById('harga_negosiasi').value) || 0;
 
-            // Calculate total payments
-            let totalPembayaran = 0;
-            document.querySelectorAll('input[name$="[jumlah_pembayaran]"]').forEach(input => {
-                totalPembayaran += parseFloat(input.value) || 0;
-            });
+    // Calculate total payments
+    let totalPembayaran = 0;
+    document.querySelectorAll('input[name$="[jumlah_pembayaran]"]').forEach(input => {
+        totalPembayaran += parseFloat(input.value) || 0;
+    });
 
-            // Update summary displays
-            document.getElementById('summary-harga-mobil').textContent = formatCurrency(hargaMobil);
-            document.getElementById('summary-harga-negosiasi').textContent = formatCurrency(hargaNegosiasi);
-            document.getElementById('summary-total-pembayaran').textContent = formatCurrency(totalPembayaran);
+    // --- BAGIAN YANG DITAMBAHKAN/DIUBAH UNTUK REFUND ---
 
-            // Handle credit/non-credit differences
-            const metodePembayaran = document.getElementById('metode_pembayaran').value;
-            const sisaPembayaranElement = document.getElementById('summary-sisa-pembayaran');
-            const statusAlertElement = document.getElementById('summary-status-alert');
+    // 1. Ambil nilai refund
+    const refund = parseFloat(document.getElementById('refund').value) || 0;
 
-            if (metodePembayaran === 'kredit') {
-                const dpCalculated = Math.max(hargaNegosiasi - totalPembayaran, 0);
+    // --- AKHIR BAGIAN REFUND ---
 
-                document.getElementById('summary-dp-section').style.display = 'flex';
-                document.getElementById('summary-dp-calculated').textContent = formatCurrency(dpCalculated);
-                document.getElementById('hidden-dp-value').value = dpCalculated;
+    // Update summary displays
+    document.getElementById('summary-harga-mobil').textContent = formatCurrency(hargaMobil);
+    document.getElementById('summary-harga-negosiasi').textContent = formatCurrency(hargaNegosiasi);
+    document.getElementById('summary-total-pembayaran').textContent = formatCurrency(totalPembayaran);
 
-                sisaPembayaranElement.textContent = formatCurrency(dpCalculated);
-                sisaPembayaranElement.className = 'value fw-bold ' + (dpCalculated > 0 ? 'text-danger' : 'text-success');
+    // Handle credit/non-credit differences
+    const metodePembayaran = document.getElementById('metode_pembayaran').value;
+    const sisaPembayaranElement = document.getElementById('summary-sisa-pembayaran');
+    const statusAlertElement = document.getElementById('summary-status-alert');
 
-                statusAlertElement.textContent = dpCalculated > 0 ?
-                    'Status: DP Belum Lunas' : 'Status: DP Sudah Lunas';
-                statusAlertElement.className = dpCalculated > 0 ?
-                    'summary-alert alert alert-warning text-center' : 'summary-alert alert alert-success text-center';
+    if (metodePembayaran === 'kredit') {
+        const dpCalculated = Math.max(hargaNegosiasi - totalPembayaran, 0);
 
-                // Update credit details
-                document.getElementById('summary-kredit-details').style.display = 'block';
-                document.getElementById('summary-tempo-display').textContent =
-                    document.getElementById('tempo').value + ' Tahun';
-                document.getElementById('summary-angsuran-display').textContent =
-                    formatCurrency(parseFloat(document.getElementById('angsuran_per_bulan').value) || 0);
-                document.getElementById('summary-leasing-display').textContent =
-                    document.getElementById('leasing').value || '-';
+        document.getElementById('summary-dp-section').style.display = 'flex';
+        document.getElementById('summary-dp-calculated').textContent = formatCurrency(dpCalculated);
+        document.getElementById('hidden-dp-value').value = dpCalculated;
+
+        sisaPembayaranElement.textContent = formatCurrency(dpCalculated);
+        sisaPembayaranElement.className = 'value fw-bold ' + (dpCalculated > 0 ? 'text-danger' : 'text-success');
+
+        statusAlertElement.textContent = dpCalculated > 0 ?
+            'Status: DP Belum Lunas' : 'Status: DP Sudah Lunas';
+        statusAlertElement.className = dpCalculated > 0 ?
+            'summary-alert alert alert-warning text-center' : 'summary-alert alert alert-success text-center';
+
+        // Update credit details
+        document.getElementById('summary-kredit-details').style.display = 'block';
+        document.getElementById('summary-tempo-display').textContent =
+            document.getElementById('tempo').value + ' Tahun';
+        document.getElementById('summary-angsuran-display').textContent =
+            formatCurrency(parseFloat(document.getElementById('angsuran_per_bulan').value) || 0);
+        document.getElementById('summary-leasing-display').textContent =
+            document.getElementById('leasing').value || '-';
+
+        // --- BAGIAN YANG DITAMBAHKAN/DIUBAH UNTUK REFUND (lanjutan) ---
+
+        // 2. Tampilkan nilai refund di ringkasan kredit
+        // Anda perlu memastikan ada elemen HTML dengan ID 'summary-refund-display'
+        // atau ID lain yang sesuai di bagian ringkasan Anda.
+        // Jika belum ada, Anda perlu menambahkannya di HTML.
+        document.getElementById('summary-refund-display').textContent = formatCurrency(refund);
+
+        // Pastikan baris refund di ringkasan ditampilkan ketika metode pembayaran adalah kredit
+        document.getElementById('summary-refund-row').style.display = 'flex'; // Asumsi Anda punya elemen dengan ID ini
+
+        // --- AKHIR BAGIAN REFUND ---
+
+        } else {
+            document.getElementById('summary-dp-section').style.display = 'none';
+            document.getElementById('summary-kredit-details').style.display = 'none';
+
+            // --- BAGIAN YANG DITAMBAHKAN/DIUBAH UNTUK REFUND (lanjutan) ---
+
+            // Sembunyikan baris refund ketika metode pembayaran bukan kredit
+            document.getElementById('summary-refund-row').style.display = 'none'; // Asumsi Anda punya elemen dengan ID ini
+
+
+            // --- AKHIR BAGIAN REFUND ---
+
+            const sisaPembayaran = hargaNegosiasi - totalPembayaran;
+            sisaPembayaranElement.textContent = formatCurrency(sisaPembayaran);
+
+            if (sisaPembayaran > 0) {
+                sisaPembayaranElement.className = 'value fw-bold text-danger';
+                statusAlertElement.textContent = 'Status: Belum Lunas';
+                statusAlertElement.className = 'summary-alert alert alert-danger text-center';
+            } else if (sisaPembayaran < 0) {
+                sisaPembayaranElement.className = 'value fw-bold text-success';
+                statusAlertElement.textContent = 'Status: Pembayaran Melebihi Harga';
+                statusAlertElement.className = 'summary-alert alert alert-info text-center';
             } else {
-                document.getElementById('summary-dp-section').style.display = 'none';
-                document.getElementById('summary-kredit-details').style.display = 'none';
-
-                const sisaPembayaran = hargaNegosiasi - totalPembayaran;
-                sisaPembayaranElement.textContent = formatCurrency(sisaPembayaran);
-
-                if (sisaPembayaran > 0) {
-                    sisaPembayaranElement.className = 'value fw-bold text-danger';
-                    statusAlertElement.textContent = 'Status: Belum Lunas';
-                    statusAlertElement.className = 'summary-alert alert alert-danger text-center';
-                } else if (sisaPembayaran < 0) {
-                    sisaPembayaranElement.className = 'value fw-bold text-success';
-                    statusAlertElement.textContent = 'Status: Pembayaran Melebihi Harga';
-                    statusAlertElement.className = 'summary-alert alert alert-info text-center';
-                } else {
-                    sisaPembayaranElement.className = 'value fw-bold text-success';
-                    statusAlertElement.textContent = 'Status: Lunas';
-                    statusAlertElement.className = 'summary-alert alert alert-success text-center';
-                }
+                sisaPembayaranElement.className = 'value fw-bold text-success';
+                statusAlertElement.textContent = 'Status: Lunas';
+                statusAlertElement.className = 'summary-alert alert alert-success text-center';
             }
         }
+    }
 
         // Format currency helper
         function formatCurrency(amount) {
@@ -615,6 +656,7 @@
         document.getElementById('tempo').addEventListener('input', calculateSummary);
         document.getElementById('angsuran_per_bulan').addEventListener('input', calculateSummary);
         document.getElementById('leasing').addEventListener('input', calculateSummary);
+        document.getElementById('refund').addEventListener('input', calculateSummary); // Tambahkan event listener untuk refund
 
         // Initial calculation
         calculateSummary();

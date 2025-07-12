@@ -12,7 +12,7 @@ use App\Http\Controllers\TransaksiPenjualanController;
 use App\Http\Controllers\TransaksiPembelianController;
 use App\Http\Controllers\ServisController;
 use App\Http\Controllers\AccountSettingsController;
-use App\Http\Controllers\LaporanController; // Pastikan ini ada
+use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
 
@@ -101,13 +101,8 @@ Route::middleware(['auth'])->group(function () {
             ->name('pembeli.update');
 
         // Rute Resource untuk Transaksi Penjual (dalam prefix transaksi)
-        // Catatan: Ini sepertinya salah penamaan, seharusnya TransaksiPenjualController bukan PenjualController
-        // Jika Anda memiliki TransaksiPenjualController, pastikan diimpor di atas.
-        // Jika ini memang untuk CRUD Penjual, maka resource 'penjual' sudah ada di luar prefix 'transaksi'.
-        // Saya asumsikan ini adalah kesalahan ketik dan Anda bermaksud TransaksiPenjualController.
-        // Jika tidak, harap klarifikasi.
-        // Route::resource('penjual', TransaksiPenjualController::class)
-        //     ->middleware('role:manajer,admin');
+        Route::resource('penjual', TransaksiPenjualController::class)
+            ->middleware('role:manajer,admin');
 
         // Detail servis (AJAX)
         Route::get('/get-servis-details', [TransaksiController::class, 'getServisDetails'])
@@ -135,17 +130,8 @@ Route::middleware(['auth'])->group(function () {
     // START: RUTE LAPORAN
     // ----------------------------------------------------
     Route::prefix('laporan')->name('laporan.')->group(function () {
-        // --- Rute Baru/Diperbarui untuk Laporan Mobil Terjual ---
         Route::get('/mobil-terjual', [LaporanController::class, 'mobilTerjual'])->name('mobil_terjual');
-        Route::get('/mobil-terjual/pdf', [LaporanController::class, 'exportMobilTerjualPdf'])->name('mobil_terjual.pdf');
-
         Route::get('/mobil-dibeli', [LaporanController::class, 'mobilDibeli'])->name('mobil_dibeli');
-        // Route untuk ekspor PDF dari laporan mobil dibeli
-        Route::get('/mobil-dibeli/pdf', [LaporanController::class, 'exportMobilDibeliPdf'])->name('mobil_dibeli.pdf');
-
-        // Rute baru untuk laporan servis mobil
-        Route::get('/mobil-servis', [LaporanController::class, 'mobilServis'])->name('mobil_servis');
-        Route::get('/mobil-servis/pdf', [LaporanController::class, 'exportMobilServisPdf'])->name('mobil_servis.pdf');
     });
     // ----------------------------------------------------
     // END: RUTE LAPORAN

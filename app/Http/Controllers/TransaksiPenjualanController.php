@@ -6,10 +6,11 @@ use App\Models\Mobil;
 use App\Models\Pembeli;
 use App\Models\TransaksiPenjualan;
 use App\Models\TransaksiKreditDetail;
-use App\Models\TransaksiPenjualanPembayaranDetail; // Menggunakan model baru untuk detail pembayaran penjualan
+use App\Models\TransaksiPenjualanPembayaranDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage; // Untuk upload file
+use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon; // Pastikan Carbon sudah diimpor
 
 class TransaksiPenjualanController extends Controller
 {
@@ -20,9 +21,7 @@ class TransaksiPenjualanController extends Controller
      */
     public function index()
     {
-        // Memuat relasi mobil, pembeli, dan pembayaranDetails
-        // Gunakan paginate() alih-alih get() untuk mendapatkan instance Paginator
-        $transaksis = TransaksiPenjualan::with('mobil', 'pembeli', 'pembayaranDetails')->latest()->paginate(10); // Menampilkan 10 item per halaman
+        $transaksis = TransaksiPenjualan::with('mobil', 'pembeli', 'pembayaranDetails')->latest()->paginate(10);
         return view('transaksi_penjualan.index', compact('transaksis'));
     }
 
@@ -36,13 +35,30 @@ class TransaksiPenjualanController extends Controller
         $mobils = Mobil::all();
         $pembelis = Pembeli::all();
 
-        // **INI ADALAH BAGIAN YANG DIREVISI:**
-        // Buat kode transaksi unik untuk ditampilkan di formulir
-        $tanggalSekarang = now()->format('Ymd'); // Format tanggal YYYYMMDD
-        $stringAcak = Str::random(4); // String acak 4 karakter untuk "YANG KE"
-        $kode_transaksi_otomatis = 'CM-PJ-' . $tanggalSekarang . '-' . strtoupper($stringAcak);
+        // Tanggal sekarang dengan format DDMMYY
+        $tanggalSekarang = now()->format('dmy');
 
-        // Teruskan variabel ini ke tampilan
+        // Dapatkan nomor urut transaksi terakhir secara global
+        $lastTransaksi = TransaksiPenjualan::latest('id')->first(); // Ambil transaksi terakhir berdasarkan ID
+
+        $urutan = 1; // Default jika belum ada transaksi sama sekali
+        if ($lastTransaksi) {
+            // Asumsi format kode_transaksi: CM-PJ-DDMMYY-XXX atau CM-PJ-YYYYMMDD-XXX dari format sebelumnya
+            // Kita perlu mengambil bagian terakhir setelah tanda hubung terakhir
+            $parts = explode('-', $lastTransaksi->kode_transaksi);
+            if (count($parts) > 1) { // Pastikan ada setidaknya satu tanda hubung
+                $lastPart = end($parts); // Ambil bagian terakhir
+                // Coba konversi bagian terakhir ke integer, jika gagal, anggap 0
+                $lastUrutan = (int) $lastPart;
+                $urutan = $lastUrutan + 1;
+            }
+        }
+
+        // Format nomor urut menjadi 3 digit (misal: 001, 010, 100)
+        $nomorUrutFormatted = sprintf('%03d', $urutan);
+
+        $kode_transaksi_otomatis = 'CM-PJ-' . $tanggalSekarang . '-' . $nomorUrutFormatted;
+
         return view('transaksi_penjualan.create', compact('mobils', 'pembelis', 'kode_transaksi_otomatis'));
     }
 
@@ -54,27 +70,23 @@ class TransaksiPenjualanController extends Controller
      */
     public function store(Request $request)
     {
-        // Validasi data transaksi penjualan utama
         $validatedTransaksi = $request->validate([
             'mobil_id' => 'required|exists:mobils,id',
             'pembeli_id' => 'required|exists:pembelis,id',
-            'metode_pembayaran' => 'required|in:non_kredit,kredit', // Mengganti 'tunai' menjadi 'non_kredit'
+            'metode_pembayaran' => 'required|in:non_kredit,kredit',
             'harga_negosiasi' => 'required|numeric|min:0',
             'tanggal_transaksi' => 'required|date',
-            // 'status' akan dihitung otomatis, jadi tidak perlu divalidasi di sini
         ]);
 
-        // Validasi detail pembayaran
         $validatedPembayaran = $request->validate([
-            'pembayaran' => 'array', // Pastikan ini adalah array
+            'pembayaran' => 'array',
             'pembayaran.*.metode_pembayaran_detail' => 'required|string|max:255',
             'pembayaran.*.jumlah_pembayaran' => 'required|numeric|min:0',
             'pembayaran.*.tanggal_pembayaran' => 'required|date',
             'pembayaran.*.keterangan_pembayaran_detail' => 'nullable|string|max:1000',
-            'pembayaran.*.bukti_pembayaran_detail' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048', // Menggunakan 'bukti_pembayaran_detail'
+            'pembayaran.*.bukti_pembayaran_detail' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
-        // Validasi detail kredit jika metode pembayaran adalah 'kredit'
         $validatedKredit = [];
         if ($validatedTransaksi['metode_pembayaran'] === 'kredit') {
             $validatedKredit = $request->validate([
@@ -82,30 +94,42 @@ class TransaksiPenjualanController extends Controller
                 'tempo' => 'required|integer|min:1',
                 'leasing' => 'required|string|max:255',
                 'angsuran_per_bulan' => 'required|numeric|min:0',
+                'refund' => 'nullable|numeric|min:0', // <--- TAMBAHKAN BARIS INI
+
             ]);
         }
 
         $mobil = Mobil::findOrFail($validatedTransaksi['mobil_id']);
 
-        // Buat kode transaksi unik dengan format CM-PJ-TANGGAL-YANG KE (menggunakan tanggal dan string acak)
-        // Ini adalah kode transaksi yang akan disimpan ke database
-        $tanggalSekarang = now()->format('Ymd'); // Format tanggal YYYYMMDD
-        $stringAcak = Str::random(4); // String acak 4 karakter untuk "YANG KE"
-        $kode_transaksi = 'CM-PJ-' . $tanggalSekarang . '-' . strtoupper($stringAcak);
+        // Tanggal sekarang dengan format DDMMYY
+        $tanggalSekarang = now()->format('dmy');
 
-        // Buat transaksi penjualan
+        // Dapatkan nomor urut transaksi terakhir secara global
+        $lastTransaksi = TransaksiPenjualan::latest('id')->first();
+
+        $urutan = 1;
+        if ($lastTransaksi) {
+            $parts = explode('-', $lastTransaksi->kode_transaksi);
+            if (count($parts) > 1) {
+                $lastPart = end($parts);
+                $lastUrutan = (int) $lastPart;
+                $urutan = $lastUrutan + 1;
+            }
+        }
+        $nomorUrutFormatted = sprintf('%03d', $urutan);
+        $kode_transaksi = 'CM-PJ-' . $tanggalSekarang . '-' . $nomorUrutFormatted;
+
         $transaksi = TransaksiPenjualan::create([
-            'kode_transaksi' => $kode_transaksi, // Menggunakan $kode_transaksi untuk disimpan
+            'kode_transaksi' => $kode_transaksi,
             'mobil_id' => $validatedTransaksi['mobil_id'],
             'pembeli_id' => $validatedTransaksi['pembeli_id'],
             'metode_pembayaran' => $validatedTransaksi['metode_pembayaran'],
-            'total_harga' => $mobil->harga_mobil, // Menggunakan harga mobil dari model Mobil
+            'total_harga' => $mobil->harga_mobil,
             'harga_negosiasi' => $validatedTransaksi['harga_negosiasi'],
             'tanggal_transaksi' => $validatedTransaksi['tanggal_transaksi'],
-            'status' => 'belum lunas', // Status awal, akan diupdate setelah pembayaran diproses
+            'status' => 'belum lunas',
         ]);
 
-        // Simpan detail kredit jika metode pembayaran adalah kredit
         if ($validatedTransaksi['metode_pembayaran'] === 'kredit') {
             TransaksiKreditDetail::create(array_merge(
                 ['transaksi_penjualan_id' => $transaksi->id],
@@ -114,31 +138,27 @@ class TransaksiPenjualanController extends Controller
         }
 
         $totalPembayaran = 0;
-        // Simpan detail pembayaran
         if (isset($validatedPembayaran['pembayaran'])) {
             foreach ($validatedPembayaran['pembayaran'] as $pembayaranData) {
                 $filePath = null;
-                // Upload file bukti pembayaran jika ada
                 if (isset($pembayaranData['bukti_pembayaran_detail']) && $pembayaranData['bukti_pembayaran_detail'] instanceof \Illuminate\Http\UploadedFile) {
                     $fileName = Str::slug($transaksi->kode_transaksi . '-' . Str::random(10)) . '.' . $pembayaranData['bukti_pembayaran_detail']->getClientOriginalExtension();
                     $filePath = $pembayaranData['bukti_pembayaran_detail']->storeAs('public/bukti_pembayaran', $fileName);
-                    $filePath = Storage::url($filePath); // Dapatkan URL publik
+                    $filePath = Storage::url($filePath);
                 }
 
-                // Menggunakan model TransaksiPenjualanPembayaranDetail dan 'transaksi_id'
                 TransaksiPenjualanPembayaranDetail::create([
-                    'transaksi_id' => $transaksi->id, // Menggunakan 'transaksi_id' sebagai foreign key
+                    'transaksi_id' => $transaksi->id,
                     'metode_pembayaran_detail' => $pembayaranData['metode_pembayaran_detail'],
                     'jumlah_pembayaran' => $pembayaranData['jumlah_pembayaran'],
                     'tanggal_pembayaran' => $pembayaranData['tanggal_pembayaran'],
                     'keterangan_pembayaran_detail' => $pembayaranData['keterangan_pembayaran_detail'] ?? null,
-                    'bukti_pembayaran_detail' => $filePath, // Menggunakan 'bukti_pembayaran_detail'
+                    'bukti_pembayaran_detail' => $filePath,
                 ]);
                 $totalPembayaran += $pembayaranData['jumlah_pembayaran'];
             }
         }
 
-        // Hitung dan update status transaksi
         $this->updateTransaksiStatus($transaksi, $totalPembayaran);
 
         return redirect()->route('transaksi-penjualan.index')->with('success', 'Transaksi berhasil disimpan.');
@@ -152,7 +172,6 @@ class TransaksiPenjualanController extends Controller
      */
     public function show(TransaksiPenjualan $transaksi_penjualan)
     {
-        // Memuat semua relasi yang diperlukan untuk tampilan detail
         $transaksi_penjualan->load('mobil', 'pembeli', 'kreditDetail', 'pembayaranDetails');
         return view('transaksi_penjualan.show', compact('transaksi_penjualan'));
     }
@@ -167,7 +186,6 @@ class TransaksiPenjualanController extends Controller
     {
         $mobils = Mobil::all();
         $pembelis = Pembeli::all();
-        // Memuat relasi kreditDetail dan pembayaranDetails (yang sekarang menunjuk ke tabel baru)
         $transaksi_penjualan->load('kreditDetail', 'pembayaranDetails');
 
         return view('transaksi_penjualan.edit', compact('transaksi_penjualan', 'mobils', 'pembelis'));
@@ -182,28 +200,25 @@ class TransaksiPenjualanController extends Controller
      */
     public function update(Request $request, TransaksiPenjualan $transaksi_penjualan)
     {
-        // Validasi data transaksi penjualan utama
         $validatedTransaksi = $request->validate([
             'mobil_id' => 'required|exists:mobils,id',
             'pembeli_id' => 'required|exists:pembelis,id',
-            'metode_pembayaran' => 'required|in:non_kredit,kredit', // Mengganti 'tunai' menjadi 'non_kredit'
+            'metode_pembayaran' => 'required|in:non_kredit,kredit',
             'harga_negosiasi' => 'required|numeric|min:0',
             'tanggal_transaksi' => 'required|date',
         ]);
 
-        // Validasi detail pembayaran
         $validatedPembayaran = $request->validate([
             'pembayaran' => 'array',
-            'pembayaran.*.id' => 'nullable|exists:transaksi_penjualan_pembayaran_details,id', // Diperbarui: nama tabel baru
+            'pembayaran.*.id' => 'nullable|exists:transaksi_penjualan_pembayaran_details,id',
             'pembayaran.*.metode_pembayaran_detail' => 'required|string|max:255',
             'pembayaran.*.jumlah_pembayaran' => 'required|numeric|min:0',
             'pembayaran.*.tanggal_pembayaran' => 'required|date',
             'pembayaran.*.keterangan_pembayaran_detail' => 'nullable|string|max:1000',
-            'pembayaran.*.bukti_pembayaran_detail' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048', // Menggunakan 'bukti_pembayaran_detail'
-            'pembayaran.*.delete_file_bukti' => 'nullable|boolean', // Untuk menghapus file bukti yang sudah ada
+            'pembayaran.*.bukti_pembayaran_detail' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'pembayaran.*.delete_file_bukti' => 'nullable|boolean',
         ]);
 
-        // Validasi detail kredit jika metode pembayaran adalah 'kredit'
         $validatedKredit = [];
         if ($validatedTransaksi['metode_pembayaran'] === 'kredit') {
             $validatedKredit = $request->validate([
@@ -211,12 +226,13 @@ class TransaksiPenjualanController extends Controller
                 'tempo' => 'required|integer|min:1',
                 'leasing' => 'required|string|max:255',
                 'angsuran_per_bulan' => 'required|numeric|min:0',
+                'refund' => 'nullable|numeric|min:0', // <--- TAMBAHKAN BARIS INI
+
             ]);
         }
 
         $mobil = Mobil::findOrFail($validatedTransaksi['mobil_id']);
 
-        // Update transaksi penjualan utama
         $transaksi_penjualan->update([
             'mobil_id' => $validatedTransaksi['mobil_id'],
             'pembeli_id' => $validatedTransaksi['pembeli_id'],
@@ -224,38 +240,31 @@ class TransaksiPenjualanController extends Controller
             'total_harga' => $mobil->harga_mobil,
             'harga_negosiasi' => $validatedTransaksi['harga_negosiasi'],
             'tanggal_transaksi' => $validatedTransaksi['tanggal_transaksi'],
-            // Status akan diupdate setelah pembayaran diproses
         ]);
 
-        // Update atau buat detail kredit
         if ($validatedTransaksi['metode_pembayaran'] === 'kredit') {
             $transaksi_penjualan->kreditDetail()->updateOrCreate(
                 ['transaksi_penjualan_id' => $transaksi_penjualan->id],
                 $validatedKredit
             );
         } else {
-            // Jika metode pembayaran berubah menjadi non-kredit, hapus detail kredit
             $transaksi_penjualan->kreditDetail()->delete();
         }
 
         $totalPembayaran = 0;
-        // Mengambil ID pembayaran dari tabel baru
         $existingPaymentIds = $transaksi_penjualan->pembayaranDetails->pluck('id')->toArray();
         $submittedPaymentIds = [];
 
-        // Proses detail pembayaran
         if (isset($validatedPembayaran['pembayaran'])) {
             foreach ($validatedPembayaran['pembayaran'] as $pembayaranData) {
                 $filePath = null;
                 $currentPayment = null;
 
-                // Menggunakan model baru untuk mencari pembayaran
                 if (isset($pembayaranData['id'])) {
                     $currentPayment = TransaksiPenjualanPembayaranDetail::find($pembayaranData['id']);
                     $submittedPaymentIds[] = $pembayaranData['id'];
                 }
 
-                // Hapus file bukti yang sudah ada jika diminta
                 if ($currentPayment && isset($pembayaranData['delete_file_bukti']) && $pembayaranData['delete_file_bukti']) {
                     if ($currentPayment->bukti_pembayaran_detail && Storage::exists(str_replace('/storage/', 'public/', $currentPayment->bukti_pembayaran_detail))) {
                         Storage::delete(str_replace('/storage/', 'public/', $currentPayment->bukti_pembayaran_detail));
@@ -263,9 +272,7 @@ class TransaksiPenjualanController extends Controller
                     $currentPayment->bukti_pembayaran_detail = null;
                 }
 
-                // Upload file bukti pembayaran baru jika ada
                 if (isset($pembayaranData['bukti_pembayaran_detail']) && $pembayaranData['bukti_pembayaran_detail'] instanceof \Illuminate\Http\UploadedFile) {
-                    // Hapus file lama jika ada sebelum mengupload yang baru
                     if ($currentPayment && $currentPayment->bukti_pembayaran_detail && Storage::exists(str_replace('/storage/', 'public/', $currentPayment->bukti_pembayaran_detail))) {
                         Storage::delete(str_replace('/storage/', 'public/', $currentPayment->bukti_pembayaran_detail));
                     }
@@ -273,7 +280,6 @@ class TransaksiPenjualanController extends Controller
                     $filePath = $pembayaranData['bukti_pembayaran_detail']->storeAs('public/bukti_pembayaran', $fileName);
                     $filePath = Storage::url($filePath);
                 } else if ($currentPayment) {
-                    // Pertahankan file bukti yang sudah ada jika tidak ada upload baru atau penghapusan
                     $filePath = $currentPayment->bukti_pembayaran_detail;
                 }
 
@@ -282,15 +288,14 @@ class TransaksiPenjualanController extends Controller
                     'jumlah_pembayaran' => $pembayaranData['jumlah_pembayaran'],
                     'tanggal_pembayaran' => $pembayaranData['tanggal_pembayaran'],
                     'keterangan_pembayaran_detail' => $pembayaranData['keterangan_pembayaran_detail'] ?? null,
-                    'bukti_pembayaran_detail' => $filePath, // Menggunakan 'bukti_pembayaran_detail'
+                    'bukti_pembayaran_detail' => $filePath,
                 ];
 
                 if ($currentPayment) {
                     $currentPayment->update($paymentDataToSave);
                 } else {
-                    // Menggunakan model baru dan 'transaksi_id'
                     TransaksiPenjualanPembayaranDetail::create(array_merge(
-                        ['transaksi_id' => $transaksi_penjualan->id], // Menggunakan 'transaksi_id'
+                        ['transaksi_id' => $transaksi_penjualan->id],
                         $paymentDataToSave
                     ));
                 }
@@ -298,10 +303,8 @@ class TransaksiPenjualanController extends Controller
             }
         }
 
-        // Hapus pembayaran yang tidak lagi ada di request dari tabel baru
         $paymentsToDelete = array_diff($existingPaymentIds, $submittedPaymentIds);
         foreach ($paymentsToDelete as $paymentId) {
-            // Menggunakan model baru untuk menghapus pembayaran
             $payment = TransaksiPenjualanPembayaranDetail::find($paymentId);
             if ($payment) {
                 if ($payment->bukti_pembayaran_detail && Storage::exists(str_replace('/storage/', 'public/', $payment->bukti_pembayaran_detail))) {
@@ -324,20 +327,14 @@ class TransaksiPenjualanController extends Controller
      */
     public function destroy(TransaksiPenjualan $transaksi_penjualan)
     {
-        // Hapus semua file bukti pembayaran terkait dari tabel baru
         foreach ($transaksi_penjualan->pembayaranDetails as $detail) {
             if ($detail->bukti_pembayaran_detail && Storage::exists(str_replace('/storage/', 'public/', $detail->bukti_pembayaran_detail))) {
                 Storage::delete(str_replace('/storage/', 'public/', $detail->bukti_pembayaran_detail));
             }
         }
 
-        // Hapus semua detail pembayaran terkait dari tabel baru
         $transaksi_penjualan->pembayaranDetails()->delete();
-
-        // Hapus detail kredit jika ada
         $transaksi_penjualan->kreditDetail()->delete();
-
-        // Hapus transaksi penjualan itu sendiri
         $transaksi_penjualan->delete();
 
         return redirect()->route('transaksi-penjualan.index')->with('success', 'Transaksi berhasil dihapus.');

@@ -1,94 +1,133 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Password</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Reset Kata Sandi</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 
-    <!-- Bootstrap 5 CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
 
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Poppins', sans-serif;
-        }
+    .reset-container {
+      max-width: 400px;
+      width: 100%;
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow:
+        0 4px 12px rgba(0,0,0,0.1),
+        0 -4px 12px rgba(0,0,0,0.05),
+        4px 0 12px rgba(0,0,0,0.05),
+        -4px 0 12px rgba(0,0,0,0.05);
+      padding: 2.5rem 2rem;
+      box-sizing: border-box;
+    }
 
-        .reset-container {
-            max-width: 400px;
-            margin: 5% auto;
-            padding: 2rem;
-            background: white;
-            border-radius: 1rem;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-        }
+    .reset-container h4 {
+      font-weight: 600;
+      color: #4A90E2;
+      text-align: center;
+      margin-bottom: 2rem;
+      font-size: 1.75rem;
+    }
 
-        .reset-container h4 {
-            font-weight: 600;
-            color: #4A90E2;
-        }
+    .form-label {
+      color: #343a40;
+      font-weight: 500;
+    }
 
-        .form-control, .btn {
-            border-radius: 0.75rem;
-        }
+    .form-control {
+      border-radius: 0.75rem;
+      border: 1px solid #ced4da;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
 
-        .btn-primary {
-            background-color: #4A90E2;
-            border-color: #4A90E2;
-            transition: 0.3s;
-        }
+    .form-control:focus {
+      border-color: #4A90E2;
+      box-shadow: 0 0 0 0.25rem rgba(74, 144, 226, 0.25);
+      outline: none;
+    }
 
-        .btn-primary:hover {
-            background-color: #357ABD;
-            border-color: #357ABD;
-        }
+    .btn-primary {
+      background-color: #4A90E2;
+      border-color: #4A90E2;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      padding: 0.75rem;
+      font-size: 1.1rem;
+      transition: background-color 0.3s;
+    }
 
-        .alert {
-            border-radius: 0.75rem;
-        }
-    </style>
+    .btn-primary:hover {
+      background-color: #357ABD;
+      border-color: #357ABD;
+    }
+
+    .alert {
+      border-radius: 0.75rem;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      padding: 0.75rem 1.25rem;
+    }
+
+    .text-center a {
+      color: #4A90E2;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .text-center a:hover {
+      color: #357ABD;
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="reset-container">
-            <h4 class="mb-4 text-center">Reset Kata Sandi</h4>
+  <div class="reset-container">
+    <h4>Reset Kata Sandi</h4>
 
-            <!-- Menampilkan Pesan Sukses -->
-            @if (session('status'))
-                <div class="alert alert-success">
-                    {{ session('status') }}
-                </div>
-            @endif
+    @if (session('status'))
+      <div class="alert alert-success">
+        {{ session('status') }}
+      </div>
+    @endif
 
-            <!-- Menampilkan Pesan Error -->
-            @if ($errors->any())
-                <div class="alert alert-danger">
-                    {{ $errors->first() }}
-                </div>
-            @endif
+    @if ($errors->any())
+      <div class="alert alert-danger">
+        {{ $errors->first() }}
+      </div>
+    @endif
 
-            <form method="POST" action="{{ route('password.email') }}">
-                @csrf
+    <form method="POST" action="{{ route('password.email') }}">
+      @csrf
 
-                <div class="mb-3">
-                    <label for="email" class="form-label">Alamat Email</label>
-                    <input type="email" name="email" id="email" class="form-control" required autofocus>
-                </div>
+      <div class="mb-3">
+        <label for="email" class="form-label">Alamat Email</label>
+        <input type="email" name="email" id="email" class="form-control" required autofocus />
+      </div>
 
-                <button type="submit" class="btn btn-primary w-100">Kirim Link Reset</button>
+      <button type="submit" class="btn btn-primary w-100">Kirim Link Reset</button>
 
-                <div class="mt-3 text-center">
-                    <a href="{{ route('login') }}">Kembali ke Login</a>
-                </div>
-            </form>
-        </div>
-    </div>
+      <div class="mt-3 text-center">
+        <a href="{{ route('login') }}">Kembali ke Login</a>
+      </div>
+    </form>
+  </div>
 
-    <!-- Bootstrap JS (Opsional) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

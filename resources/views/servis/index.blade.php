@@ -669,10 +669,10 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Nama Barang</th>
-                                    <th>Kemasan</th>
+                                    {{-- Kolom Kemasan dihapus karena inputnya sudah tidak digunakan --}}
                                     <th class="text-center">Qty</th>
                                     <th class="text-end">Harga Satuan</th>
-                                    <th class="text-end">Diskon (%)</th>
+                                    {{-- Kolom Diskon (%) dihapus karena inputnya sudah tidak digunakan --}}
                                     <th class="text-end">Jumlah</th>
                                 </tr>
                             </thead>
@@ -864,17 +864,17 @@
                                 itemList += `
                                     <tr>
                                         <td>${item.item_name || 'N/A'}</td>
-                                        <td>${item.item_package || 'N/A'}</td>
+                                        {{-- <td>${item.item_package || 'N/A'}</td> --}} {{-- Dihapus --}}
                                         <td class="text-center">${item.item_qty || 0}</td>
                                         <td class="text-end">Rp${hargaSatuanFormatted}</td>
-                                        <td class="text-end">${parseFloat(item.item_discount || 0).toFixed(0)}%</td>
+                                        {{-- <td class="text-end">${parseFloat(item.item_discount || 0).toFixed(0)}%</td> --}} {{-- Dihapus --}}
                                         <td class="text-end">Rp${jumlahFormatted}</td>
                                     </tr>
                                 `;
                             });
                             itemsBody.innerHTML = itemList;
                         } else {
-                            itemsBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Tidak ada item servis.</td></tr>`;
+                            itemsBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Tidak ada item servis.</td></tr>`; // colspan diubah dari 6 menjadi 4
                         }
 
                         // Menampilkan created_at dan updated_at (asumsi API endpoint mengembalikan data ini)

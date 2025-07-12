@@ -355,6 +355,13 @@
                                     Angsuran per bulan wajib diisi dan harus angka positif.
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <label for="refund" class="form-label text-muted">Jumlah Refund</label>
+                                <input type="number" id="refund" name="refund" class="form-control" value="{{ old('refund', $transaksi_penjualan->kreditDetail->refund ?? 0) }}" min="0">
+                                <div class="invalid-feedback">
+                                    Jumlah refund harus berupa angka positif.
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -419,6 +426,10 @@
                             <div class="summary-detail">
                                 <span class="label">Angsuran Per Bulan:</span>
                                 <span class="value" id="summaryAngsuranPerBulan">Rp0</span>
+                            </div>
+                            <div class="summary-detail" id="summary-refund-row" style="display: none;"> {{-- Awalnya hidden --}}
+                                <span class="label">Refund:</span>
+                                <span class="value" id="summary-refund">Rp0</span>
                             </div>
                             <div class="summary-detail">
                                 <span class="label">Leasing:</span>
@@ -501,6 +512,8 @@
     const summaryDpSection = document.getElementById('summaryDpSection');
     const summaryDisplayDpCalculated = document.getElementById('summaryDisplayDpCalculated');
     const hiddenDpValue = document.getElementById('hidden_dp_value');
+    const summaryRefundRow = document.getElementById('summary-refund-row');
+    const summaryRefund = document.getElementById('summary-refund');
 
 
     // Input elements for calculation
@@ -510,6 +523,8 @@
     const tempoInput = document.getElementById('tempo');
     const angsuranPerBulanInput = document.getElementById('angsuran_per_bulan');
     const leasingInput = document.getElementById('leasing');
+    const refundInput = document.getElementById('refund');
+
 
     const fixedActionBar = document.getElementById('fixedActionBar');
 
@@ -540,6 +555,8 @@
             paymentStatusAlert.classList.add('d-none'); // Sembunyikan alert
             summaryDpSection.style.display = 'none'; // Sembunyikan DP
             summaryKreditDetails.style.display = 'none'; // Sembunyikan ringkasan kredit
+            summaryRefundRow.style.display = 'none';
+
 
             return; // Hentikan fungsi jika pilihan utama belum lengkap
         }
@@ -562,6 +579,8 @@
             totalPembayaranDiterimaFromDetails += parseFloat(input.value) || 0;
         });
         summaryTotalPembayaran.textContent = formatCurrency(totalPembayaranDiterimaFromDetails);
+        const refund = parseFloat(refundInput.value) || 0;
+
 
         let dpCalculated = 0;
         if (metodePembayaranSelect.value === 'kredit') {
@@ -627,8 +646,13 @@
             summaryTempo.textContent = `${tempoInYears} Tahun`;
             summaryAngsuranPerBulan.textContent = formatCurrency(angsuranPerBulan);
             summaryLeasing.textContent = leasingValue;
+
+            summaryRefundRow.style.display = 'flex'; // Tampilkan baris refund
+            summaryRefund.textContent = formatCurrency(refund); // Tampilkan nilai refund
         } else {
             summaryKreditDetails.style.display = 'none';
+            summaryRefundRow.style.display = 'none';
+
         }
     }
 
@@ -652,6 +676,8 @@
             tempoInput.value = '';
             angsuranPerBulanInput.value = '';
             leasingInput.value = '';
+            refundInput.value = 0; // <--- TAMBAHKAN BARIS INI
+
         }
         calculateSummary(); // Recalculate summary after method change
     }
@@ -794,6 +820,8 @@
         tempoInput.addEventListener('input', calculateSummary);
         angsuranPerBulanInput.addEventListener('input', calculateSummary);
         leasingInput.addEventListener('input', calculateSummary);
+        refundInput.addEventListener('input', calculateSummary); // <--- TAMBAHKAN BARIS INI
+
 
         // Initial calculation on page load
         toggleKreditDetails();

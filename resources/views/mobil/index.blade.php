@@ -264,6 +264,15 @@
             background-color: #dc3545 !important;
             color: white;
         }
+        /* New badge styles for 'baru' and 'bekas' */
+        .badge.bg-primary-dark { /* Example for 'baru' */
+            background-color: #007bff !important; /* Bootstrap primary */
+            color: white;
+        }
+        .badge.bg-secondary-light { /* Example for 'bekas' */
+            background-color: #6c757d !important; /* Bootstrap secondary */
+            color: white;
+        }
     </style>
 </head>
 
@@ -331,6 +340,8 @@
                     <option value="terjual">Terjual</option>
                     <option value="booking">Booking</option>
                     <option value="perbaikan">Perbaikan</option>
+                    <option value="baru">Baru</option> {{-- Ditambahkan --}}
+                    <option value="bekas">Bekas</option> {{-- Ditambahkan --}}
                 </select>
             </div>
             <div class="col-md-2 text-end">
@@ -397,6 +408,10 @@
                                             $statusClass = 'bg-warning';
                                         } elseif ($mobil->status_mobil === 'perbaikan') {
                                             $statusClass = 'bg-info text-dark'; // Changed for visibility
+                                        } elseif ($mobil->status_mobil === 'baru') { // Ditambahkan
+                                            $statusClass = 'bg-primary-dark'; // Ditambahkan
+                                        } elseif ($mobil->status_mobil === 'bekas') { // Ditambahkan
+                                            $statusClass = 'bg-secondary-light'; // Ditambahkan
                                         }
                                     @endphp
                                     <span class="badge {{ $statusClass }}">{{ ucfirst($mobil->status_mobil) }}</span>
@@ -696,11 +711,13 @@
                 this.dataset.sortDirection = newDirection;
 
                 const statusOrder = {
-                    'tersedia': 5,
-                    'booking': 4,
-                    'perbaikan': 3,
+                    'tersedia': 7, // Disesuaikan, tambahkan prioritas baru
+                    'baru': 6,
+                    'booking': 5,
+                    'perbaikan': 4,
+                    'bekas': 3,
                     'terjual': 2,
-                    'tidak ada': 1 // Assuming 'tidak ada' is lowest priority for ketersediaan
+                    'tidak ada': 1
                 };
                 const ketersediaanOrder = {
                     'ada': 2,

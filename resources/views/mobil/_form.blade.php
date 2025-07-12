@@ -293,10 +293,6 @@
                         <select id="status_mobil" name="status_mobil" class="form-select form-select-lg rounded-3" required>
                             <option value="bekas" {{ $old('status_mobil') == 'bekas' ? 'selected' : '' }}>Bekas</option>
                             <option value="baru" {{ $old('status_mobil') == 'baru' ? 'selected' : '' }}>Baru</option>
-                            <option value="dibatalkan" {{ $old('status_mobil') == 'dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
-                            <option value="menunggu pembayaran" {{ $old('status_mobil') == 'menunggu pembayaran' ? 'selected' : '' }}>Menunggu Pembayaran</option>
-                            <option value="lunas" {{ $old('status_mobil') == 'lunas' ? 'selected' : '' }}>Lunas</option>
-                            <option value="belum lunas" {{ $old('status_mobil') == 'belum lunas' ? 'selected' : '' }}>Belum Lunas</option>
                         </select>
                     </div>
 

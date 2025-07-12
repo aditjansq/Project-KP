@@ -15,6 +15,8 @@ class TransaksiKreditDetail extends Model
         'tempo',
         'leasing',
         'angsuran_per_bulan',
+        'refund', // Tambahkan baris ini
+
     ];
 
     /**
