@@ -180,7 +180,7 @@
 
     <div class="card">
         <div class="card-header">
-            <h5 class="mb-0 font-weight-bold">Data Mobil Terjual</h5>
+            {{-- <h5 class="mb-0 font-weight-bold">Data Mobil Terjual</h5> --}}
             {{-- Tombol Ekspor PDF dipindahkan ke dalam card-header --}}
             <a href="{{ route('laporan.mobil_terjual.pdf') }}" class="btn btn-danger">
                 <i class="fa-solid fa-file-pdf"></i> Ekspor ke PDF
