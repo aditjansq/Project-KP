@@ -4,7 +4,8 @@ namespace App\Http\Controllers; // Ini harus langsung setelah <?php
 
 use App\Models\User;
 use App\Models\Mobil;
-use App\Models\Transaksi; // Import model Transaksi
+use App\Models\TransaksiPembelian; // Import model TransaksiPembelian
+use App\Models\TransaksiPenjualan; // Import model TransaksiPenjualan
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
@@ -17,13 +18,27 @@ class UserController extends Controller
         $totalUsers = User::count();
         $totalMobil = Mobil::count();
 
-        // Hitung total transaksi pembeli (transaksi yang memiliki pembeli_id)
-        $totalTransaksiPembeli = Transaksi::whereNotNull('pembeli_id')->count();
+        // Menghitung total transaksi pembelian
+        $totalTransaksiPembelian = TransaksiPembelian::count();
 
-        // Hitung total transaksi penjual (transaksi yang memiliki penjual_id)
-        $totalTransaksiPenjual = Transaksi::whereNotNull('penjual_id')->count();
+        // Menghitung total transaksi penjualan
+        $totalTransaksiPenjualan = TransaksiPenjualan::count();
 
-        return view('roles.manajer', compact('users', 'totalUsers', 'totalMobil', 'totalTransaksiPembeli', 'totalTransaksiPenjual')); // Kirimkan semua variabel ke view
+        // Menghitung total mobil berdasarkan ketersediaan
+        $totalMobilTerjual = Mobil::where('ketersediaan', 'terjual')->count();
+        $totalMobilTersedia = Mobil::whereIn('ketersediaan', ['ada', 'servis'])->count(); // Diperbarui untuk menyertakan 'servis'
+        $totalMobilServis = Mobil::where('ketersediaan', 'servis')->count();
+
+        return view('roles.manajer', compact(
+            'users',
+            'totalUsers',
+            'totalMobil',
+            'totalTransaksiPembelian',
+            'totalTransaksiPenjualan', // Variabel ini telah disesuaikan menjadi 'totalTransaksiPenjualan' agar konsisten
+            'totalMobilTerjual',
+            'totalMobilTersedia',
+            'totalMobilServis'
+        ));
     }
 
     public function create()
@@ -36,8 +51,8 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
             'job' => ['required', 'string', Rule::in(['admin', 'manajer', 'sales'])],
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
         User::create([

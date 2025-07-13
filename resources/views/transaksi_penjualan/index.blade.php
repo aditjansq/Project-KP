@@ -2,6 +2,10 @@
 
 @section('title', 'Daftar Transaksi Penjualan')
 
+@php
+    $job = strtolower(auth()->user()->job ?? '');
+@endphp
+
 @section('content')
 <head>
     {{-- Google Fonts Poppins (opsional, bisa dipertahankan jika diinginkan) --}}
@@ -246,6 +250,44 @@
             font-size: 3rem;
             color: #adb5bd;
         }
+
+        /* NEW/MODIFIED: Styling for Status Badges (outline style) */
+        .status-badge, .metode-pembayaran-badge {
+            padding: 0.5em 1em;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            display: inline-block;
+            border: 1px solid transparent; /* Default transparent border */
+            text-transform: capitalize; /* Ensure first letter is capitalized */
+        }
+
+        .status-badge.status-lunas {
+            background-color: transparent !important;
+            color: #28a745; /* Green */
+            border-color: #28a745;
+        }
+        .status-badge.status-belum-lunas {
+            background-color: transparent !important;
+            color: #dc3545; /* Red */
+            border-color: #dc3545;
+        }
+        .status-badge.status-dp {
+            background-color: transparent !important;
+            color: #ffc107; /* Yellow */
+            border-color: #ffc107;
+        }
+
+        /* NEW: Styling for Metode Pembayaran Badges (outline style) */
+        .metode-pembayaran-badge.metode-pembayaran-non-kredit {
+            background-color: transparent !important;
+            color: #17a2b8; /* Info Blue */
+            border-color: #17a2b8;
+        }
+        .metode-pembayaran-badge.metode-pembayaran-kredit {
+            background-color: transparent !important;
+            color: #6f42c1; /* Purple (contoh, bisa disesuaikan) */
+            border-color: #6f42c1;
+        }
     </style>
 </head>
 
@@ -256,9 +298,11 @@
             <small class="text-secondary">Kelola semua informasi transaksi penjualan Anda dengan mudah.</small>
         </div>
         <div class="col-md-4 text-md-end">
+            @if(in_array($job, ['admin']))
             <a href="{{ route('transaksi-penjualan.create') }}" class="btn btn-primary btn-lg shadow-lg rounded-pill animate__animated animate__fadeInRight">
                 <i class="bi bi-plus-circle-fill me-2"></i> Tambah Transaksi Baru
             </a>
+            @endif
         </div>
     </div>
 
@@ -320,8 +364,9 @@
                     <tbody>
                         @forelse ($transaksis as $transaksi)
                             <tr data-kode-transaksi="{{ strtolower($transaksi->kode_transaksi) }}"
-                                data-mobil="{{ strtolower($transaksi->mobil->merek_mobil ?? '') }} {{ strtolower($transaksi->mobil->tipe_mobil ?? '') }}"
+                                data-mobil="{{ strtolower($transaksi->mobil->merek_mobil ?? '') }} {{ strtolower($transaksi->mobil->tipe_mobil ?? '') }} {{ strtolower($transaksi->mobil->tahun_pembuatan ?? '') }} {{ strtolower($transaksi->mobil->nomor_polisi ?? '') }}"
                                 data-pembeli="{{ strtolower($transaksi->pembeli->nama ?? '') }}"
+                                data-pembeli-telepon="{{ strtolower($transaksi->pembeli->no_telepon ?? '') }}"
                                 data-status="{{ strtolower($transaksi->status) }}"
                                 data-metode-pembayaran="{{ strtolower($transaksi->metode_pembayaran) }}">
                                 <td class="text-center">{{ $loop->iteration }}</td>
@@ -334,17 +379,28 @@
                                     <strong>{{ $transaksi->pembeli->nama ?? 'N/A' }}</strong><br>
                                     <small class="text-muted">{{ $transaksi->pembeli->no_telepon ?? 'N/A' }}</small>
                                 </td>
-                                <td>{{ ucfirst(str_replace('_', ' ', $transaksi->metode_pembayaran)) }}</td>
+                                <td>
+                                    @php
+                                        $metodeClass = '';
+                                        if (strtolower($transaksi->metode_pembayaran) === 'non_kredit') {
+                                            $metodeClass = 'metode-pembayaran-non-kredit';
+                                        } elseif (strtolower($transaksi->metode_pembayaran) === 'kredit') {
+                                            $metodeClass = 'metode-pembayaran-kredit';
+                                        }
+                                    @endphp
+                                    <span class="metode-pembayaran-badge {{ $metodeClass }}">{{ ucfirst(str_replace('_', ' ', $transaksi->metode_pembayaran)) }}</span>
+                                </td>
                                 <td>Rp{{ number_format($transaksi->harga_negosiasi, 0, ',', '.') }}</td>
                                 <td>{{ \Carbon\Carbon::parse($transaksi->tanggal_transaksi)->translatedFormat('d M Y') }}</td>
                                 <td>
                                     @php
+
                                         $statusClass = '';
-                                        if ($transaksi->status === 'lunas') {
+                                        if (strtolower($transaksi->status) === 'lunas') {
                                             $statusClass = 'status-lunas';
-                                        } elseif ($transaksi->status === 'belum lunas') {
+                                        } elseif (strtolower($transaksi->status) === 'belum lunas') {
                                             $statusClass = 'status-belum-lunas';
-                                        } elseif ($transaksi->status === 'dp') {
+                                        } elseif (strtolower($transaksi->status) === 'dp') {
                                             $statusClass = 'status-dp';
                                         }
                                     @endphp
@@ -355,9 +411,11 @@
                                         <a href="{{ route('transaksi-penjualan.show', $transaksi->id) }}" class="btn btn-custom-view">
                                             <i class="fas fa-eye me-1"></i> Lihat
                                         </a>
+                                        @if(in_array($job, ['admin']))
                                         <a href="{{ route('transaksi-penjualan.edit', $transaksi->id) }}" class="btn btn-custom-edit">
                                             <i class="fas fa-edit me-1"></i> Edit
                                         </a>
+                                        @endif
                                         {{-- Tombol Hapus Dihapus Sesuai Permintaan --}}
                                         {{-- <form action="{{ route('transaksi-penjualan.destroy', $transaksi->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus transaksi ini?');" class="d-inline">
                                             @csrf
@@ -414,14 +472,16 @@
                 }
 
                 const kodeTransaksi = row.dataset.kodeTransaksi;
-                const mobil = row.dataset.mobil;
+                const mobil = row.dataset.mobil; // Ini sekarang mencakup merek, tipe, tahun, dan nomor polisi
                 const pembeli = row.dataset.pembeli;
+                const pembeliTelepon = row.dataset.pembeliTelepon; // BARU
                 const status = row.dataset.status;
                 const metodePembayaran = row.dataset.metodePembayaran;
 
                 const matchesSearch = kodeTransaksi.includes(searchTerm) ||
-                                      mobil.includes(searchTerm) ||
-                                      pembeli.includes(searchTerm);
+                                      mobil.includes(searchTerm) || // Akan mencari tahun dan nomor polisi juga
+                                      pembeli.includes(searchTerm) ||
+                                      pembeliTelepon.includes(searchTerm); // BARU
 
                 const matchesStatus = selectedStatus === '' || status === selectedStatus;
                 const matchesMetodePembayaran = selectedMetodePembayaran === '' || metodePembayaran === selectedMetodePembayaran;
@@ -517,11 +577,11 @@
                             // For this table, the date format is 'd M Y', so we need to parse it correctly
                             const parseDate = (dateString) => {
                                 const parts = dateString.split(' ');
-                                const day = parseInt(parts[0]);
                                 const monthNames = {
                                     'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'Mei': 4, 'Jun': 5,
                                     'Jul': 6, 'Agu': 7, 'Sep': 8, 'Okt': 9, 'Nov': 10, 'Des': 11
                                 };
+                                const day = parseInt(parts[0]);
                                 const month = monthNames[parts[1]];
                                 const year = parseInt(parts[2]);
                                 return new Date(year, month, day);
@@ -534,8 +594,9 @@
                             cellBValue = statusOrder[valB.toLowerCase()] || 0;
                             break;
                         case 'mobil': // For 'Mobil' column, sort by the first line (brand/type/year)
-                            cellAValue = valA.split('\n')[0].trim().toLowerCase();
-                            cellBValue = valB.split('\n')[0].trim().toLowerCase();
+                            // Since data-mobil now contains more info, we can use that directly for sorting
+                            cellAValue = rowA.dataset.mobil.toLowerCase();
+                            cellBValue = rowB.dataset.mobil.toLowerCase();
                             break;
                         default: // 'text' type or others
                             cellAValue = valA.toLowerCase();

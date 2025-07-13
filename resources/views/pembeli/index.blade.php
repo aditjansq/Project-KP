@@ -7,6 +7,8 @@
 @php
     use Carbon\Carbon;
     use Illuminate\Support\Facades\Storage;
+
+    $job = strtolower(auth()->user()->job ?? '');
 @endphp
 
 <head>
@@ -524,9 +526,11 @@
             <small class="text-secondary">Kelola semua informasi pembeli Anda dengan mudah.</small>
         </div>
         <div class="col-md-4 text-md-end">
+            @if(in_array($job, ['admin']))
             <a href="{{ route('pembeli.create') }}" class="btn btn-primary btn-lg shadow-lg rounded-pill animate__animated animate__fadeInRight">
                 <i class="bi bi-person-plus-fill me-2"></i> Tambah Pembeli Baru
             </a>
+            @endif
         </div>
     </div>
 
@@ -620,9 +624,11 @@
                                             ]) }}">
                                             <i class="fas fa-info-circle"></i> Detail
                                         </button>
+                                        @if(in_array($job, ['admin']))
                                         <a href="{{ route('pembeli.edit', $pembeli->id) }}" class="btn btn-custom-edit">
                                             <i class="fas fa-edit"></i> Edit
                                         </a>
+                                        @endif
                                         {{-- Tombol Hapus Dihapus --}}
                                         {{--
                                         <form action="{{ route('pembeli.destroy', $pembeli->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data pembeli ini?');" class="d-inline">

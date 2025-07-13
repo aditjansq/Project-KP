@@ -20,25 +20,8 @@
         </div>
     </div>
 
-    {{-- Section Ringkasan Statistik --}}
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mb-5">
-        {{-- BLOK "Total Pengguna" DIHAPUS DARI SINI --}}
-        {{-- <div class="col animate__animated animate__fadeInUp animate__delay-0s">
-            <div class="card card-summary shadow-lg border-0 rounded-4 h-100">
-                <div class="card-body p-4 d-flex align-items-center justify-content-between">
-                    <div>
-                        <p class="text-uppercase text-muted fw-bold mb-1">Total Pengguna</p>
-                        <h3 class="card-title fw-bold text-dark mb-0">{{ $totalUsers ?? 'N/A' }}</h3>
-                    </div>
-                    <div class="icon-wrap bg-primary-subtle text-primary">
-                        <i class="bi bi-people-fill"></i>
-                    </div>
-                </div>
-                <div class="card-footer bg-transparent border-0 px-4 pb-3">
-                    <a href="#" class="text-primary fw-semibold small">Lihat Detail <i class="bi bi-arrow-right-short"></i></a>
-                </div>
-            </div>
-        </div> --}}
+    {{-- Section Ringkasan Statistik (kembali ke posisi semula: satu baris 3 kartu) --}}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5"> {{-- Diubah dari row-cols-lg-4 menjadi row-cols-lg-3 --}}
         <div class="col animate__animated animate__fadeInUp animate__delay-1s">
             <div class="card card-summary shadow-lg border-0 rounded-4 h-100">
                 <div class="card-body p-4 d-flex align-items-center justify-content-between">
@@ -60,14 +43,14 @@
                 <div class="card-body p-4 d-flex align-items-center justify-content-between">
                     <div>
                         <p class="text-uppercase text-muted fw-bold mb-1">Mobil Terjual</p>
-                        <h3 class="card-title fw-bold text-dark mb-0">{{ $totalTransaksiPembeli ?? 'N/A' }}</h3>
+                        <h3 class="card-title fw-bold text-dark mb-0">{{ $totalTransaksiPenjualan ?? 'N/A' }}</h3>
                     </div>
                     <div class="icon-wrap bg-warning-subtle text-warning">
                         <i class="bi bi-cart-fill"></i>
                     </div>
                 </div>
                 <div class="card-footer bg-transparent border-0 px-4 pb-3">
-                    <a href="{{ route('transaksi.pembeli.index') }}" class="text-warning fw-semibold small">Lihat Detail <i class="bi bi-arrow-right-short"></i></a>
+                    <a href="{{ route('transaksi-penjualan.index') }}" class="text-warning fw-semibold small">Lihat Detail <i class="bi bi-arrow-right-short"></i></a>
                 </div>
             </div>
         </div>
@@ -76,14 +59,29 @@
                 <div class="card-body p-4 d-flex align-items-center justify-content-between">
                     <div>
                         <p class="text-uppercase text-muted fw-bold mb-1">Pembelian Mobil</p>
-                        <h3 class="card-title fw-bold text-dark mb-0">{{ $totalTransaksiPenjual ?? 'N/A' }}</h3>
+                        <h3 class="card-title fw-bold text-dark mb-0">{{ $totalTransaksiPembelian ?? 'N/A' }}</h3>
                     </div>
                     <div class="icon-wrap bg-danger-subtle text-danger">
                         <i class="bi bi-cash-stack"></i>
                     </div>
                 </div>
                 <div class="card-footer bg-transparent border-0 px-4 pb-3">
-                    <a href="{{ route('transaksi-penjualan.index') }}" class="text-danger fw-semibold small">Lihat Detail <i class="bi bi-arrow-right-short"></i></a>
+                    <a href="{{ route('transaksi-pembelian.index') }}" class="text-danger fw-semibold small">Lihat Detail <i class="bi bi-arrow-right-short"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Section Chart Mobil (dipindahkan ke baris kedua, paling kiri) --}}
+    <div class="row mb-5">
+        <div class="col-lg-6 col-md-8 animate__animated animate__fadeInUp animate__delay-4s"> {{-- Delay disesuaikan --}}
+            <div class="card border-0 shadow-xl rounded-4">
+                <div class="card-header bg-white p-4 border-bottom-0">
+                    <h5 class="card-title mb-0 text-dark fw-bold">Status Ketersediaan Mobil</h5>
+                    <p class="card-text text-muted">Distribusi mobil berdasarkan status ketersediaan.</p>
+                </div>
+                <div class="card-body p-4 d-flex justify-content-center">
+                    <canvas id="mobilStatusChart" style="max-height: 300px;"></canvas>
                 </div>
             </div>
         </div>
@@ -243,7 +241,6 @@
         letter-spacing: 0.5px;
         box-shadow: 0 4px 10px rgba(13, 110, 253, 0.2);
         border-radius: 0.5rem;
-        /* Padding and height will be set by the common rule below */
     }
     .btn-primary:hover {
         background: linear-gradient(45deg, #0b5ed7, #0d6efd);
@@ -251,7 +248,6 @@
         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
     }
     .btn-outline-secondary {
-        /* Padding and height will be set by the common rule below */
         border-radius: 0.5rem;
     }
 
@@ -280,7 +276,7 @@
         animation-timing-function: ease-in-out;
     }
 
-    /* Custom Table Styles (These styles are generic, but might not be used if no table is present) */
+    /* Custom Table Styles */
     .custom-table {
         border-collapse: separate;
         border-spacing: 0;
@@ -371,21 +367,21 @@
         margin-top: 1.5rem;
     }
 
-    /* Form elements (general styling from manajer.blade.php kept for consistency if needed for other forms) */
+    /* Form elements */
     .form-control,
     .form-select,
     .btn {
-        height: 38px; /* Fixed height for consistency */
-        padding: 0.375rem 1rem; /* Adjust padding to center text vertically within 38px height */
-        border-radius: 0.5rem !important; /* Force consistent rounding for all elements */
-        box-sizing: border-box; /* Include padding and border in the height calculation */
-        display: inline-flex; /* Use flex for vertical centering of content */
-        align-items: center; /* Vertically center content */
-        font-size: 0.9rem; /* Ensure consistent font size */
-        white-space: nowrap; /* Prevent text from wrapping within the button */
+        height: 38px;
+        padding: 0.375rem 1rem;
+        border-radius: 0.5rem !important;
+        box-sizing: border-box;
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.9rem;
+        white-space: nowrap;
     }
 
-    /* Adjust header-right layout for small screens (if these elements are used) */
+    /* Adjust header-right layout for small screens */
     @media (max-width: 768px) {
         .card-header .header-right {
             width: 100%;
@@ -407,4 +403,58 @@
 {{-- Pastikan Anda sudah menyertakan Bootstrap JS dan jQuery --}}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{{-- Sertakan Chart.js --}}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Data dari PHP
+        const totalMobilTersedia = {{ $totalMobilTersedia ?? 0 }};
+        const totalMobilTerjual = {{ $totalMobilTerjual ?? 0 }};
+
+        // Konfigurasi Chart.js
+        const ctx = document.getElementById('mobilStatusChart').getContext('2d');
+        const mobilStatusChart = new Chart(ctx, {
+            type: 'pie', // Tipe chart lingkaran
+            data: {
+                labels: ['Tersedia / Servis', 'Terjual'],
+                datasets: [{
+                    data: [totalMobilTersedia, totalMobilTerjual],
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.8)', // Warna untuk Tersedia / Servis
+                        'rgba(255, 99, 132, 0.8)'  // Warna untuk Terjual
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom', // Posisi legenda di bawah chart
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed !== null) {
+                                    label += context.parsed;
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
 @endsection

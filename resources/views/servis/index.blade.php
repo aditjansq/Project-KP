@@ -806,7 +806,6 @@
     document.addEventListener('DOMContentLoaded', function() {
         // --- Logika Modal (Detail Servis) ---
         const detailModalElement = document.getElementById('detailModal');
-        // MODIFIKASI: Biarkan backdrop default Bootstrap
         const detailModal = new bootstrap.Modal(detailModalElement); // Dapatkan instance modal Bootstrap
 
         if (detailModalElement) {
@@ -892,8 +891,8 @@
 
         // --- Logika Modal Filter Utama (Diperbarui untuk Halaman Servis) ---
         const mainFilterModalElement = document.getElementById('mainFilterModal');
-        // MODIFIKASI: Inisialisasi modal TANPA backdrop: false
-        const mainFilterModal = new bootstrap.Modal(mainFilterModalElement, { backdrop: true }); // Mengaktifkan backdrop
+        // Inisialisasi modal dengan backdrop yang diaktifkan secara eksplisit (defaultnya memang true)
+        const mainFilterModal = new bootstrap.Modal(mainFilterModalElement, { backdrop: true });
 
         const searchInput = document.getElementById('searchInput'); // Bilah pencarian utama di luar modal
         const startDateFilter = document.getElementById('startDateFilter');
@@ -910,6 +909,30 @@
         const servisTable = document.getElementById('servisTable');
         let tableRows = servisTable.querySelectorAll('tbody tr.data-row'); // Dapatkan semua baris data awalnya
         const tableResponsiveContainer = document.getElementById('tableResponsiveContainer');
+
+
+        // *** START PERBAIKAN PENTING UNTUK MASALAH BACKDROP ***
+        // Fungsi untuk memastikan modal backdrop dan kelas/style terkait dihapus
+        function removeModalBackdrop() {
+            // Hapus elemen backdrop
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+            // Pastikan kelas 'modal-open' dihapus dari body
+            document.body.classList.remove('modal-open');
+            // Pastikan inline style yang ditambahkan Bootstrap dihapus dari body
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right'); // Penting untuk scrollbar
+            console.log('removeModalBackdrop executed: body classes/styles cleared.');
+        }
+
+        // Event listener untuk memastikan backdrop terhapus saat modal benar-benar tersembunyi
+        mainFilterModalElement.addEventListener('hidden.bs.modal', function () {
+            console.log('Modal hidden event fired. Removing backdrop.');
+            removeModalBackdrop();
+        });
+        // *** END PERBAIKAN PENTING UNTUK MASALAH BACKDROP ***
 
 
         const scrollToRight = () => {
@@ -1039,37 +1062,6 @@
         // Event listener untuk searchInput (di luar modal)
         searchInput.addEventListener('keyup', applyFiltersAndSearch);
 
-        // Event listener untuk saat modal sepenuhnya tersembunyi oleh Bootstrap
-        mainFilterModalElement.addEventListener('hidden.bs.modal', function () {
-            console.log('Event: hidden.bs.modal fired.');
-            // Beri Bootstrap sedikit waktu lebih untuk benar-benar menghapus semuanya, lalu jalankan pemeriksaan fallback kami
-            setTimeout(() => {
-                console.log('Di dalam hidden.bs.modal setTimeout (200ms delay). Memeriksa elemen yang tersisa...');
-                // Pastikan kelas modal-open pada body dihapus jika tidak ada modal lain yang benar-benar terbuka
-                const activeModals = document.querySelectorAll('.modal.show');
-                if (activeModals.length === 0 && document.body.classList.contains('modal-open')) {
-                    console.warn('Body masih memiliki kelas "modal-open" tanpa modal aktif. Menghapusnya.');
-                    document.body.classList.remove('modal-open');
-                    document.body.style.overflow = ''; // Pulihkan overflow jika diatur ke hidden
-                    document.body.style.paddingRight = ''; // Hapus padding jika ditambahkan oleh Bootstrap
-                } else if (document.body.classList.contains('modal-open')) {
-                    console.log('Body memiliki "modal-open" tetapi modal lain aktif. Mempertahankan kelas.');
-                } else {
-                    console.log('Body tidak memiliki kelas "modal-open".');
-                }
-
-                // Catat status tombol "Filter Lainnya"
-                const filterLainnyaButton = document.querySelector('[data-bs-target="#mainFilterModal"]');
-                if (filterLainnyaButton) {
-                    console.log(`Status dinonaktifkan tombol "Filter Lainnya": ${filterLainnyaButton.disabled}`);
-                    console.log(`Gaya pointer-events tombol "Filter Lainnya": ${getComputedStyle(filterLainnyaButton).pointerEvents}`);
-                    console.log(`Gaya opasitas tombol "Filter Lainnya": ${getComputedStyle(filterLainnyaButton).opacity}`);
-                    // Anda dapat menambahkan pemeriksaan lebih lanjut di sini jika diperlukan, misalnya, jika itu ditutupi oleh elemen lain
-                }
-
-            }, 200); // Penundaan yang ditingkatkan untuk pembersihan yang lebih kuat
-        });
-
         // Tambahkan log saat tombol "Filter Lainnya" diklik untuk membuka modal
         const filterLainnyaButton = document.querySelector('[data-bs-target="#mainFilterModal"]');
         if (filterLainnyaButton) {
@@ -1082,7 +1074,7 @@
         applyAllFiltersBtn.addEventListener('click', function() {
             console.log('Tombol Terapkan Filter diklik. Menerapkan filter dan menyembunyikan modal.');
             applyFiltersAndSearch();
-            mainFilterModal.hide();
+            mainFilterModal.hide(); // Bootstrap akan memicu hidden.bs.modal, yang akan menjalankan removeModalBackdrop
         });
 
 

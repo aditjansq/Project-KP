@@ -336,12 +336,8 @@
                 <label for="statusFilter" class="form-label text-muted">Status</label>
                 <select id="statusFilter" class="form-select">
                     <option value="">Semua Status</option>
-                    <option value="tersedia">Tersedia</option>
-                    <option value="terjual">Terjual</option>
-                    <option value="booking">Booking</option>
-                    <option value="perbaikan">Perbaikan</option>
-                    <option value="baru">Baru</option> {{-- Ditambahkan --}}
-                    <option value="bekas">Bekas</option> {{-- Ditambahkan --}}
+                    <option value="baru">Baru</option>
+                    <option value="bekas">Bekas</option>
                 </select>
             </div>
             <div class="col-md-2 text-end">
@@ -407,11 +403,11 @@
                                         } elseif ($mobil->status_mobil === 'booking') {
                                             $statusClass = 'bg-warning';
                                         } elseif ($mobil->status_mobil === 'perbaikan') {
-                                            $statusClass = 'bg-info text-dark'; // Changed for visibility
-                                        } elseif ($mobil->status_mobil === 'baru') { // Ditambahkan
-                                            $statusClass = 'bg-primary-dark'; // Ditambahkan
-                                        } elseif ($mobil->status_mobil === 'bekas') { // Ditambahkan
-                                            $statusClass = 'bg-secondary-light'; // Ditambahkan
+                                            $statusClass = 'bg-info text-dark';
+                                        } elseif ($mobil->status_mobil === 'baru') {
+                                            $statusClass = 'bg-primary-dark';
+                                        } elseif ($mobil->status_mobil === 'bekas') {
+                                            $statusClass = 'bg-secondary-light';
                                         }
                                     @endphp
                                     <span class="badge {{ $statusClass }}">{{ ucfirst($mobil->status_mobil) }}</span>
@@ -432,9 +428,11 @@
                                         <a href="{{ route('mobil.show', $mobil->id) }}" class="btn btn-custom-view">
                                             <i class="fas fa-eye me-1"></i> Lihat
                                         </a>
+                                        @if(in_array($job, ['admin']))
                                         <a href="{{ route('mobil.edit', $mobil->id) }}" class="btn btn-custom-edit">
                                             <i class="fas fa-edit me-1"></i> Edit
                                         </a>
+                                        @endif
                                         {{-- Tombol Hapus Dihapus Sesuai Permintaan --}}
                                         {{-- <form action="{{ route('mobil.destroy', $mobil->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data mobil ini?');" class="d-inline">
                                             @csrf
@@ -483,7 +481,7 @@
                         <select id="transmisiFilterModal" class="form-select">
                             <option value="">Semua Transmisi</option>
                             <option value="manual">Manual</option>
-                            <option value="automatic">Automatic</option>
+                            <option value="matic">Matic</option>
                         </select>
                     </div>
                     <div class="col-md-6">
@@ -492,6 +490,7 @@
                             <option value="">Semua Ketersediaan</option>
                             <option value="ada">Ada</option>
                             <option value="tidak ada">Tidak Ada</option>
+                            <option value="terjual">Terjual</option>
                         </select>
                     </div>
                     <div class="col-md-6">
@@ -509,7 +508,7 @@
                         <label for="warnaFilterModal" class="form-label text-muted">Warna</label>
                         <select id="warnaFilterModal" class="form-select">
                             <option value="">Semua Warna</option>
-                            @foreach ($mobils->unique('warna') as $mobil)
+                            @foreach ($mobils->unique('warna_mobil') as $mobil) {{-- Pastikan ini 'warna_mobil' bukan 'warna' --}}
                                 <option value="{{ $mobil->warna_mobil }}">{{ ucfirst($mobil->warna_mobil) }}</option>
                             @endforeach
                         </select>
@@ -542,7 +541,7 @@
 </div>
 
 {{-- Bootstrap Bundle with Popper --}}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -566,6 +565,28 @@
 
         // Bootstrap Modal Instance
         const moreFiltersModal = new bootstrap.Modal(document.getElementById('moreFiltersModal'));
+
+        // *** START PERBAIKAN PENTING UNTUK MASALAH BACKDROP ***
+        // Fungsi untuk memastikan modal backdrop dan kelas/style terkait dihapus
+        function removeModalBackdrop() {
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+            // Pastikan kelas 'modal-open' dihapus dari body
+            document.body.classList.remove('modal-open');
+            // Pastikan inline style yang ditambahkan Bootstrap dihapus dari body
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right'); // Penting untuk scrollbar
+            console.log('removeModalBackdrop executed: body classes/styles cleared.');
+        }
+
+        // Event listener untuk memastikan backdrop terhapus saat modal benar-benar tersembunyi
+        document.getElementById('moreFiltersModal').addEventListener('hidden.bs.modal', function () {
+            console.log('Modal hidden event fired. Removing backdrop.');
+            removeModalBackdrop();
+        });
+        // *** END PERBAIKAN PENTING UNTUK MASALAH BACKDROP ***
 
 
         // Function to apply all filters (main and modal)
@@ -654,8 +675,10 @@
 
         // Event listener for "Apply Filters" button inside modal
         applyAllFiltersBtn.addEventListener('click', function() {
+            moreFiltersModal.hide(); // Sembunyikan modal
+            // applyFiltersAndSearch akan dipanggil setelah modal benar-benar tersembunyi
+            // melalui event listener 'hidden.bs.modal'
             applyFiltersAndSearch();
-            moreFiltersModal.hide(); // Hide the modal after applying
         });
 
         // Event listener for "Reset All Filters" button inside modal
@@ -674,15 +697,19 @@
             bahanBakarFilterModal.value = '';
             nopolFilterModal.value = '';
 
-            applyFiltersAndSearch(); // Apply filters with cleared values
-            moreFiltersModal.hide(); // Hide the modal after resetting
+            moreFiltersModal.hide(); // Sembunyikan modal
+            // applyFiltersAndSearch akan dipanggil setelah modal benar-benar tersembunyi
+            applyFiltersAndSearch();
         });
+
 
         // Event listener for when the modal is shown, to sync current main filter values to modal filters
         document.getElementById('moreFiltersModal').addEventListener('show.bs.modal', function () {
-            // Sync current main filter values to modal filters (if needed, though for select it's usually handled by initial load)
-            // For text inputs like nopol, ensure the current value is reflected in the modal when opened
-            nopolFilterModal.value = nopolFilterModal.value; // This ensures it keeps its value if modal is closed and reopened without applying
+            // Sync text input like nopol from main search to modal filter
+            nopolFilterModal.value = searchInput.value;
+            // Anda bisa menambahkan sync untuk filter lain di sini jika diperlukan.
+            // Contoh: transmisiFilterModal.value = someOtherGlobalTransmisiValue;
+            console.log('Modal show event fired. Syncing nopol:', nopolFilterModal.value);
         });
 
 
@@ -711,7 +738,7 @@
                 this.dataset.sortDirection = newDirection;
 
                 const statusOrder = {
-                    'tersedia': 7, // Disesuaikan, tambahkan prioritas baru
+                    'tersedia': 7,
                     'baru': 6,
                     'booking': 5,
                     'perbaikan': 4,
@@ -762,7 +789,13 @@
                 });
 
                 // Re-append sorted rows to the table body
+                // Remove existing empty state message before re-appending
+                let emptyStateRow = mobilTableBody.querySelector('.empty-state-message');
+                if (emptyStateRow) {
+                    emptyStateRow.remove();
+                }
                 rows.forEach(row => tbody.appendChild(row));
+                applyFiltersAndSearch(); // Re-apply filters after sort to ensure visibility states are correct
             });
         });
 

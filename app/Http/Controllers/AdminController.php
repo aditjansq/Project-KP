@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\User;    // Asumsikan model User ada di App\Models
-use App\Models\Mobil;   // Asumsikan model Mobil ada di App\Models
-use App\Models\Transaksi; // Asumsikan model Transaksi ada di App\Models
+use App\Models\User;
+use App\Models\Mobil;
+use App\Models\TransaksiPembelian; // Import model TransaksiPembelian
+use App\Models\TransaksiPenjualan; // Import model TransaksiPenjualan
 
 class AdminController extends Controller
 {
@@ -20,14 +21,27 @@ class AdminController extends Controller
         $totalUsers = User::count();
         $totalMobil = Mobil::count();
 
-        // Menggunakan logika yang Anda berikan:
-        // Hitung total transaksi pembeli (transaksi yang memiliki pembeli_id)
-        // $totalTransaksiPembeli = Transaksi::whereNotNull('pembeli_id')->count();
+        // Menghitung total transaksi pembelian
+        $totalTransaksiPembelian = TransaksiPembelian::count();
 
-        // Hitung total transaksi penjual (transaksi yang memiliki penjual_id)
-        // $totalTransaksiPenjual = Transaksi::whereNotNull('penjual_id')->count();
+        // Menghitung total transaksi penjualan
+        $totalTransaksiPenjualan = TransaksiPenjualan::count();
+
+        // Menghitung total mobil berdasarkan ketersediaan
+        $totalMobilTerjual = Mobil::where('ketersediaan', 'terjual')->count();
+        $totalMobilTersedia = Mobil::whereIn('ketersediaan', ['ada', 'servis'])->count(); // Diperbarui untuk menyertakan 'servis'
+        $totalMobilServis = Mobil::where('ketersediaan', 'servis')->count();
+
 
         // Mengirim data ke tampilan 'roles.admin'
-        return view('roles.admin', compact('totalUsers', 'totalMobil'));
+        return view('roles.admin', compact(
+            'totalUsers',
+            'totalMobil',
+            'totalTransaksiPembelian',
+            'totalTransaksiPenjualan',
+            'totalMobilTerjual', // Variabel baru
+            'totalMobilTersedia', // Variabel baru
+            'totalMobilServis' // Variabel baru
+        ));
     }
 }

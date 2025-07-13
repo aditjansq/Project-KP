@@ -58,15 +58,15 @@
             <div class="card card-summary shadow-lg border-0 rounded-4 h-100">
                 <div class="card-body p-4 d-flex align-items-center justify-content-between">
                     <div>
-                        <p class="text-uppercase text-muted fw-bold mb-1">Transaksi Pembeli</p>
-                        <h3 class="card-title fw-bold text-dark mb-0">{{ $totalTransaksiPembeli ?? 'N/A' }}</h3>
+                        <p class="text-uppercase text-muted fw-bold mb-1">Transaksi Pembelian</p>
+                        <h3 class="card-title fw-bold text-dark mb-0">{{ $totalTransaksiPembelian ?? 'N/A' }}</h3>
                     </div>
                     <div class="icon-wrap bg-warning-subtle text-warning">
                         <i class="bi bi-cart-fill"></i>
                     </div>
                 </div>
                 <div class="card-footer bg-transparent border-0 px-4 pb-3">
-                    <a href="{{ route('transaksi.pembeli.index') }}" class="text-warning fw-semibold small">Lihat Detail <i class="bi bi-arrow-right-short"></i></a>
+                    <a href="{{ route('transaksi-pembelian.index') }}" class="text-warning fw-semibold small">Lihat Detail <i class="bi bi-arrow-right-short"></i></a>
                 </div>
             </div>
         </div>
@@ -74,15 +74,15 @@
             <div class="card card-summary shadow-lg border-0 rounded-4 h-100">
                 <div class="card-body p-4 d-flex align-items-center justify-content-between">
                     <div>
-                        <p class="text-uppercase text-muted fw-bold mb-1">Transaksi Penjual</p>
-                        <h3 class="card-title fw-bold text-dark mb-0">{{ $totalTransaksiPenjual ?? 'N/A' }}</h3>
+                        <p class="text-uppercase text-muted fw-bold mb-1">Transaksi Penjualan</p>
+                        <h3 class="card-title fw-bold text-dark mb-0">{{ $totalTransaksiPenjualan ?? 'N/A' }}</h3>
                     </div>
                     <div class="icon-wrap bg-danger-subtle text-danger">
                         <i class="bi bi-cash-stack"></i>
                     </div>
                 </div>
                 <div class="card-footer bg-transparent border-0 px-4 pb-3">
-                    <a href="{{ route('transaksi.penjual.index') }}" class="text-danger fw-semibold small">Lihat Detail <i class="bi bi-arrow-right-short"></i></a>
+                    <a href="{{ route('transaksi-penjualan.index') }}" class="text-danger fw-semibold small">Lihat Detail <i class="bi bi-arrow-right-short"></i></a>
                 </div>
             </div>
         </div>
@@ -111,6 +111,7 @@
             </div>
         </div>
         <div class="card-body p-0">
+            {{-- DIV ini yang membuat tabel responsif di mobile --}}
             <div class="table-responsive" id="userTableResponsiveContainer">
                 <table class="table table-hover table-striped align-middle mb-0 custom-table" id="userTable">
                     <thead class="bg-gradient-primary text-white text-center align-middle">
@@ -485,7 +486,8 @@
     .custom-table {
         border-collapse: separate;
         border-spacing: 0;
-        table-layout: fixed;
+        /* Hapus atau komentari baris ini jika masih tidak responsif */
+        /* table-layout: fixed; */
         width: 100%;
         font-size: 0.9rem;
     }
@@ -704,14 +706,23 @@
         const userTableRows = userTable.querySelectorAll('tbody tr.user-data-row');
         const userTableResponsiveContainer = document.getElementById('userTableResponsiveContainer');
 
-        const scrollToRight = () => {
+        // *** PERUBAHAN PENTING DI SINI ***
+        // Hapus atau ubah fungsi scrollToRight agar tidak selalu menggulir ke paling kanan
+        // Jika Anda ingin tabel selalu dimulai dari kiri (kolom pertama terlihat), gunakan:
+        /*
+        const scrollToLeft = () => {
             if (userTableResponsiveContainer) {
-                userTableResponsiveContainer.scrollLeft = userTableResponsiveContainer.scrollWidth;
+                userTableResponsiveContainer.scrollLeft = 0;
             }
         };
+        scrollToLeft();
+        window.addEventListener('resize', scrollToLeft);
+        */
+        // Atau, jika ingin membiarkan pengguna menggulir secara manual (rekomendasi):
+        // HAPUS DUA BARIS INI:
+        // scrollToRight();
+        // window.addEventListener('resize', scrollToRight);
 
-        scrollToRight();
-        window.addEventListener('resize', scrollToRight);
 
         function applyUserFiltersAndSearch() {
             const searchTerm = userSearchInput.value.toLowerCase().trim();

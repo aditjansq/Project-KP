@@ -7,6 +7,9 @@
 @php
     use Carbon\Carbon;
     use Illuminate\Support\Facades\Storage;
+
+    $job = strtolower(auth()->user()->job ?? '');
+
 @endphp
 
 <head>
@@ -563,9 +566,11 @@
             <small class="text-secondary">Kelola semua informasi penjual Anda dengan mudah.</small>
         </div>
         <div class="col-md-4 text-md-end">
+            @if(in_array($job, ['admin']))
             <a href="{{ route('penjual.create') }}" class="btn btn-primary btn-lg shadow-lg rounded-pill animate__animated animate__fadeInRight">
                 <i class="bi bi-person-plus-fill me-2"></i> Tambah Penjual Baru
             </a>
+            @endif
         </div>
     </div>
 
@@ -653,9 +658,11 @@
                                         ]) }}">
                                         <i class="fas fa-info-circle"></i> Detail
                                     </button>
+                                    @if(in_array($job, ['admin']))
                                     <a href="{{ route('penjual.edit', $penjual->id) }}" class="btn btn-custom-edit">
                                         <i class="fas fa-edit"></i> Edit
                                     </a>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

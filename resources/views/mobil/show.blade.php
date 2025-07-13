@@ -6,6 +6,10 @@
 @php
     use Illuminate\Support\Facades\Storage;
     use Carbon\Carbon;
+
+    // Pastikan variabel $job tersedia atau ambil langsung dari session
+    $job = strtolower(auth()->user()->job ?? '');
+@endphp
 @endphp
 
 <head>
@@ -133,9 +137,11 @@
             <a href="{{ route('mobil.index') }}" class="btn btn-outline-secondary rounded-pill animate__animated animate__fadeInRight">
                 <i class="bi bi-arrow-left me-2"></i> Kembali ke Daftar Mobil
             </a>
+            @if(in_array($job, ['admin']))
             <a href="{{ route('mobil.edit', $mobil->id) }}" class="btn btn-primary rounded-pill animate__animated animate__fadeInRight ms-2">
                 <i class="bi bi-pencil-square me-2"></i> Edit Mobil
             </a>
+            @endif
         </div>
     </div>
 

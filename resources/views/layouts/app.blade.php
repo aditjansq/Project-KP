@@ -1,3 +1,7 @@
+@php
+    $job = strtolower(auth()->user()->job ?? '');
+@endphp
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -798,6 +802,7 @@
                     <i class="bi bi-cash-coin"></i> <span>Transaksi Penjualan</span>
                 </a>
             </li>
+            @if(in_array($job, ['admin']))
             <h6 class="menu-section-label">Pihak Terkait</h6>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('pembeli.*') ? 'active' : '' }}" href="{{ route('pembeli.index') }}">
@@ -809,6 +814,7 @@
                     <i class="bi bi-shop"></i> <span>Penjual</span>
                 </a>
             </li>
+            @endif
 
             <h6 class="menu-section-label">Laporan</h6>
             <li class="nav-item">

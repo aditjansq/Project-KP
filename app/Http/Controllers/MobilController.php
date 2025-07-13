@@ -156,11 +156,11 @@ class MobilController extends Controller
      * Metode ini akan dipanggil ketika mengakses /mobil/{id}.
      *
      * @param  \App\Models\Mobil  $mobil
-     * @return \Illuminate\Http\JsonResponse
+     * @return \Illuminate\View\View
      */
     public function show(Mobil $mobil): \Illuminate\View\View
     {
-        // ... kode Anda
+        // Mengembalikan tampilan detail mobil
         return view('mobil.show', compact('mobil'));
     }
 

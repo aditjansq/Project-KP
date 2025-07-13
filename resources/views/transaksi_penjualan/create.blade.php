@@ -2,6 +2,10 @@
 
 @section('title', 'Tambah Penjualan Mobil')
 
+@php
+    $job = strtolower(auth()->user()->job ?? '');
+@endphp
+
 @section('content')
 <head>
     {{-- Animate.css --}}

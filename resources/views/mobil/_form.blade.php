@@ -63,6 +63,9 @@
                             <option value="Wagon" {{ $old('jenis_mobil') == 'Wagon' ? 'selected' : '' }}>Wagon</option>
                             <option value="City Car" {{ $old('jenis_mobil') == 'City Car' ? 'selected' : '' }}>City Car</option>
                             <option value="Off-road Vehicle" {{ $old('jenis_mobil') == 'Off-road Vehicle' ? 'selected' : '' }}>Off-road Vehicle</option>
+                            <option value="Mini Bus" {{ $old('jenis_mobil') == 'Mini Bus' ? 'selected' : '' }}>Mini Bus</option>
+                            <option value="Jeep" {{ $old('jenis_mobil') == 'Jeep' ? 'selected' : '' }}>Jeep</option>
+                            <option value="Double Cabin" {{ $old('jenis_mobil') == 'Double Cabin' ? 'selected' : '' }}>Double Cabin</option>
                         </select>
                     </div>
 
