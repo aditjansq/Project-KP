@@ -781,16 +781,20 @@
                 </a>
             </li>
             <h6 class="menu-section-label">Mobil</h6>
+            @if(in_array($job, ['admin','manajer']))
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('servis.*') ? 'active' : '' }}" href="{{ route('servis.index') }}">
                     <i class="bi bi-tools"></i> <span>Servis</span>
                 </a>
             </li>
+            @endif
+
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('mobil.*') ? 'active' : '' }}" href="{{ route('mobil.index') }}">
                     <i class="bi bi-car-front-fill"></i> <span>Mobil</span>
                 </a>
             </li>
+            @if(in_array($job, ['admin','manajer']))
             <h6 class="menu-section-label">Transaksi</h6>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('transaksi-pembelian.*') ? 'active' : '' }}" href="{{ route('transaksi-pembelian.index') }}">
@@ -802,6 +806,7 @@
                     <i class="bi bi-cash-coin"></i> <span>Transaksi Penjualan</span>
                 </a>
             </li>
+            @endif
             @if(in_array($job, ['admin']))
             <h6 class="menu-section-label">Pihak Terkait</h6>
             <li class="nav-item">
@@ -815,7 +820,7 @@
                 </a>
             </li>
             @endif
-
+            @if(in_array($job, ['admin', 'manajer']))
             <h6 class="menu-section-label">Laporan</h6>
             <li class="nav-item">
                 <a
@@ -836,6 +841,7 @@
                     </ul>
                 </div>
             </li>
+            @endif
 
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('settings') ? 'active' : '' }}" href="{{ route('settings') }}">
@@ -912,6 +918,7 @@
                         <i class="bi bi-cart-check-fill"></i> <span>Transaksi Pembelian</span>
                     </a>
                 </li>
+
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('transaksi-penjualan.*') ? 'active' : '' }}" href="{{ route('transaksi-penjualan.index') }}">
                         <i class="bi bi-cash-coin"></i> <span>Transaksi Penjualan</span>
