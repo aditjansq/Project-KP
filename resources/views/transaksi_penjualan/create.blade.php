@@ -361,9 +361,7 @@
                             </button>
                         </div>
                         <div id="pembayaran-wrapper">
-                            <div class="alert alert-info text-center py-3 animate__animated animate__fadeIn">
-                                <i class="bi bi-info-circle-fill me-2"></i> Klik "Tambah Pembayaran" untuk menambahkan detail pembayaran.
-                            </div>
+                            {{-- Initial payment item will be added by JavaScript --}}
                         </div>
                     </div>
                 </div>
@@ -592,6 +590,7 @@
         // Payment item management
         function addPaymentItem() {
             const wrapperElement = document.getElementById('pembayaran-wrapper');
+            // Initial alert is removed from HTML, so this is no longer strictly needed but good for robustness
             const initialAlert = wrapperElement.querySelector('.alert-info');
             if (initialAlert) {
                 initialAlert.remove();
@@ -695,8 +694,8 @@
         const angsuranPerBulanInput = document.getElementById('angsuran_per_bulan');
         const refundInput = document.getElementById('refund');
         const metodePembayaranSelect = document.getElementById('metode_pembayaran');
-        const mobilSelect = document.getElementById('mobil_id'); // Using native JS element for listener
-        const pembeliSelect = document.getElementById('pembeli_id'); // Using native JS element for listener
+        const mobilSelect = document.getElementById('mobil_id');
+        const pembeliSelect = document.getElementById('pembeli_id');
 
 
         // Event listeners for inputs that also need formatting
@@ -745,10 +744,10 @@
             metodePembayaranSelect.addEventListener('change', toggleKreditDetails);
         }
         if (mobilSelect) {
-            $(mobilSelect).on('change', calculateSummary); // Select2 events are typically handled by jQuery's on method
+            $(mobilSelect).on('change', calculateSummary);
         }
         if (pembeliSelect) {
-            $(pembeliSelect).on('change', calculateSummary); // Select2 events are typically handled by jQuery's on method
+            $(pembeliSelect).on('change', calculateSummary);
         }
 
         // Event listener for confirm delete button in modal
@@ -768,7 +767,8 @@
         });
 
 
-        // Initial calculation on page load
+        // Initial setup on page load
+        addPaymentItem(); // Add the first payment item automatically
         calculateSummary();
         toggleKreditDetails();
 
