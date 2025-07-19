@@ -393,9 +393,9 @@
         <div class="col-lg-4 col-md-6 mb-4">
           <div class="p-4 shadow-sm border rounded-4 h-100 animate-on-scroll">
             <div class="mb-3 text-primary fs-1"><i class="fas fa-headset"></i></div>
-            <h4 class="fw-semibold mb-2">Layanan Pelanggan 24/7</h4>
+            <h4 class="fw-semibold mb-2">Cash dan kredit</h4>
             <p class="text-muted">
-              Kami siap membantu kapan pun Anda butuh informasi, bantuan teknis, atau konsultasi pembelian.
+              Pembayaran Cash dan Kredit
             </p>
           </div>
         </div>

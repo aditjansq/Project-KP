@@ -304,14 +304,21 @@
                                 <input type="text" class="form-control" id="harga_mobil_display" value="Rp{{ number_format($transaksi_penjualan->mobil->harga_mobil ?? 0, 0, ',', '.') }}" readonly>
                                 <small class="form-text text-muted">Harga dasar dari mobil yang dipilih.</small>
                             </div>
+
                             <div class="col-md-6">
                                 <label for="harga_negosiasi" class="form-label text-muted">Harga Negosiasi</label>
-                                <input type="number" class="form-control" id="harga_negosiasi" name="harga_negosiasi" value="{{ old('harga_negosiasi', $transaksi_penjualan->harga_negosiasi) }}" required min="0">
+                                {{-- Ubah type dari number menjadi text untuk memungkinkan pemformatan dengan titik --}}
+                                <input type="text" class="form-control" id="harga_negosiasi" name="harga_negosiasi"
+                                    value="{{ old('harga_negosiasi', number_format($transaksi_penjualan->harga_negosiasi ?? 0, 0, ',', '.')) }}"
+                                    required min="0"
+                                    oninput="formatNumberInput(this); calculateSummary();" {{-- Perubahan di sini --}}
+                                    onblur="if (!this.value) { this.value = '0'; } calculateSummary();"> {{-- Perubahan di sini --}}
                                 <div class="invalid-feedback">
                                     Harga negosiasi wajib diisi dan harus angka positif.
                                 </div>
                                 <small class="form-text text-muted">Harga akhir setelah negosiasi dengan pembeli.</small>
                             </div>
+
                             <div class="col-md-12">
                                 <label for="metode_pembayaran" class="form-label text-muted">Metode Pembayaran Utama</label>
                                 <select class="form-select" id="metode_pembayaran" name="metode_pembayaran" required>
@@ -348,16 +355,28 @@
                                     Leasing wajib diisi.
                                 </div>
                             </div>
+
                             <div class="col-md-6">
                                 <label for="angsuran_per_bulan" class="form-label text-muted">Angsuran Per Bulan</label>
-                                <input type="number" class="form-control" id="angsuran_per_bulan" name="angsuran_per_bulan" value="{{ old('angsuran_per_bulan', $transaksi_penjualan->kreditDetail->angsuran_per_bulan ?? 0) }}" min="0">
+                                {{-- Ubah type dari number menjadi text untuk memungkinkan pemformatan dengan titik --}}
+                                <input type="text" class="form-control" id="angsuran_per_bulan" name="angsuran_per_bulan"
+                                    value="{{ old('angsuran_per_bulan', number_format($transaksi_penjualan->kreditDetail->angsuran_per_bulan ?? 0, 0, ',', '.')) }}"
+                                    required min="0"
+                                    oninput="formatNumberInput(this); calculateSummary();" {{-- Tambahkan oninput --}}
+                                    onblur="if (!this.value) { this.value = '0'; } calculateSummary();"> {{-- Tambahkan onblur --}}
                                 <div class="invalid-feedback">
                                     Angsuran per bulan wajib diisi dan harus angka positif.
                                 </div>
                             </div>
+
                             <div class="col-md-6">
                                 <label for="refund" class="form-label text-muted">Jumlah Refund</label>
-                                <input type="number" id="refund" name="refund" class="form-control" value="{{ old('refund', $transaksi_penjualan->kreditDetail->refund ?? 0) }}" min="0">
+                                {{-- Ubah type dari number menjadi text dan tambahkan pemformatan awal dengan titik --}}
+                                <input type="text" id="refund" name="refund" class="form-control"
+                                    value="{{ old('refund', number_format($transaksi_penjualan->kreditDetail->refund ?? 0, 0, ',', '.')) }}"
+                                    min="0"
+                                    oninput="formatNumberInput(this); calculateSummary();" {{-- Tambahkan oninput --}}
+                                    onblur="if (!this.value) { this.value = '0'; } calculateSummary();"> {{-- Tambahkan onblur --}}
                                 <div class="invalid-feedback">
                                     Jumlah refund harus berupa angka positif.
                                 </div>
@@ -451,6 +470,29 @@
     </button>
 </div>
 
+{{-- Confirm Delete Payment Modal --}}
+<div class="modal fade" id="confirmDeletePaymentModal" tabindex="-1" aria-labelledby="confirmDeletePaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark" id="confirmDeletePaymentModalLabel">Konfirmasi Hapus Detail Pembayaran</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <div class="text-center mb-3">
+                    <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 3rem;"></i>
+                </div>
+                <p class="text-muted text-center">Apakah Anda yakin ingin menghapus detail pembayaran ini? Tindakan ini tidak dapat dibatalkan.</p>
+            </div>
+            <div class="modal-footer border-0 pt-0 justify-content-center">
+                <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-danger rounded-pill" id="confirmDeletePaymentBtn">Hapus</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 {{-- Bootstrap Bundle with Popper --}}
@@ -458,7 +500,30 @@
 {{-- Select2 JS --}}
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script>
+    // Utility function to format currency
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+    }
+
+    // Fungsi global untuk memformat input angka dengan pemisah ribuan saat diketik
+    function formatNumberInput(inputElement) {
+        let value = inputElement.value.replace(/\./g, ''); // Hapus titik yang ada
+        if (value) {
+            value = parseInt(value).toLocaleString('id-ID'); // Format sebagai mata uang ID
+            inputElement.value = value;
+        } else {
+            inputElement.value = ''; // Jika kosong, biarkan kosong atau atur ke '0' jika ingin default
+        }
+    }
+
+    // Fungsi global untuk membersihkan angka dari pemisah ribuan sebelum digunakan dalam perhitungan
+    function cleanNumber(value) {
+        return parseFloat(String(value).replace(/\./g, '') || 0);
+    }
+
     let pembayaranIndex = 0; // Mulai dari 0 karena semua item akan ditambahkan via JS
 
     // PHP logic to prepare initialPembayarans for JavaScript
@@ -528,11 +593,11 @@
 
     const fixedActionBar = document.getElementById('fixedActionBar');
 
+    // Modal elements
+    const confirmDeletePaymentModal = new bootstrap.Modal(document.getElementById('confirmDeletePaymentModal'));
+    const confirmDeletePaymentBtn = document.getElementById('confirmDeletePaymentBtn');
+    let itemToDelete = null; // Menyimpan referensi item yang akan dihapus
 
-    // Utility function to format currency
-    function formatCurrency(amount) {
-        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
-    }
 
     // Fungsi untuk memeriksa apakah pilihan utama sudah dibuat
     function checkMainSelectionsMade() {
@@ -568,18 +633,19 @@
         }
         summaryHargaDasar.textContent = formatCurrency(selectedMobilHarga);
 
-
-        const hargaNegosiasi = parseFloat(hargaNegosiasiInput.value) || 0;
+        // Gunakan cleanNumber untuk mendapatkan nilai numerik bersih dari hargaNegosiasiInput
+        const hargaNegosiasi = cleanNumber(hargaNegosiasiInput.value);
         summaryHargaNegosiasi.textContent = formatCurrency(hargaNegosiasi);
 
 
         let totalPembayaranDiterimaFromDetails = 0;
         // Sum up all individual payments from the detail wrapper
         document.querySelectorAll('[name^="pembayaran"][name$="[jumlah_pembayaran]"]').forEach(input => {
-            totalPembayaranDiterimaFromDetails += parseFloat(input.value) || 0;
+            // Gunakan cleanNumber untuk setiap input jumlah_pembayaran
+            totalPembayaranDiterimaFromDetails += cleanNumber(input.value);
         });
         summaryTotalPembayaran.textContent = formatCurrency(totalPembayaranDiterimaFromDetails);
-        const refund = parseFloat(refundInput.value) || 0;
+        const refund = cleanNumber(refundInput.value); // Gunakan cleanNumber untuk refund
 
 
         let dpCalculated = 0;
@@ -640,7 +706,7 @@
         if (metodePembayaranSelect.value === 'kredit') {
             summaryKreditDetails.style.display = 'block';
             const tempoInYears = parseInt(tempoInput.value) || 0;
-            const angsuranPerBulan = parseFloat(angsuranPerBulanInput.value) || 0;
+            const angsuranPerBulan = cleanNumber(angsuranPerBulanInput.value); // Gunakan cleanNumber
             const leasingValue = leasingInput.value || '-';
 
             summaryTempo.textContent = `${tempoInYears} Tahun`;
@@ -698,7 +764,8 @@
 
         const paymentId = payment ? (payment.id || '') : '';
         const metodePembayaranDetail = payment ? (payment.metode_pembayaran_detail || '') : '';
-        const jumlahPembayaran = payment ? (payment.jumlah_pembayaran || 0) : 0;
+        // Pastikan jumlah_pembayaran diinisialisasi dengan nilai yang sudah bersih dari format
+        const jumlahPembayaran = payment ? cleanNumber(payment.jumlah_pembayaran || 0) : 0;
         const tanggalPembayaran = payment ? (payment.tanggal_pembayaran ? new Date(payment.tanggal_pembayaran).toISOString().split('T')[0] : '') : new Date().toISOString().split('T')[0];
         const keteranganPembayaranDetail = payment ? (payment.keterangan_pembayaran_detail || '') : '';
         const buktiPembayaranDetail = payment ? (payment.bukti_pembayaran_detail || '') : '';
@@ -719,7 +786,12 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label text-muted">Jumlah Pembayaran</label>
-                    <input type="number" name="pembayaran[${currentPaymentIndex}][jumlah_pembayaran]" class="form-control payment-detail-input" value="${jumlahPembayaran}" required step="0.01" min="0">
+                    {{-- Ubah type dari number menjadi text dan tambahkan direktif Alpine.js --}}
+                    {{-- Gunakan new Intl.NumberFormat untuk format nilai awal --}}
+                    <input type="text" name="pembayaran[${currentPaymentIndex}][jumlah_pembayaran]" class="form-control payment-detail-input"
+                        value="${new Intl.NumberFormat('id-ID').format(jumlahPembayaran)}" required min="0"
+                        x-on:input="formatNumberInput($el); calculateSummary();"
+                        x-on:blur="if (!$el.value) { $el.value = '0'; } calculateSummary();">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label text-muted">Tanggal Pembayaran</label>
@@ -761,17 +833,10 @@
             input.addEventListener('input', calculateSummary);
         });
 
-        // Add event listener for remove button
-        item.querySelector('.remove-btn').addEventListener('click', () => {
-            item.remove();
-            calculateSummary(); // Recalculate summary after removing an item
-            // Show empty state message if no payment items left
-            if (pembayaranDetailsWrapper.children.length === 0) {
-                const newEmptyAlert = document.createElement('div');
-                newEmptyAlert.classList.add('alert', 'alert-info', 'text-center', 'py-3', 'animate__animated', 'animate__fadeIn');
-                newEmptyAlert.innerHTML = `<i class="bi bi-info-circle-fill me-2"></i> Klik "Tambah Pembayaran" untuk menambahkan detail pembayaran.`;
-                pembayaranDetailsWrapper.appendChild(newEmptyAlert);
-            }
+        // Add event listener for remove button to show modal
+        item.querySelector('.remove-btn').addEventListener('click', (e) => {
+            itemToDelete = item; // Simpan referensi item yang akan dihapus
+            confirmDeletePaymentModal.show(e.target); // Tampilkan modal
         });
     }
 
@@ -802,7 +867,7 @@
         } else {
             // Jika tidak ada pembayaran awal, tampilkan pesan kosong
             if (pembayaranDetailsWrapper.children.length === 0) {
-                 const newEmptyAlert = document.createElement('div');
+                const newEmptyAlert = document.createElement('div');
                 newEmptyAlert.classList.add('alert', 'alert-info', 'text-center', 'py-3', 'animate__animated', 'animate__fadeIn');
                 newEmptyAlert.innerHTML = `<i class="bi bi-info-circle-fill me-2"></i> Klik "Tambah Pembayaran" untuk menambahkan detail pembayaran.`;
                 pembayaranDetailsWrapper.appendChild(newEmptyAlert);
@@ -812,15 +877,32 @@
         // Add button listener
         addPembayaranBtn.addEventListener('click', () => addPaymentItem());
 
+        // Event listener untuk tombol konfirmasi hapus di modal
+        confirmDeletePaymentBtn.addEventListener('click', () => {
+            if (itemToDelete) {
+                itemToDelete.remove();
+                calculateSummary(); // Recalculate summary after removing an item
+                // Show empty state message if no payment items left
+                if (pembayaranDetailsWrapper.children.length === 0) {
+                    const newEmptyAlert = document.createElement('div');
+                    newEmptyAlert.classList.add('alert', 'alert-info', 'text-center', 'py-3', 'animate__animated', 'animate__fadeIn');
+                    newEmptyAlert.innerHTML = `<i class="bi bi-info-circle-fill me-2"></i> Klik "Tambah Pembayaran" untuk menambahkan detail pembayaran.`;
+                    pembayaranDetailsWrapper.appendChild(newEmptyAlert);
+                }
+                itemToDelete = null; // Reset itemToDelete
+                confirmDeletePaymentModal.hide(); // Sembunyikan modal
+            }
+        });
+
         // Event listeners untuk input utama
         mobilIdSelect.addEventListener('change', calculateSummary);
         pembeliIdSelect.addEventListener('change', calculateSummary);
         metodePembayaranSelect.addEventListener('change', toggleKreditDetails);
-        hargaNegosiasiInput.addEventListener('input', calculateSummary);
-        tempoInput.addEventListener('input', calculateSummary);
-        angsuranPerBulanInput.addEventListener('input', calculateSummary);
-        leasingInput.addEventListener('input', calculateSummary);
-        refundInput.addEventListener('input', calculateSummary); // <--- TAMBAHKAN BARIS INI
+        // hargaNegosiasiInput tidak perlu event listener di sini karena sudah ditangani oleh Alpine.js x-on:input
+        // tempoInput tidak perlu event listener di sini karena sudah ditangani oleh Alpine.js x-on:input
+        // angsuranPerBulanInput tidak perlu event listener di sini karena sudah ditangani oleh Alpine.js x-on:input
+        // leasingInput tidak perlu event listener di sini karena sudah ditangani oleh Alpine.js x-on:input
+        // refundInput tidak perlu event listener di sini karena sudah ditangani oleh Alpine.js x-on:input
 
 
         // Initial calculation on page load
@@ -835,6 +917,16 @@
         Array.prototype.slice.call(forms)
             .forEach(function (form) {
                 form.addEventListener('submit', function (event) {
+                    // Before submission, remove dots from number inputs to ensure backend receives clean numbers
+                    document.querySelectorAll(
+                        'input[name="harga_negosiasi"], ' +
+                        'input[name^="pembayaran"][name$="[jumlah_pembayaran]"], ' +
+                        'input[name="angsuran_per_bulan"], ' +
+                        'input[name="refund"]'
+                    ).forEach(input => {
+                        input.value = input.value.replace(/\./g, '');
+                    });
+
                     if (!form.checkValidity()) {
                         event.preventDefault();
                         event.stopPropagation();

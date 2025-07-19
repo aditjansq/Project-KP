@@ -127,11 +127,12 @@
                         </select>
                     </div>
 
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-4" x-data="{ hargaMobil: '{{ old('harga_mobil', isset($mobil) ? number_format(intval($mobil->harga_mobil), 0, ',', '.') : '') }}' }">
                         <label for="harga_mobil" class="form-label mb-1 fw-semibold">Harga Mobil (IDR)</label>
-                        <input type="number" name="harga_mobil" class="form-control form-control-lg rounded-3" id="harga_mobil" min="0"
-                            value="{{ old('harga_mobil', isset($mobil) ? intval($mobil->harga_mobil) : '') }}"
-                            placeholder="Contoh: 150000000" required>
+                        <input type="text" name="harga_mobil" class="form-control form-control-lg rounded-3" id="harga_mobil"
+                            x-model="hargaMobil"
+                            x-on:input="hargaMobil = $event.target.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')"
+                            placeholder="Contoh: 150.000.000" required>
                         @error('harga_mobil')
                             <div class="invalid-feedback d-block">
                                 {{ $message }}
@@ -615,5 +616,6 @@
             kodeWilayahSelect.trigger('change');
         }
     });
+
 </script>
 @endsection

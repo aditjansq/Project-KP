@@ -149,7 +149,7 @@
         <div class="card-body p-lg-5 p-md-4 p-3 card-detail">
 
             {{-- Bagian Gambar Mobil --}}
-            <div class="d-flex justify-content-center mb-4">
+            {{-- <div class="d-flex justify-content-center mb-4">
                 <div class="car-image-container">
                     @if ($mobil->gambar_mobil)
                         <img src="{{ Storage::url(str_replace('public/', '', $mobil->gambar_mobil)) }}" alt="Gambar Mobil {{ $mobil->merek_mobil }} {{ $mobil->tipe_mobil }}" class="img-fluid rounded-3">
@@ -159,7 +159,7 @@
                         </div>
                     @endif
                 </div>
-            </div>
+            </div> --}}
 
             {{-- Bagian Informasi Umum Mobil --}}
             <div class="section-title">

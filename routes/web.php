@@ -15,6 +15,7 @@ use App\Http\Controllers\AccountSettingsController;
 use App\Http\Controllers\LaporanController; // Pastikan ini ada
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\SalesController;
 
 // ------------------------
 // 👤 RUTE UNTUK TAMU (GUEST ROUTES)
@@ -170,9 +171,8 @@ Route::middleware(['auth'])->group(function () {
     // ✅ Dashboard per Role lainnya
     Route::middleware('role:admin')->get('/dashboard/admin', [AdminController::class, 'index'])->name('dashboard.admin');
 
-    Route::middleware('role:sales')->get('/dashboard/sales', function () {
-        return view('roles.sales');
-    })->name('dashboard.sales');
+    Route::middleware('role:sales')->get('/dashboard/sales', [SalesController::class, 'index'])->name('dashboard.sales');
+
 });
 
 // ------------------------

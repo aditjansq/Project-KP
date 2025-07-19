@@ -105,6 +105,8 @@ class MobilController extends Controller
      */
     public function store(Request $request)
     {
+        $request->merge(['harga_mobil' => str_replace('.', '', $request->input('harga_mobil'))]);
+
         // Validasi data yang masuk dari form
         $request->validate([
             'jenis_mobil' => 'required|string|max:255',
@@ -191,6 +193,8 @@ class MobilController extends Controller
      */
     public function update(Request $request, Mobil $mobil)
     {
+        $request->merge(['harga_mobil' => str_replace('.', '', $request->input('harga_mobil'))]);
+
         // Validasi data yang masuk untuk pembaruan
         $request->validate([
             'jenis_mobil' => 'required|string|max:255',

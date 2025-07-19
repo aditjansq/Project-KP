@@ -353,7 +353,7 @@ class TransaksiPenjualanController extends Controller
         if ($totalPembayaran >= $transaksi->harga_negosiasi) {
             $status = 'lunas';
         } elseif ($totalPembayaran > 0 && $totalPembayaran < $transaksi->harga_negosiasi) {
-            $status = 'dp';
+            $status = 'belum lunas';
         }
 
         $transaksi->update(['status' => $status]);

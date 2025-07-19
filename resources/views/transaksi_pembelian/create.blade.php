@@ -217,7 +217,6 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="kode_transaksi_otomatis" class="form-label text-muted">Kode Transaksi</label>
-                                {{-- PERBAIKAN: Tambahkan name="kode_transaksi" --}}
                                 <input type="text" id="kode_transaksi_otomatis" name="kode_transaksi" class="form-control" value="{{ $kode_transaksi ?? 'Kode Otomatis' }}" readonly>
                                 <small class="form-text text-muted">Kode transaksi akan dibuat secara otomatis oleh sistem.</small>
                             </div>
@@ -271,12 +270,21 @@
 
                             <div class="col-md-6">
                                 <label for="harga_beli_final" class="form-label text-muted">Harga Beli Final</label>
-                                {{-- REVISI: Tambahkan name="harga_beli_mobil_final" sesuai dengan kolom database dan validasi di controller --}}
-                                <input type="number" id="harga_beli_final" name="harga_beli_mobil_final" class="form-control" value="{{ old('harga_beli_mobil_final') }}" required min="0" step="0.01">
+                                <input type="text" id="harga_beli_final" name="harga_beli_mobil_final" class="form-control"
+                                    value="{{ old('harga_beli_mobil_final') ? number_format(old('harga_beli_mobil_final'), 0, ',', '.') : '' }}"
+                                    required min="0"
+                                    placeholder="Contoh: 150.000.000"
+                                    oninput="formatAndCalculateSummary(this)"
+                                    onblur="if (!this.value) { this.value = '0'; calculateSummary(); }"
+                                >
                                 <div class="invalid-feedback">
-                                    Harga beli final wajib diisi dan harus angka positif.
+                                    Harga beli final wajib diisi dan harus berupa angka.
                                 </div>
+                                @error('harga_beli_mobil_final')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
                             </div>
+
                             <div class="col-md-6">
                                 <label for="keterangan" class="form-label text-muted">Keterangan Tambahan</label>
                                 <textarea id="keterangan" name="keterangan" class="form-control" rows="2">{{ old('keterangan') }}</textarea>
@@ -294,7 +302,6 @@
                             </button>
                         </div>
                         <div id="pembayaran-wrapper">
-                            {{-- PERBAIKAN: Ubah name="pembayaran[0][...]" menjadi name="pembayaran_detail[0][...]" --}}
                             <div class="pembayaran-item mb-3 p-3 position-relative animate__animated animate__fadeIn">
                                 <div class="row g-3">
                                     <div class="col-md-4">
@@ -307,7 +314,12 @@
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label text-muted">Jumlah Pembayaran</label>
-                                        <input type="number" name="pembayaran_detail[0][jumlah_pembayaran]" class="form-control payment-detail-input" required step="0.01" min="0">
+                                        <input type="text" name="pembayaran_detail[0][jumlah_pembayaran]" class="form-control payment-detail-input payment-amount-input"
+                                            value="{{ old('pembayaran_detail.0.jumlah_pembayaran') ? number_format(old('pembayaran_detail.0.jumlah_pembayaran'), 0, ',', '.') : '' }}"
+                                            required min="0" placeholder="Contoh: 50.000.000"
+                                            oninput="formatPaymentAmount(this)"
+                                            onblur="if (!this.value) { this.value = '0'; calculateSummary(); }"
+                                        >
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label text-muted">Tanggal Pembayaran</label>
@@ -322,7 +334,8 @@
                                         <input type="file" name="pembayaran_detail[0][bukti_pembayaran_detail]" class="form-control shadow-sm">
                                     </div>
                                     <div class="col-12 mt-2 text-end">
-                                        <button type="button" class="btn btn-danger btn-sm rounded-3 remove-btn">
+                                        <button type="button" class="btn btn-danger btn-sm rounded-3 remove-btn"
+                                                data-bs-toggle="modal" data-bs-target="#confirmDeletePaymentModal">
                                             <i class="fas fa-trash me-1"></i> Hapus
                                         </button>
                                     </div>
@@ -371,6 +384,28 @@
     </button>
 </div>
 
+<div class="modal fade" id="confirmDeletePaymentModal" tabindex="-1" aria-labelledby="confirmDeletePaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark" id="confirmDeletePaymentModalLabel">Konfirmasi Hapus Detail Pembayaran</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <div class="text-center mb-3">
+                    <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 3rem;"></i>
+                </div>
+                <p class="text-muted text-center">Apakah Anda yakin ingin menghapus detail pembayaran ini? Tindakan ini tidak dapat dibatalkan.</p>
+            </div>
+            <div class="modal-footer border-0 pt-0 justify-content-center">
+                <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-danger rounded-pill" id="confirmDeletePaymentBtn">Hapus</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -384,8 +419,16 @@
         // Payment index counter
         let pembayaranIndex = 1;
 
+        // Variable to store the payment item to be deleted
+        let paymentItemToDelete = null;
+
+        // Initialize Bootstrap Modal
+        const confirmDeletePaymentModal = new bootstrap.Modal(document.getElementById('confirmDeletePaymentModal'));
+
+        // --- GLOBAL FUNCTIONS ---
+
         // Main calculation function
-        function calculateSummary() {
+        window.calculateSummary = function() {
             // Get selected car price (assuming harga_beli from mobil_id)
             const mobilElement = document.getElementById('mobil_id');
             const selectedMobil = mobilElement.options[mobilElement.selectedIndex];
@@ -393,14 +436,16 @@
                 parseFloat(selectedMobil.dataset.harga) : 0;
 
             // Get final purchase price
-            // REVISI: Mengambil nilai dari input dengan name="harga_beli_mobil_final"
-            const hargaBeliFinal = parseFloat(document.querySelector('input[name="harga_beli_mobil_final"]').value) || 0;
+            const hargaBeliFinalInput = document.getElementById('harga_beli_final').value;
+            const hargaBeliFinal = parseFloat(hargaBeliFinalInput.replace(/\./g, '')) || 0;
 
             // Calculate total payments
             let totalPembayaran = 0;
-            // PERBAIKAN: Selector untuk input pembayaran
+            // Iterate over all payment amount input fields
             document.querySelectorAll('input[name^="pembayaran_detail"][name$="[jumlah_pembayaran]"]').forEach(input => {
-                totalPembayaran += parseFloat(input.value) || 0;
+                // Get the value and remove dots before parsing to float
+                const valueWithoutDots = input.value.replace(/\./g, '');
+                totalPembayaran += parseFloat(valueWithoutDots) || 0;
             });
 
             // Update summary displays
@@ -429,12 +474,42 @@
             }
         }
 
-        // Format currency helper
-        function formatCurrency(amount) {
-            return 'Rp' + amount.toFixed(0).replace(/\d(?=(\d{3})+$)/g, '$&.');
-        }
+        // Format currency helper (optimized for real-time input)
+        window.formatCurrency = function(amount) {
+            if (isNaN(amount) || amount === null || typeof amount === 'undefined') {
+                return 'Rp0';
+            }
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+            }).format(amount);
+        };
 
-        // Payment item management
+        // Function to format the input field directly (adds dots)
+        window.formatAndCalculateSummary = function(inputElement) {
+            let rawValue = inputElement.value.replace(/\D/g, ''); // Remove all non-digits
+            let formattedValue = '';
+            if (rawValue) {
+                formattedValue = rawValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            }
+            inputElement.value = formattedValue;
+            calculateSummary(); // Call summary calculation after formatting
+        };
+
+        // Function to format payment amount input
+        window.formatPaymentAmount = function(inputElement) {
+            let rawValue = inputElement.value.replace(/\D/g, ''); // Remove all non-digits
+            let formattedValue = '';
+            if (rawValue) {
+                formattedValue = rawValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            }
+            inputElement.value = formattedValue;
+            calculateSummary(); // Call summary calculation after formatting
+        };
+
+        // --- PAYMENT ITEM MANAGEMENT ---
         function addPaymentItem() {
             const wrapperElement = document.getElementById('pembayaran-wrapper');
             const newItem = document.createElement('div');
@@ -443,16 +518,18 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label text-muted">Metode Pembayaran</label>
-                        {{-- PERBAIKAN: Ubah name="pembayaran[${pembayaranIndex}][...]" menjadi name="pembayaran_detail[${pembayaranIndex}][...]" --}}
                         <select name="pembayaran_detail[${pembayaranIndex}][metode_pembayaran]" class="form-select payment-detail-input" required>
                             <option value="">-- Pilih Metode --</option>
-                            <option value="cash">Cash</option>
+                            <option value="Cash">Cash</option>
                             <option value="Transfer Bank">Transfer Bank</option>
                         </select>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label text-muted">Jumlah Pembayaran</label>
-                        <input type="number" name="pembayaran_detail[${pembayaranIndex}][jumlah_pembayaran]" class="form-control payment-detail-input" required step="0.01" min="0">
+                        <input type="text" name="pembayaran_detail[${pembayaranIndex}][jumlah_pembayaran]" class="form-control payment-detail-input payment-amount-input" required min="0" placeholder="Contoh: 50.000.000"
+                            oninput="formatPaymentAmount(this)"
+                            onblur="if (!this.value) { this.value = '0'; calculateSummary(); }"
+                        >
                     </div>
                     <div class="col-md-4">
                         <label class="form-label text-muted">Tanggal Pembayaran</label>
@@ -467,7 +544,8 @@
                         <input type="file" name="pembayaran_detail[${pembayaranIndex}][bukti_pembayaran_detail]" class="form-control shadow-sm">
                     </div>
                     <div class="col-12 mt-2 text-end">
-                        <button type="button" class="btn btn-danger btn-sm rounded-3 remove-btn">
+                        <button type="button" class="btn btn-danger btn-sm rounded-3 remove-btn"
+                                data-bs-toggle="modal" data-bs-target="#confirmDeletePaymentModal">
                             <i class="fas fa-trash me-1"></i> Hapus
                         </button>
                     </div>
@@ -477,36 +555,64 @@
             wrapperElement.appendChild(newItem);
             pembayaranIndex++;
 
-            // Add event listeners to new inputs
-            newItem.querySelectorAll('.payment-detail-input').forEach(input => {
-                input.addEventListener('input', calculateSummary);
+            // Event listeners for the newly added inputs
+            newItem.querySelectorAll('.payment-detail-input:not(.payment-amount-input)').forEach(input => {
+                 input.addEventListener('input', calculateSummary);
             });
 
-            // Add remove button functionality
+            // Add remove button functionality with confirmation modal
             newItem.querySelector('.remove-btn').addEventListener('click', function() {
-                newItem.remove();
-                calculateSummary();
+                paymentItemToDelete = newItem; // Store the item to be deleted
             });
 
             calculateSummary();
         }
 
-        // Add event listeners
+        // Add event listeners for static elements on initial load
         document.getElementById('addPembayaranBtn').addEventListener('click', addPaymentItem);
 
-        // PERBAIKAN: Selector untuk input pembayaran awal
-        document.querySelectorAll('#pembayaran-wrapper .payment-detail-input').forEach(input => {
-            input.addEventListener('input', calculateSummary);
+        // Attach click listener to existing "Hapus" buttons for the first item
+        document.querySelectorAll('.pembayaran-item .remove-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                paymentItemToDelete = this.closest('.pembayaran-item');
+            });
         });
 
+        // Event listener for the "Hapus" button inside the confirmation modal
+        document.getElementById('confirmDeletePaymentBtn').addEventListener('click', function() {
+            if (paymentItemToDelete) {
+                paymentItemToDelete.remove();
+                paymentItemToDelete = null; // Clear the stored item
+                calculateSummary(); // Recalculate summary after deletion
+                confirmDeletePaymentModal.hide(); // Hide the modal
+            }
+        });
+
+
+        // Initial setup for the first payment amount input (index 0)
+        // Ensure initial formatting is applied if old value exists
+        const initialPaymentAmountInput = document.querySelector('input[name="pembayaran_detail[0][jumlah_pembayaran]"]');
+        if (initialPaymentAmountInput && initialPaymentAmountInput.value) {
+            formatPaymentAmount(initialPaymentAmountInput);
+        } else if (initialPaymentAmountInput) {
+             // If no old value, ensure summary still calculates correctly based on 0
+             initialPaymentAmountInput.value = '0'; // Set to '0' initially
+             calculateSummary();
+        }
+
+
+        // Event listener for main form inputs that affect summary
         document.getElementById('mobil_id').addEventListener('change', calculateSummary);
         document.getElementById('penjual_id').addEventListener('change', calculateSummary);
-        // REVISI: Mengubah event listener agar memantau input dengan name="harga_beli_mobil_final"
-        document.querySelector('input[name="harga_beli_mobil_final"]').addEventListener('input', calculateSummary);
         document.getElementById('tanggal_transaksi').addEventListener('change', calculateSummary);
 
-        // Initial calculation
-        calculateSummary();
+        // Initial calculation on page load for harga_beli_final
+        const hargaBeliFinalInput = document.getElementById('harga_beli_final');
+        if (hargaBeliFinalInput.value) {
+            formatAndCalculateSummary(hargaBeliFinalInput);
+        } else {
+            calculateSummary(); // Perform initial summary calculation if no old value
+        }
     });
 
     // Form validation
@@ -515,6 +621,11 @@
         var forms = document.querySelectorAll('.needs-validation');
         Array.prototype.slice.call(forms).forEach(function(form) {
             form.addEventListener('submit', function(event) {
+                // Before submission, remove dots from number inputs to ensure backend receives clean numbers
+                document.querySelectorAll('input[name="harga_beli_mobil_final"], input[name^="pembayaran_detail"][name$="[jumlah_pembayaran]"]').forEach(input => {
+                    input.value = input.value.replace(/\./g, '');
+                });
+
                 if (!form.checkValidity()) {
                     event.preventDefault();
                     event.stopPropagation();

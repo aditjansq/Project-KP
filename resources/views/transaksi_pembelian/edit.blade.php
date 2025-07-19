@@ -11,7 +11,7 @@
 <head>
     {{-- Animate.css for subtle animations --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    {{-- Font Awesome untuk ikon file --}}
+    {{-- Font Awesome for icons --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     {{-- Bootstrap Icons for general icons --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
@@ -124,63 +124,54 @@
         }
 
         /* Select2 Custom Styling to match Bootstrap 5 */
+        .select2-container {
+            width: 100% !important; /* Ensure it takes full width of its parent column */
+        }
         .select2-container .select2-selection--single {
-            height: calc(2.8rem + 2px); /* Match Bootstrap form-control-lg height */
+            height: calc(2.8rem + 2px); /* Maintain Bootstrap's form-control height */
             border: 1px solid #e0e6ed;
             border-radius: 0.5rem !important;
             display: flex;
             align-items: center;
+            padding: 0.375rem 0.75rem; /* Add padding for better visual */
         }
 
-        .select2-container .select2-selection--single .select2-selection__rendered {
-            line-height: 1.5;
-            padding-left: 0.75rem;
-            color: #495057;
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: normal; /* Ensure text is vertically centered */
+            padding-left: 0; /* Remove default Select2 padding if `padding` is added to parent */
+            color: #000000; /* Mengubah warna teks di input Select2 menjadi hitam */
         }
 
-        .select2-container .select2-selection--single .select2-selection__arrow {
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
             height: calc(2.8rem + 2px);
-            width: 20px;
             right: 0.75rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .select2-container--default .select2-selection--single .select2-selection__arrow b {
-            border-color: #888 transparent transparent transparent;
-            border-width: 5px 4px 0 4px;
-        }
-
-        .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
-            border-color: transparent transparent #888 transparent;
-            border-width: 0 4px 5px 4px;
-        }
-
-        .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
-            background-color: #0d6efd !important;
-            color: white;
-        }
-
-        .select2-container--default .select2-results__option--selected {
-            background-color: #e9ecef !important;
-            color: #343a40;
+            top: 0; /* Align arrow to top of the container */
+            display: flex; /* Use flex to center arrow vertically */
+            align-items: center; /* Vertically center arrow */
         }
 
         .select2-dropdown {
             border: 1px solid #e0e6ed;
             border-radius: 0.5rem;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            overflow: hidden; /* Ensures rounded corners are visible */
         }
 
-        .select2-search input {
-            border-radius: 0.5rem !important;
-            border-color: #e0e6ed !important;
+        /* Styling for dropdown options */
+        .select2-container--default .select2-results__option {
+            color: #000000; /* Warna teks untuk setiap opsi di dropdown */
+            padding: 8px 12px; /* Sesuaikan padding jika diperlukan */
         }
-        .select2-search input:focus {
-            border-color: #0d6efd !important;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+
+        /* Styling for highlighted option in dropdown (on hover/focus) */
+        .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+            background-color: #0d6efd; /* Warna latar belakang saat di-hover */
+            color: #ffffff; /* Warna teks saat di-hover menjadi putih agar kontras */
+        }
+
+        /* Styling for selected option in dropdown (already chosen) */
+        .select2-container--default .select2-results__option[aria-selected=true] {
+            background-color: #e9ecef; /* Warna latar belakang untuk opsi yang sudah dipilih */
+            color: #000000; /* Warna teks untuk opsi yang sudah dipilih */
         }
 
         /* Custom styling for remove button */
@@ -224,18 +215,13 @@
             max-width: 500px; /* Limit width on large screens for better aesthetics */
             width: 75%; /* Make it 75% width of its container */
         }
-
-        /* Hide the original button's bottom margin to prevent extra space when fixed button is active */
-        .hidden-original-button-margin {
-            margin-bottom: 0 !important;
-        }
     </style>
 </head>
 
 <div class="container-fluid py-4 px-3 px-md-4">
     <div class="row mb-4 align-items-center">
         <div class="col-md-8 mb-3 mb-md-0">
-            <h4 class="text-dark fw-bold mb-0">Edit Data Transaksi Pembelian Mobil</h4>
+            <h4 class="text-dark fw-bold mb-0">Edit Data Transaksi Pembelian Mobil Baru</h4>
             <small class="text-secondary">Silakan perbarui form berikut dengan data yang benar.</small>
         </div>
         <div class="col-md-4 text-md-end">
@@ -266,8 +252,7 @@
                 <div class="card border-0 shadow-xl rounded-4 mb-4 animate__animated animate__fadeInLeft section-panel">
                     <div class="card-body">
                         <div class="section-header mb-4">
-                            {{-- Using h5, font-weight controlled by CSS --}}
-                            <h5 class="text-dark"><i class="bi bi-info-circle-fill me-2"></i> Informasi Utama Transaksi</h5>
+                            <h5 class="fw-bold text-dark"><i class="bi bi-car-front-fill me-2"></i> Informasi Pembelian Utama</h5>
                         </div>
                         <div class="row g-3">
                             <div class="col-md-6">
@@ -281,37 +266,55 @@
                                 <div class="invalid-feedback">Tanggal transaksi wajib diisi.</div>
                             </div>
                             <div class="col-md-6">
-                                <label for="mobil_id" class="form-label text-muted">Mobil</label>
+                                <label for="mobil_id" class="form-label text-muted">Pilih Mobil</label>
                                 <select class="form-select select2" id="mobil_id" name="mobil_id" required>
                                     <option value="">-- Pilih Mobil --</option>
                                     @foreach($mobils as $mobil)
-                                        <option value="{{ $mobil->id }}" {{ old('mobil_id', $transaksiPembelian->mobil_id) == $mobil->id ? 'selected' : '' }}>
-                                            {{ $mobil->merek_mobil }} {{ $mobil->tipe_mobil }} ({{ $mobil->tahun_pembuatan }}) {{ $mobil->nomor_polisi }}
+                                        <option value="{{ $mobil->id }}"
+                                            data-harga="{{ $mobil->harga_beli }}"
+                                            data-merk="{{ $mobil->merek_mobil }}"
+                                            data-model="{{ $mobil->tipe_mobil }}"
+                                            data-tahun-pembuatan="{{ $mobil->tahun_pembuatan }}"
+                                            data-nomor-polisi="{{ $mobil->nomor_polisi }}"
+                                            {{ old('mobil_id', $transaksiPembelian->mobil_id) == $mobil->id ? 'selected' : '' }}>
+                                            {{ $mobil->merek_mobil }} {{ $mobil->tipe_mobil }} ({{ $mobil->tahun_pembuatan }}) - {{ $mobil->nomor_polisi }}
                                         </option>
                                     @endforeach
                                 </select>
                                 <div class="invalid-feedback">Mobil wajib dipilih.</div>
                             </div>
                             <div class="col-md-6">
-                                <label for="penjual_id" class="form-label text-muted">Penjual</label>
+                                <label for="penjual_id" class="form-label text-muted">Pilih Penjual</label>
                                 <select class="form-select select2" id="penjual_id" name="penjual_id" required>
                                     <option value="">-- Pilih Penjual --</option>
                                     @foreach($penjuals as $penjual)
-                                        <option value="{{ $penjual->id }}" {{ old('penjual_id', $transaksiPembelian->penjual_id) == $penjual->id ? 'selected' : '' }}>
-                                            {{ $penjual->nama }}
+                                        <option value="{{ $penjual->id }}"
+                                            data-nama="{{ $penjual->nama }}"
+                                            data-telepon="{{ $penjual->no_telepon }}"
+                                            {{ old('penjual_id', $transaksiPembelian->penjual_id) == $penjual->id ? 'selected' : '' }}>
+                                            {{ $penjual->nama }} ({{ $penjual->no_telepon }})
                                         </option>
                                     @endforeach
                                 </select>
                                 <div class="invalid-feedback">Penjual wajib dipilih.</div>
                             </div>
-                            <div class="col-md-12">
-                                <label for="harga_beli_mobil_final" class="form-label text-muted">Harga Beli Mobil Final</label>
-                                <input type="number" class="form-control" id="harga_beli_mobil_final" name="harga_beli_mobil_final" value="{{ old('harga_beli_mobil_final', $transaksiPembelian->harga_beli_mobil_final) }}" required min="0">
-                                <div class="invalid-feedback">Harga beli mobil final wajib diisi dan tidak boleh negatif.</div>
+                            <div class="col-md-6">
+                                <label for="harga_beli_mobil_final" class="form-label text-muted">Harga Beli Final</label>
+                                <input type="text" id="harga_beli_mobil_final" name="harga_beli_mobil_final" class="form-control"
+                                    value="{{ old('harga_beli_mobil_final') ? number_format(old('harga_beli_mobil_final'), 0, ',', '.') : number_format($transaksiPembelian->harga_beli_mobil_final, 0, ',', '.') }}"
+                                    required min="0"
+                                    placeholder="Contoh: 150.000.000"
+                                    oninput="formatAndCalculateSummary(this)"
+                                    onblur="if (!this.value) { this.value = '0'; calculateSummary(); }"
+                                >
+                                <div class="invalid-feedback">Harga beli final wajib diisi dan harus berupa angka.</div>
+                                @error('harga_beli_mobil_final')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
                             </div>
-                            <div class="col-md-12">
-                                <label for="keterangan" class="form-label text-muted">Keterangan (Opsional)</label>
-                                <textarea class="form-control" id="keterangan" name="keterangan" rows="3">{{ old('keterangan', $transaksiPembelian->keterangan) }}</textarea>
+                            <div class="col-md-6">
+                                <label for="keterangan" class="form-label text-muted">Keterangan Tambahan</label>
+                                <textarea class="form-control" id="keterangan" name="keterangan" rows="2">{{ old('keterangan', $transaksiPembelian->keterangan) }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -321,14 +324,13 @@
                 <div class="card border-0 shadow-xl rounded-4 mb-4 animate__animated animate__fadeInLeft section-panel">
                     <div class="card-body">
                         <div class="section-header d-flex justify-content-between align-items-center mb-4">
-                            {{-- Updated icon for Detail Pembayaran --}}
-                            <h5 class="text-dark mb-0"><i class="bi bi-cash-coin me-2"></i> Detail Pembayaran</h5>
+                            <h5 class="fw-bold text-dark"><i class="bi bi-cash-coin me-2"></i> Detail Pembayaran</h5>
                             <button type="button" id="addPembayaranBtn" class="btn btn-sm btn-outline-primary rounded-pill">
                                 <i class="bi bi-plus-circle me-2"></i> Tambah Pembayaran
                             </button>
                         </div>
-                        <div id="pembayaranDetailsWrapper">
-                            {{-- Payment details will be dynamically added here by JavaScript --}}
+                        <div id="pembayaran-wrapper">
+                            {{-- Existing payment details will be loaded here by JavaScript --}}
                         </div>
                     </div>
                 </div>
@@ -339,76 +341,93 @@
                 <div class="card border-0 shadow-xl rounded-4 mb-4 animate__animated animate__fadeInRight section-panel sticky-top" style="top: 1.5rem;">
                     <div class="card-body">
                         <div class="section-header mb-4">
-                            {{-- Using h5, font-weight controlled by CSS, and updated icon --}}
-                            <h5 class="text-dark"><i class="bi bi-calculator-fill me-2"></i> Ringkasan Transaksi</h5>
+                            <h5 class="fw-bold text-dark"><i class="bi bi-calculator-fill me-2"></i> Ringkasan Transaksi</h4>
                         </div>
                         <div class="summary-detail">
-                            <span class="label">Total Harga Mobil:</span>
-                            <span class="value" id="summaryHargaMobil">Rp 0</span>
+                            <span class="label">Harga Beli Mobil:</span>
+                            <span class="value" id="summary-harga-mobil">Rp0</span>
                         </div>
                         <div class="summary-detail">
-                            <span class="label">Total Pembayaran Diterima:</span>
-                            <span class="value" id="summaryTotalPembayaran">Rp 0</span>
+                            <span class="label">Harga Beli Final:</span>
+                            <span class="value" id="summary-harga-beli-final">Rp0</span>
+                        </div>
+                        <div class="summary-detail">
+                            <span class="label">Total Pembayaran Diberikan:</span>
+                            <span class="value" id="summary-total-pembayaran">Rp0</span>
                         </div>
                         <div class="summary-detail summary-total">
                             <span class="label fw-bold">Sisa Pembayaran:</span>
-                            <span class="value" id="summarySisaPembayaran">Rp 0</span>
+                            <span class="value fw-bold" id="summary-sisa-pembayaran">Rp0</span>
                         </div>
-                        {{-- Updated Status Pembayaran UI --}}
-                        <div class="summary-alert alert mt-3 text-center" role="alert" id="summaryStatusPembayaranContainer">
-                            Status: <span id="summaryStatusPembayaran">Belum Diketahui</span>
+                        <div class="summary-alert alert alert-warning text-center" role="alert" id="summary-status-alert">
+                            Status: Belum Lunas
                         </div>
-                    </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        {{-- Fixed Bottom Action Bar --}}
-        <div class="fixed-bottom-action-bar animate__animated animate__fadeInUp">
-            <button type="submit" class="btn btn-primary btn-lg rounded-pill animate__pulse">
-                <i class="bi bi-save me-2"></i> Simpan Perubahan
-            </button>
-        </div>
     </form>
 </div>
 
-{{-- jQuery (needed for Select2) --}}
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
-{{-- Bootstrap Bundle with Popper --}}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-{{-- Select2 JS --}}
+<div class="fixed-bottom-action-bar animate__animated animate__fadeInUp">
+    <button type="submit" form="editForm" class="btn btn-primary btn-lg rounded-pill animate__animated animate__pulse animate__infinite">
+        <i class="bi bi-save me-2"></i> Simpan Perubahan
+    </button>
+</div>
+
+<div class="modal fade" id="confirmDeletePaymentModal" tabindex="-1" aria-labelledby="confirmDeletePaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark" id="confirmDeletePaymentModalLabel">Konfirmasi Hapus Detail Pembayaran</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <div class="text-center mb-3">
+                    <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 3rem;"></i>
+                </div>
+                <p class="text-muted text-center">Apakah Anda yakin ingin menghapus detail pembayaran ini? Tindakan ini tidak dapat dibatalkan.</p>
+            </div>
+            <div class="modal-footer border-0 pt-0 justify-content-center">
+                <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-danger rounded-pill" id="confirmDeletePaymentBtn">Hapus</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Inisialisasi Select2
+        // Initialize Select2
         $('#mobil_id').select2({
             theme: "default",
-            placeholder: "Pilih Mobil",
+            placeholder: "-- Pilih Mobil --",
             allowClear: true,
             dropdownParent: $('#mobil_id').parent(),
             width: '100%'
         });
         $('#penjual_id').select2({
             theme: "default",
-            placeholder: "Pilih Penjual",
+            placeholder: "-- Pilih Penjual --",
             allowClear: true,
             dropdownParent: $('#penjual_id').parent(),
             width: '100%'
         });
 
-        const pembayaranDetailsWrapper = document.getElementById('pembayaranDetailsWrapper');
+        const pembayaranWrapper = document.getElementById('pembayaran-wrapper');
         const addPembayaranBtn = document.getElementById('addPembayaranBtn');
         const hargaBeliMobilFinalInput = document.getElementById('harga_beli_mobil_final');
-        const mobilIdSelect = document.getElementById('mobil_id');
-        const penjualIdSelect = document.getElementById('penjual_id');
 
-        const summaryHargaMobil = document.getElementById('summaryHargaMobil');
-        const summaryTotalPembayaran = document.getElementById('summaryTotalPembayaran');
-        const summarySisaPembayaran = document.getElementById('summarySisaPembayaran');
-        const summaryStatusPembayaran = document.getElementById('summaryStatusPembayaran');
-        const summaryStatusPembayaranContainer = document.getElementById('summaryStatusPembayaranContainer');
+        // Variable to store the payment item to be deleted
+        let paymentItemToDelete = null;
+
+        // Initialize Bootstrap Modal
+        const confirmDeletePaymentModal = new bootstrap.Modal(document.getElementById('confirmDeletePaymentModal'));
+
 
         // Inisialisasi counter pembayaran. Ini penting agar indeks tidak tumpang tindih saat menambah item baru.
         // Gunakan jumlah detail pembayaran yang sudah ada + jumlah dari old() jika ada error validasi
@@ -424,60 +443,95 @@
             }
         @endif
 
-        // Fungsi untuk menghitung ringkasan
-        function calculateSummary() {
-            let totalHargaMobil = parseFloat(hargaBeliMobilFinalInput.value) || 0;
-            let totalPembayaranDiterima = 0;
+        // --- GLOBAL FUNCTIONS ---
 
-            // Iterasi melalui semua input jumlah_pembayaran yang ada di wrapper
-            document.querySelectorAll('[name^="pembayaran_detail"][name$="[jumlah_pembayaran]"]').forEach(input => {
-                totalPembayaranDiterima += parseFloat(input.value) || 0;
+        // Main calculation function
+        window.calculateSummary = function() {
+            const hargaBeliFinalInput = document.getElementById('harga_beli_mobil_final').value;
+            // Hapus semua karakter non-digit kecuali tanda minus di awal (untuk angka negatif jika diperlukan)
+            const hargaBeliFinal = parseFloat(hargaBeliFinalInput.replace(/[^\d-]/g, '')) || 0;
+
+            let totalPembayaran = 0;
+            document.querySelectorAll('input[name^="pembayaran_detail"][name$="[jumlah_pembayaran]"]').forEach(input => {
+                // Hapus semua karakter non-digit kecuali tanda minus di awal
+                const valueWithoutNonDigits = input.value.replace(/[^\d-]/g, '');
+                totalPembayaran += parseFloat(valueWithoutNonDigits) || 0;
             });
 
-            let sisaPembayaran = totalHargaMobil - totalPembayaranDiterima;
-            let statusPembayaranText = '';
-            let statusClass = '';
+            // Update summary displays
+            document.getElementById('summary-harga-mobil').textContent = formatCurrency(hargaBeliFinal);
+            document.getElementById('summary-harga-beli-final').textContent = formatCurrency(hargaBeliFinal);
+            document.getElementById('summary-total-pembayaran').textContent = formatCurrency(totalPembayaran);
 
-            if (totalPembayaranDiterima >= totalHargaMobil && totalHargaMobil > 0) {
-                statusPembayaranText = 'Lunas';
-                statusClass = 'alert-success';
-            } else if (totalPembayaranDiterima > 0 && totalPembayaranDiterima < totalHargaMobil) {
-                statusPembayaranText = 'Sebagian Dibayar';
-                statusClass = 'alert-warning';
+            const sisaPembayaran = hargaBeliFinal - totalPembayaran;
+            const sisaPembayaranElement = document.getElementById('summary-sisa-pembayaran');
+            const statusAlertElement = document.getElementById('summary-status-alert');
+
+            sisaPembayaranElement.textContent = formatCurrency(sisaPembayaran);
+
+            // Update status based on sisaPembayaran
+            if (sisaPembayaran > 0) {
+                sisaPembayaranElement.className = 'value fw-bold text-danger';
+                statusAlertElement.textContent = 'Status: Belum Lunas';
+                statusAlertElement.className = 'summary-alert alert alert-danger text-center';
+            } else if (sisaPembayaran < 0) {
+                sisaPembayaranElement.className = 'value fw-bold text-info';
+                statusAlertElement.textContent = 'Status: Pembayaran Melebihi Harga';
+                statusAlertElement.className = 'summary-alert alert alert-info text-center';
             } else {
-                statusPembayaranText = 'Belum Dibayar';
-                statusClass = 'alert-danger';
+                sisaPembayaranElement.className = 'value fw-bold text-success';
+                statusAlertElement.textContent = 'Status: Lunas';
+                statusAlertElement.className = 'summary-alert alert alert-success text-center';
             }
+        };
 
-            summaryHargaMobil.textContent = formatRupiah(totalHargaMobil);
-            summaryTotalPembayaran.textContent = formatRupiah(totalPembayaranDiterima);
-            summarySisaPembayaran.textContent = formatRupiah(sisaPembayaran);
-            summaryStatusPembayaran.textContent = statusPembayaranText;
-
-            // Update class pada container status
-            summaryStatusPembayaranContainer.className = 'summary-alert alert mt-3 text-center ' + statusClass;
-        }
-
-        // Fungsi format Rupiah
-        function formatRupiah(angka) {
-            let reverse = angka.toString().split('').reverse().join('');
-            let ribuan = reverse.match(/\d{1,3}/g);
-            let result = ribuan.join('.').split('').reverse().join('');
-            return 'Rp ' + result;
-        }
-
-        // Fungsi untuk menambahkan item pembayaran baru
-        function addPaymentItem(payment = null) {
-            // Hapus alert "Klik Tambah Pembayaran" jika ada
-            const existingAlert = pembayaranDetailsWrapper.querySelector('.alert-info');
-            if (existingAlert) {
-                existingAlert.remove();
+        // Format currency helper (optimized for real-time input)
+        // Removes any decimal places (e.g., ,00)
+        window.formatCurrency = function(amount) {
+            if (isNaN(amount) || amount === null || typeof amount === 'undefined') {
+                return 'Rp 0';
             }
+            // Use Intl.NumberFormat and explicitly set minimum and maximum fraction digits to 0
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+            }).format(amount);
+        };
+
+        // Function to format the input field directly (adds dots)
+        window.formatAndCalculateSummary = function(inputElement) {
+            // Hapus semua karakter non-digit dari nilai input
+            let rawValue = inputElement.value.replace(/[^\d]/g, '');
+            let formattedValue = '';
+            if (rawValue) {
+                // Tambahkan titik sebagai pemisah ribuan
+                formattedValue = rawValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            }
+            inputElement.value = formattedValue;
+            calculateSummary(); // Call summary calculation after formatting
+        };
+
+        // Function to format payment amount input
+        window.formatPaymentAmount = function(inputElement) {
+            // Hapus semua karakter non-digit dari nilai input
+            let rawValue = inputElement.value.replace(/[^\d]/g, '');
+            let formattedValue = '';
+            if (rawValue) {
+                // Tambahkan titik sebagai pemisah ribuan
+                formattedValue = rawValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            }
+            inputElement.value = formattedValue;
+            calculateSummary(); // Call summary calculation after formatting
+        };
+
+        // --- PAYMENT ITEM MANAGEMENT ---
+        function addPaymentItem(payment = null, isOld = false) {
+            const currentPaymentIndex = paymentItemCounter++; // Use and increment counter
 
             const item = document.createElement('div');
             item.className = 'pembayaran-item mb-3 p-3 position-relative animate__animated animate__fadeIn';
-
-            const currentPaymentIndex = paymentItemCounter++; // Gunakan dan tingkatkan counter
 
             const paymentId = payment ? (payment.id || '') : '';
             const metodePembayaranDetail = payment ? (payment.metode_pembayaran || '') : '';
@@ -485,31 +539,35 @@
             const tanggalPembayaran = payment ? (payment.tanggal_pembayaran ? new Date(payment.tanggal_pembayaran).toISOString().split('T')[0] : '') : new Date().toISOString().split('T')[0];
             const keteranganPembayaranDetail = payment ? (payment.keterangan_pembayaran_detail || '') : '';
             const buktiPembayaranDetail = payment ? (payment.bukti_pembayaran_detail || '') : '';
+            const deleteFileChecked = isOld && payment && payment.delete_file_bukti == '1' ? 'checked' : '';
 
-            // START REVISI JAVASCRIPT
-            const cleanedBuktiPathForJs = (() => {
-                if (!buktiPembayaranDetail) {
-                    return ''; // Tangani jika kosong atau null
+
+            // Helper function to clean and get the full URL for existing files
+            const getCleanedBuktiPath = (path) => {
+                if (!path) {
+                    return '';
                 }
-                if (buktiPembayaranDetail.startsWith('http')) {
-                    // Jika sudah berupa URL HTTP, periksa dan perbaiki masalah duplikasi //storage/
-                    return buktiPembayaranDetail.replace(/(https?:\/\/[^\/]+\/storage)\/\/storage\//, '$1/');
+                // If it's already a full URL (e.g., from old input for uploaded new file)
+                if (path.startsWith('http')) {
+                    // This might happen if validation fails and old input contains a temporary file URL
+                    // Or if it was already stored with a full URL.
+                    // We need to ensure no double //storage/ if it was formed from asset('storage/...')
+                    return path.replace(/(https?:\/\/[^\/]+\/storage)\/\/storage\//, '$1/');
                 }
 
-                // Jika bukan URL lengkap (masih berupa path relatif dari database)
-                // Bersihkan semua kemungkinan prefiks yang tidak diinginkan
-                let path = buktiPembayaranDetail;
-                path = path.replace(/^\/storage\//, ''); // Hapus '/storage/' di awal
-                path = path.replace(/^storage\//, '');   // Hapus 'storage/' di awal
-                path = path.replace(/^public\//, '');    // Hapus 'public/' di awal
+                // If it's a relative path from the database, ensure it's correctly prefixed
+                let cleanedPath = path;
+                cleanedPath = cleanedPath.replace(/^\/storage\//, ''); // Remove leading '/storage/' if present
+                cleanedPath = cleanedPath.replace(/^storage\//, '');   // Remove leading 'storage/' if present
+                cleanedPath = cleanedPath.replace(/^public\//, '');    // Remove leading 'public/' if present
 
-                // Pastikan tidak ada double slash di awal path setelah pembersihan
-                path = path.replace(/^\/\//, '/');
+                // Ensure no double slash at the start of the path after cleaning
+                cleanedPath = cleanedPath.replace(/^\/\//, '/');
 
-                return `{{ url('storage') }}/${path}`;
-            })();
-            // END REVISI JAVASCRIPT
+                return `{{ url('storage') }}/${cleanedPath}`;
+            };
 
+            const cleanedBuktiPathForJs = getCleanedBuktiPath(buktiPembayaranDetail);
 
             item.innerHTML = `
                 <input type="hidden" name="pembayaran_detail[${currentPaymentIndex}][id]" value="${paymentId}">
@@ -525,7 +583,12 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-muted">Jumlah Pembayaran</label>
-                        <input type="number" name="pembayaran_detail[${currentPaymentIndex}][jumlah_pembayaran]" class="form-control payment-detail-input" value="${jumlahPembayaran}" required min="0">
+                        <input type="text" name="pembayaran_detail[${currentPaymentIndex}][jumlah_pembayaran]" class="form-control payment-detail-input payment-amount-input"
+                            value="${formatRupiahUntukInput(jumlahPembayaran)}"
+                            required min="0" placeholder="Contoh: 50.000.000"
+                            oninput="formatPaymentAmount(this)"
+                            onblur="if (!this.value) { this.value = '0'; calculateSummary(); }"
+                        >
                         <div class="invalid-feedback">Jumlah pembayaran wajib diisi dan tidak boleh negatif.</div>
                     </div>
                     <div class="col-md-6">
@@ -540,14 +603,14 @@
                     <div class="col-md-12 mt-3">
                         <label class="form-label text-muted">File Bukti Pembayaran (JPG, JPEG, PNG, PDF)</label>
                         <input type="file" name="pembayaran_detail[${currentPaymentIndex}][bukti_pembayaran_detail]" class="form-control shadow-sm" accept=".pdf,.jpg,.jpeg,.png">
-                        <small class="form-text text-muted">Unggah bukti pembayaran (maks. 2MB, format: JPG, JPEG, PNG, PDF).</small>
+                        <small class="form-text text-muted">Unggah bukti pembayaran (maks. 2MB, format: JPG, JPEG, PNG, PDF). Kosongkan jika tidak ingin mengubah.</small>
                         ${buktiPembayaranDetail ? `
                             <div class="mt-2">
                                 <a href="${cleanedBuktiPathForJs}" target="_blank" class="btn btn-sm btn-outline-info rounded-pill">
                                     <i class="bi bi-file-earmark-arrow-down-fill me-1"></i> Lihat Bukti Saat Ini
                                 </a>
                                 <div class="form-check form-check-inline ms-3">
-                                    <input class="form-check-input" type="checkbox" name="pembayaran_detail[${currentPaymentIndex}][delete_file_bukti]" id="delete_file_bukti_${currentPaymentIndex}" value="1">
+                                    <input class="form-check-input" type="checkbox" name="pembayaran_detail[${currentPaymentIndex}][delete_file_bukti]" id="delete_file_bukti_${currentPaymentIndex}" value="1" ${deleteFileChecked}>
                                     <label class="form-check-label text-danger" for="delete_file_bukti_${currentPaymentIndex}">Hapus File Ini</label>
                                 </div>
                                 <input type="hidden" name="pembayaran_detail[${currentPaymentIndex}][existing_bukti_pembayaran_detail]" value="${buktiPembayaranDetail}">
@@ -560,38 +623,50 @@
                 </button>
             `;
 
-            pembayaranDetailsWrapper.appendChild(item);
+            pembayaranWrapper.appendChild(item);
 
             // Add event listeners for new payment detail inputs
             item.querySelectorAll('.payment-detail-input').forEach(input => {
-                input.addEventListener('input', calculateSummary);
+                // For amount inputs, use the specific formatting function
+                if (input.classList.contains('payment-amount-input')) {
+                    input.addEventListener('input', () => window.formatPaymentAmount(input));
+                    input.addEventListener('blur', () => {
+                        if (!input.value) { input.value = '0'; }
+                        calculateSummary();
+                    });
+                } else {
+                    input.addEventListener('input', calculateSummary);
+                }
             });
 
-            // Add event listener for remove button
-            item.querySelector('.remove-btn').addEventListener('click', () => {
-                item.remove();
-                checkEmptyPaymentItems(); // Panggil fungsi ini setelah menghapus item
-                calculateSummary(); // Recalculate summary after removing an item
+            // Add remove button functionality with confirmation modal
+            item.querySelector('.remove-btn').addEventListener('click', function() {
+                paymentItemToDelete = item; // Store the item to be deleted
+                confirmDeletePaymentModal.show(); // Show the confirmation modal
             });
         }
 
-        // Fungsi untuk memeriksa apakah tidak ada item pembayaran
-        function checkEmptyPaymentItems() {
-            if (pembayaranDetailsWrapper.children.length === 0) {
-                const newEmptyAlert = document.createElement('div');
-                newEmptyAlert.classList.add('alert', 'alert-info', 'text-center', 'py-3', 'animate__animated', 'animate__fadeIn');
-                newEmptyAlert.innerHTML = `<i class="bi bi-info-circle-fill me-2"></i> Klik "Tambah Pembayaran" untuk menambahkan detail pembayaran.`;
-                pembayaranDetailsWrapper.appendChild(newEmptyAlert);
+        // Helper for formatting numbers with dots (for input values)
+        // Ensures no decimal places are kept
+        window.formatRupiahUntukInput = function(angka) {
+            // Pastikan input adalah string dan hapus semua karakter non-digit (termasuk titik dan koma)
+            let number_string = String(angka).replace(/[^\d]/g, '');
+            if (number_string === '') {
+                return ''; // Return empty string if no digits
             }
+            // Tambahkan titik sebagai pemisah ribuan
+            return number_string.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         }
 
         // PHP logic to prepare initialPembayarans for JavaScript
         // This handles old() input for existing items, preserving existing file paths
         @php
             $initialPembayaransData = [];
+            // Prioritize old input if validation failed
             if (old('pembayaran_detail')) {
                 foreach (old('pembayaran_detail') as $index => $oldPayment) {
                     $paymentData = $oldPayment;
+
                     // If 'id' exists, it's an existing payment being edited
                     if (isset($oldPayment['id']) && $oldPayment['id']) {
                         // Find the original payment detail by ID
@@ -599,82 +674,123 @@
 
                         if ($originalPayment) {
                             // If 'bukti_pembayaran_detail' in old() is empty AND the original had a file,
-                            // use the original file path. This covers validation failures for new files.
-                            // If a new valid file was uploaded, old() would contain its temporary path.
+                            // it means no new file was uploaded OR validation failed for a new file.
+                            // In this case, retain the original file path.
                             if (empty($oldPayment['bukti_pembayaran_detail']) && $originalPayment->bukti_pembayaran_detail) {
-                                // START REVISI PHP
-                                $cleanedPath = $originalPayment->bukti_pembayaran_detail;
-                                if (str_starts_with($cleanedPath, '/storage/')) {
-                                    $cleanedPath = substr($cleanedPath, strlen('/storage/'));
-                                } else if (str_starts_with($cleanedPath, 'storage/')) {
-                                    $cleanedPath = substr($cleanedPath, strlen('storage/'));
-                                } else if (str_starts_with($cleanedPath, 'public/')) {
-                                    $cleanedPath = substr($cleanedPath, strlen('public/'));
+                                // Only use original if delete checkbox is NOT checked in old()
+                                if (!isset($oldPayment['delete_file_bukti']) || $oldPayment['delete_file_bukti'] != '1') {
+                                    $paymentData['bukti_pembayaran_detail'] = $originalPayment->bukti_pembayaran_detail;
+                                } else {
+                                    // If delete checkbox IS checked, explicitly set to empty for old() state
+                                    $paymentData['bukti_pembayaran_detail'] = '';
                                 }
-                                $paymentData['bukti_pembayaran_detail'] = Storage::url($cleanedPath); // Gunakan Storage::url() untuk path yang bisa diakses
-                                // END REVISI PHP
                             }
                         }
                     }
+                    // For new items (no 'id' or 'id' is empty), old() data is used as is.
+                    // If a file was uploaded, old() might contain a temporary path.
+                    // If validation failed for a new file, old() for that file input might be empty.
+
                     $initialPembayaransData[] = $paymentData;
                 }
             } else {
-                // Jika tidak ada old data, gunakan data dari model
-                foreach ($transaksiPembelian->detailPembayaran as $detail) {
-                    $paymentData = $detail->toArray();
-                    if ($detail->bukti_pembayaran_detail) {
-                        // START REVISI PHP
-                        $cleanedPath = $detail->bukti_pembayaran_detail;
-                        if (str_starts_with($cleanedPath, '/storage/')) {
-                            $cleanedPath = substr($cleanedPath, strlen('/storage/'));
-                        } else if (str_starts_with($cleanedPath, 'storage/')) {
-                            $cleanedPath = substr($cleanedPath, strlen('storage/'));
-                        } else if (str_starts_with($cleanedPath, 'public/')) {
-                            $cleanedPath = substr($cleanedPath, strlen('public/'));
-                        }
-                        $paymentData['bukti_pembayaran_detail'] = Storage::url($cleanedPath);
-                        // END REVISI PHP
-                    }
-                    $initialPembayaransData[] = $paymentData;
+                // If no old input, load from $transaksiPembelian
+                foreach ($transaksiPembelian->detailPembayaran as $payment) {
+                    $initialPembayaransData[] = $payment->toArray();
                 }
             }
         @endphp
 
         const initialPembayarans = @json($initialPembayaransData);
 
-        // Populate existing payments (untuk edit page)
-        if (initialPembayarans && initialPembayarans.length > 0) {
+        // Load existing payment details or previously entered details on page load
+        if (initialPembayarans.length > 0) {
             initialPembayarans.forEach(payment => {
-                addPaymentItem(payment);
+                addPaymentItem(payment, true); // Pass true to indicate it's from old data/existing
             });
         } else {
-            // Jika tidak ada pembayaran awal, tampilkan pesan kosong
-            checkEmptyPaymentItems();
+            // If no existing payments and no old input, show the "Add payment" alert
+            const newEmptyAlert = document.createElement('div');
+            newEmptyAlert.classList.add('alert', 'alert-info', 'text-center', 'py-3', 'animate__animated', 'animate__fadeIn');
+            newEmptyAlert.innerHTML = `<i class="bi bi-info-circle-fill me-2"></i> Klik "Tambah Pembayaran" untuk menambahkan detail pembayaran.`;
+            pembayaranWrapper.appendChild(newEmptyAlert);
         }
 
-        // Add button listener
+        // Event listener for "Tambah Pembayaran" button
         addPembayaranBtn.addEventListener('click', () => addPaymentItem());
 
-        // Event listeners untuk input utama
-        mobilIdSelect.addEventListener('change', calculateSummary);
-        penjualIdSelect.addEventListener('change', calculateSummary);
-        hargaBeliMobilFinalInput.addEventListener('input', calculateSummary);
+        // Event listener for the "Hapus" button inside the confirmation modal
+        document.getElementById('confirmDeletePaymentBtn').addEventListener('click', function() {
+            if (paymentItemToDelete) {
+                // Create a hidden input to mark this detail for deletion on submit
+                const hiddenDeleteInput = document.createElement('input');
+                hiddenDeleteInput.type = 'hidden';
 
-        // Initial calculation on page load
-        calculateSummary();
+                // Determine the correct name based on whether it's an existing or new item
+                const paymentIdInput = paymentItemToDelete.querySelector('input[name$="[id]"]');
+                if (paymentIdInput && paymentIdInput.value) {
+                    // Existing payment detail, mark it for deletion by ID
+                    hiddenDeleteInput.name = `pembayaran_detail[${Array.from(pembayaranWrapper.children).indexOf(paymentItemToDelete)}][id_to_delete]`;
+                    hiddenDeleteInput.value = paymentIdInput.value;
+                } else {
+                    // New payment detail (not yet in DB), just mark for removal from array
+                    // The index needs to be accurate at time of form submission, which is handled by Laravel's old()
+                    // For newly added items that are deleted before submission, they won't be sent anyway.
+                    // This case primarily handles if it was present in old() but is now being deleted.
+                    hiddenDeleteInput.name = `pembayaran_detail[${Array.from(pembayaranWrapper.children).indexOf(paymentItemToDelete)}][delete]`;
+                    hiddenDeleteInput.value = '1';
+                }
+                document.getElementById('editForm').appendChild(hiddenDeleteInput);
 
-        // Form validation (Bootstrap 5)
-        var forms = document.querySelectorAll('.needs-validation');
-        Array.prototype.slice.call(forms)
-            .forEach(function (form) {
-                form.addEventListener('submit', function (event) {
-                    if (!form.checkValidity()) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
-                    form.classList.add('was-validated');
-                }, false);
-            });
+                paymentItemToDelete.remove();
+                paymentItemToDelete = null; // Clear the stored item
+                calculateSummary(); // Recalculate summary after deletion
+                confirmDeletePaymentModal.hide(); // Hide the modal
+            }
+            // Check if all items are removed and show the prompt
+            if (pembayaranWrapper.children.length === 0) {
+                 const newEmptyAlert = document.createElement('div');
+                newEmptyAlert.classList.add('alert', 'alert-info', 'text-center', 'py-3', 'animate__animated', 'animate__fadeIn');
+                newEmptyAlert.innerHTML = `<i class="bi bi-info-circle-fill me-2"></i> Klik "Tambah Pembayaran" untuk menambahkan detail pembayaran.`;
+                pembayaranWrapper.appendChild(newEmptyAlert);
+            }
+        });
+
+        // Event listeners for main form inputs that affect summary
+        // Note: For select2, use 'change' event on the original select element, not on select2's wrapper.
+        // We already have oninput for harga_beli_mobil_final, so just ensure initial calculation.
+        $('#mobil_id').on('change', calculateSummary);
+        $('#penjual_id').on('change', calculateSummary);
+        document.getElementById('tanggal_transaksi').addEventListener('change', calculateSummary);
+
+        // Initial calculation on page load for harga_beli_mobil_final and existing payments
+        const initialHargaBeliFinal = document.getElementById('harga_beli_mobil_final');
+        if (initialHargaBeliFinal.value) {
+            // Call formatAndCalculateSummary to apply formatting and then calculate
+            formatAndCalculateSummary(initialHargaBeliFinal);
+        } else {
+            calculateSummary(); // Perform initial summary calculation if no old value
+        }
     });
+
+    // Form validation
+    (function() {
+        'use strict';
+        var forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                // Before submission, remove dots from number inputs to ensure backend receives clean numbers
+                document.querySelectorAll('input[name="harga_beli_mobil_final"], input[name^="pembayaran_detail"][name$="[jumlah_pembayaran]"]').forEach(input => {
+                    input.value = input.value.replace(/\./g, '');
+                });
+
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
 </script>
 @endsection
