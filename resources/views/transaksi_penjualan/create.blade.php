@@ -113,30 +113,30 @@
 
         /* Select2 Custom Styling */
         .select2-container {
-            width: 100% !important; /* Pastikan selalu mengambil lebar penuh dari parent */
-            box-sizing: border-box; /* Pastikan padding dan border termasuk dalam perhitungan lebar */
+            width: 100% !important;
+            box-sizing: border-box;
         }
         .select2-container * {
-            box-sizing: border-box; /* Terapkan juga ke semua elemen anak Select2 */
+            box-sizing: border-box;
         }
         .select2-container .select2-selection--single {
-            height: calc(2.8rem + 2px); /* Pertahankan tinggi yang sama dengan form-control Bootstrap */
+            height: calc(2.8rem + 2px);
             border: 1px solid #e0e6ed;
             border-radius: 0.5rem !important;
             display: flex;
             align-items: center;
-            padding: 0.375rem 0.75rem; /* Padding internal untuk teks */
-            overflow: hidden; /* Sembunyikan konten yang meluap di dalam area input */
+            padding: 0.375rem 0.75rem;
+            overflow: hidden;
         }
 
         .select2-container--default .select2-selection--single .select2-selection__rendered {
-            line-height: normal; /* Pastikan teks terpusat vertikal */
-            padding-left: 0; /* Hapus padding default Select2 jika sudah ada padding di parent */
-            color: #000000; /* Warna teks di input Select2 menjadi hitam */
-            white-space: nowrap; /* Mencegah teks terbungkus ke baris baru */
-            overflow: hidden; /* Sembunyikan teks yang terlalu panjang */
-            text-overflow: ellipsis; /* Tampilkan elipsis (...) jika teks terlalu panjang */
-            flex-grow: 1; /* Biarkan area teks mengambil ruang yang tersedia */
+            line-height: normal;
+            padding-left: 0;
+            color: #000000;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-grow: 1;
         }
 
         .select2-container--default .select2-selection--single .select2-selection__arrow {
@@ -145,31 +145,33 @@
             top: 0;
             display: flex;
             align-items: center;
-            padding-left: 0.5rem; /* Sedikit padding di kiri panah agar tidak terlalu mepet */
+            padding-left: 0.5rem;
         }
 
         .select2-dropdown {
             border: 1px solid #e0e6ed;
             border-radius: 0.5rem;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            /* --- Tambahan Z-index untuk memastikan dropdown di atas elemen lain --- */
+            z-index: 1051 !important;
         }
 
         /* Styling untuk opsi dropdown */
         .select2-container--default .select2-results__option {
-            color: #000000; /* Warna teks untuk setiap opsi di dropdown */
+            color: #000000;
             padding: 8px 12px;
         }
 
         /* Styling untuk opsi yang disorot di dropdown (saat hover/fokus) */
         .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
-            background-color: #0d6efd; /* Warna latar belakang saat di-hover */
-            color: #ffffff; /* Warna teks saat di-hover menjadi putih agar kontras */
+            background-color: #0d6efd;
+            color: #ffffff;
         }
 
         /* Styling untuk opsi yang sudah dipilih di dropdown (sudah dipilih) */
         .select2-container--default .select2-results__option[aria-selected=true] {
-            background-color: #e9ecef; /* Warna latar belakang untuk opsi yang sudah dipilih */
-            color: #000000; /* Warna teks untuk opsi yang sudah dipilih */
+            background-color: #e9ecef;
+            color: #000000;
         }
 
         /* Fixed Bottom Action Bar */
@@ -296,7 +298,9 @@
 
                             <div class="col-md-6">
                                 <label for="harga_negosiasi" class="form-label text-muted">Harga Negosiasi</label>
-                                <input type="number" id="harga_negosiasi" name="harga_negosiasi" class="form-control" value="{{ old('harga_negosiasi') }}" required min="0" step="0.01">
+                                <input type="text" id="harga_negosiasi" name="harga_negosiasi" class="form-control"
+                                    value="{{ old('harga_negosiasi', 0) }}"
+                                    required min="0">
                                 <div class="invalid-feedback">
                                     Harga negosiasi wajib diisi dan harus angka positif.
                                 </div>
@@ -327,7 +331,9 @@
                             </div>
                             <div class="col-md-6">
                                 <label for="angsuran_per_bulan" class="form-label text-muted">Angsuran Per Bulan</label>
-                                <input type="number" id="angsuran_per_bulan" name="angsuran_per_bulan" class="form-control" value="{{ old('angsuran_per_bulan') }}" min="0" step="0.01">
+                                <input type="text" id="angsuran_per_bulan" name="angsuran_per_bulan" class="form-control"
+                                    value="{{ old('angsuran_per_bulan', 0) }}"
+                                    required min="0">
                                 <div class="invalid-feedback">
                                     Angsuran per bulan wajib diisi dan harus angka positif.
                                 </div>
@@ -335,7 +341,9 @@
                             {{-- Inputan baru untuk Refund --}}
                             <div class="col-md-6">
                                 <label for="refund" class="form-label text-muted">Jumlah Refund</label>
-                                <input type="number" id="refund" name="refund" class="form-control" value="{{ old('refund', 0) }}" min="0">
+                                <input type="text" id="refund" name="refund" class="form-control"
+                                    value="{{ old('refund', 0) }}"
+                                    min="0">
                                 <div class="invalid-feedback">
                                     Jumlah refund harus berupa angka positif.
                                 </div>
@@ -353,38 +361,8 @@
                             </button>
                         </div>
                         <div id="pembayaran-wrapper">
-                            <div class="pembayaran-item mb-3 p-3 position-relative animate__animated animate__fadeIn">
-                                <div class="row g-3">
-                                    <div class="col-md-4">
-                                        <label class="form-label text-muted">Metode Pembayaran</label>
-                                        <select name="pembayaran[0][metode_pembayaran_detail]" class="form-select payment-detail-input" required>
-                                            <option value="">-- Pilih Metode --</option>
-                                            <option value="cash">Cash</option>
-                                            <option value="transfer_bank">Transfer Bank</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label text-muted">Jumlah Pembayaran</label>
-                                        <input type="number" name="pembayaran[0][jumlah_pembayaran]" class="form-control payment-detail-input" required step="0.01" min="0">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label text-muted">Tanggal Pembayaran</label>
-                                        <input type="date" name="pembayaran[0][tanggal_pembayaran]" class="form-control payment-detail-input" value="{{ date('Y-m-d') }}" required>
-                                    </div>
-                                    <div class="col-md-12 mt-3">
-                                        <label class="form-label text-muted">Keterangan</label>
-                                        <textarea name="pembayaran[0][keterangan_pembayaran_detail]" class="form-control rounded-3 shadow-sm payment-detail-input" rows="2"></textarea>
-                                    </div>
-                                    <div class="col-md-12 mt-3">
-                                        <label class="form-label text-muted">File Bukti Pembayaran</label>
-                                        <input type="file" name="pembayaran[0][bukti_pembayaran_detail]" class="form-control shadow-sm">
-                                    </div>
-                                    <div class="col-12 mt-2 text-end">
-                                        <button type="button" class="btn btn-danger btn-sm rounded-3 remove-btn">
-                                            <i class="fas fa-trash me-1"></i> Hapus
-                                        </button>
-                                    </div>
-                                </div>
+                            <div class="alert alert-info text-center py-3 animate__animated animate__fadeIn">
+                                <i class="bi bi-info-circle-fill me-2"></i> Klik "Tambah Pembayaran" untuk menambahkan detail pembayaran.
                             </div>
                         </div>
                     </div>
@@ -455,129 +433,170 @@
     </button>
 </div>
 
+{{-- Confirm Delete Payment Modal --}}
+<div class="modal fade" id="confirmDeletePaymentModal" tabindex="-1" aria-labelledby="confirmDeletePaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark" id="confirmDeletePaymentModalLabel">Konfirmasi Hapus Detail Pembayaran</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <div class="text-center mb-3">
+                    <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 3rem;"></i>
+                </div>
+                <p class="text-muted text-center">Apakah Anda yakin ingin menghapus detail pembayaran ini? Tindakan ini tidak dapat dibatalkan.</p>
+            </div>
+            <div class="modal-footer border-0 pt-0 justify-content-center">
+                <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-danger rounded-pill" id="confirmDeletePaymentBtn">Hapus</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize Select2
-        $('#mobil_id').select2();
-        $('#pembeli_id').select2();
+    // Utility function to format currency
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+    }
 
-        // Payment index counter
-        let pembayaranIndex = 1;
-
-        // Main calculation function
-function calculateSummary() {
-    // Get selected car price
-    const mobilElement = document.getElementById('mobil_id');
-    const selectedMobil = mobilElement.options[mobilElement.selectedIndex];
-    const hargaMobil = selectedMobil && selectedMobil.dataset.harga ?
-        parseFloat(selectedMobil.dataset.harga) : 0;
-
-    // Get negotiated price
-    const hargaNegosiasi = parseFloat(document.getElementById('harga_negosiasi').value) || 0;
-
-    // Calculate total payments
-    let totalPembayaran = 0;
-    document.querySelectorAll('input[name$="[jumlah_pembayaran]"]').forEach(input => {
-        totalPembayaran += parseFloat(input.value) || 0;
-    });
-
-    // --- BAGIAN YANG DITAMBAHKAN/DIUBAH UNTUK REFUND ---
-
-    // 1. Ambil nilai refund
-    const refund = parseFloat(document.getElementById('refund').value) || 0;
-
-    // --- AKHIR BAGIAN REFUND ---
-
-    // Update summary displays
-    document.getElementById('summary-harga-mobil').textContent = formatCurrency(hargaMobil);
-    document.getElementById('summary-harga-negosiasi').textContent = formatCurrency(hargaNegosiasi);
-    document.getElementById('summary-total-pembayaran').textContent = formatCurrency(totalPembayaran);
-
-    // Handle credit/non-credit differences
-    const metodePembayaran = document.getElementById('metode_pembayaran').value;
-    const sisaPembayaranElement = document.getElementById('summary-sisa-pembayaran');
-    const statusAlertElement = document.getElementById('summary-status-alert');
-
-    if (metodePembayaran === 'kredit') {
-        const dpCalculated = Math.max(hargaNegosiasi - totalPembayaran, 0);
-
-        document.getElementById('summary-dp-section').style.display = 'flex';
-        document.getElementById('summary-dp-calculated').textContent = formatCurrency(dpCalculated);
-        document.getElementById('hidden-dp-value').value = dpCalculated;
-
-        sisaPembayaranElement.textContent = formatCurrency(dpCalculated);
-        sisaPembayaranElement.className = 'value fw-bold ' + (dpCalculated > 0 ? 'text-danger' : 'text-success');
-
-        statusAlertElement.textContent = dpCalculated > 0 ?
-            'Status: DP Belum Lunas' : 'Status: DP Sudah Lunas';
-        statusAlertElement.className = dpCalculated > 0 ?
-            'summary-alert alert alert-warning text-center' : 'summary-alert alert alert-success text-center';
-
-        // Update credit details
-        document.getElementById('summary-kredit-details').style.display = 'block';
-        document.getElementById('summary-tempo-display').textContent =
-            document.getElementById('tempo').value + ' Tahun';
-        document.getElementById('summary-angsuran-display').textContent =
-            formatCurrency(parseFloat(document.getElementById('angsuran_per_bulan').value) || 0);
-        document.getElementById('summary-leasing-display').textContent =
-            document.getElementById('leasing').value || '-';
-
-        // --- BAGIAN YANG DITAMBAHKAN/DIUBAH UNTUK REFUND (lanjutan) ---
-
-        // 2. Tampilkan nilai refund di ringkasan kredit
-        // Anda perlu memastikan ada elemen HTML dengan ID 'summary-refund-display'
-        // atau ID lain yang sesuai di bagian ringkasan Anda.
-        // Jika belum ada, Anda perlu menambahkannya di HTML.
-        document.getElementById('summary-refund-display').textContent = formatCurrency(refund);
-
-        // Pastikan baris refund di ringkasan ditampilkan ketika metode pembayaran adalah kredit
-        document.getElementById('summary-refund-row').style.display = 'flex'; // Asumsi Anda punya elemen dengan ID ini
-
-        // --- AKHIR BAGIAN REFUND ---
-
+    // Fungsi global untuk memformat input angka dengan pemisah ribuan saat diketik
+    function formatNumberInput(inputElement) {
+        let value = inputElement.value.replace(/\./g, ''); // Hapus titik yang ada
+        if (value) {
+            value = parseInt(value).toLocaleString('id-ID'); // Format sebagai mata uang ID
+            inputElement.value = value;
         } else {
-            document.getElementById('summary-dp-section').style.display = 'none';
-            document.getElementById('summary-kredit-details').style.display = 'none';
-
-            // --- BAGIAN YANG DITAMBAHKAN/DIUBAH UNTUK REFUND (lanjutan) ---
-
-            // Sembunyikan baris refund ketika metode pembayaran bukan kredit
-            document.getElementById('summary-refund-row').style.display = 'none'; // Asumsi Anda punya elemen dengan ID ini
-
-
-            // --- AKHIR BAGIAN REFUND ---
-
-            const sisaPembayaran = hargaNegosiasi - totalPembayaran;
-            sisaPembayaranElement.textContent = formatCurrency(sisaPembayaran);
-
-            if (sisaPembayaran > 0) {
-                sisaPembayaranElement.className = 'value fw-bold text-danger';
-                statusAlertElement.textContent = 'Status: Belum Lunas';
-                statusAlertElement.className = 'summary-alert alert alert-danger text-center';
-            } else if (sisaPembayaran < 0) {
-                sisaPembayaranElement.className = 'value fw-bold text-success';
-                statusAlertElement.textContent = 'Status: Pembayaran Melebihi Harga';
-                statusAlertElement.className = 'summary-alert alert alert-info text-center';
-            } else {
-                sisaPembayaranElement.className = 'value fw-bold text-success';
-                statusAlertElement.textContent = 'Status: Lunas';
-                statusAlertElement.className = 'summary-alert alert alert-success text-center';
-            }
+            inputElement.value = ''; // Jika kosong, biarkan kosong
         }
     }
 
-        // Format currency helper
-        function formatCurrency(amount) {
-            return 'Rp' + amount.toFixed(0).replace(/\d(?=(\d{3})+$)/g, '$&.');
+    // Fungsi global untuk membersihkan angka dari pemisah ribuan sebelum digunakan dalam perhitungan
+    function cleanNumber(value) {
+        return parseFloat(String(value).replace(/\./g, '') || 0);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Select2
+        $('#mobil_id').select2({
+            theme: "default",
+            placeholder: "Pilih Mobil",
+            allowClear: true,
+            dropdownParent: $('body'), // Append dropdown to body to avoid z-index issues
+            width: '100%'
+        });
+        $('#pembeli_id').select2({
+            theme: "default",
+            placeholder: "Pilih Pembeli",
+            allowClear: true,
+            dropdownParent: $('body'), // Append dropdown to body to avoid z-index issues
+            width: '100%'
+        });
+
+        // Payment index counter
+        let pembayaranIndex = 0;
+
+        // Modal elements
+        const confirmDeletePaymentModal = new bootstrap.Modal(document.getElementById('confirmDeletePaymentModal'));
+        const confirmDeletePaymentBtn = document.getElementById('confirmDeletePaymentBtn');
+        let itemToDelete = null;
+
+        // Main calculation function
+        function calculateSummary() {
+            // Get selected car price
+            const mobilElement = document.getElementById('mobil_id');
+            const selectedMobil = mobilElement.options[mobilElement.selectedIndex];
+            const hargaMobil = selectedMobil && selectedMobil.dataset.harga ?
+                parseFloat(selectedMobil.dataset.harga) : 0;
+
+            // Get negotiated price
+            const hargaNegosiasi = cleanNumber(document.getElementById('harga_negosiasi').value);
+
+            // Calculate total payments
+            let totalPembayaran = 0;
+            document.querySelectorAll('input[name$="[jumlah_pembayaran]"]').forEach(input => {
+                totalPembayaran += cleanNumber(input.value);
+            });
+
+            // Get refund value
+            const refund = cleanNumber(document.getElementById('refund').value);
+
+            // Update summary displays
+            document.getElementById('summary-harga-mobil').textContent = formatCurrency(hargaMobil);
+            document.getElementById('summary-harga-negosiasi').textContent = formatCurrency(hargaNegosiasi);
+            document.getElementById('summary-total-pembayaran').textContent = formatCurrency(totalPembayaran);
+
+            // Handle credit/non-credit differences
+            const metodePembayaran = document.getElementById('metode_pembayaran').value;
+            const sisaPembayaranElement = document.getElementById('summary-sisa-pembayaran');
+            const statusAlertElement = document.getElementById('summary-status-alert');
+
+            if (metodePembayaran === 'kredit') {
+                const dpCalculated = Math.max(hargaNegosiasi - totalPembayaran, 0);
+
+                document.getElementById('summary-dp-section').style.display = 'flex';
+                document.getElementById('summary-dp-calculated').textContent = formatCurrency(dpCalculated);
+                document.getElementById('hidden-dp-value').value = dpCalculated;
+
+                sisaPembayaranElement.textContent = formatCurrency(dpCalculated);
+                sisaPembayaranElement.className = 'value fw-bold ' + (dpCalculated > 0 ? 'text-danger' : 'text-success');
+
+                statusAlertElement.textContent = dpCalculated > 0 ?
+                    'Status: DP Belum Lunas' : 'Status: DP Sudah Lunas';
+                statusAlertElement.className = dpCalculated > 0 ?
+                    'summary-alert alert alert-warning text-center' : 'summary-alert alert alert-success text-center';
+
+                // Update credit details
+                document.getElementById('summary-kredit-details').style.display = 'block';
+                document.getElementById('summary-tempo-display').textContent =
+                    (document.getElementById('tempo').value || '0') + ' Tahun';
+                document.getElementById('summary-angsuran-display').textContent =
+                    formatCurrency(cleanNumber(document.getElementById('angsuran_per_bulan').value));
+                document.getElementById('summary-leasing-display').textContent =
+                    document.getElementById('leasing').value || '-';
+
+                document.getElementById('summary-refund-display').textContent = formatCurrency(refund);
+                document.getElementById('summary-refund-row').style.display = 'flex';
+
+            } else {
+                document.getElementById('summary-dp-section').style.display = 'none';
+                document.getElementById('summary-kredit-details').style.display = 'none';
+                document.getElementById('summary-refund-row').style.display = 'none';
+
+
+                const sisaPembayaran = hargaNegosiasi - totalPembayaran;
+                sisaPembayaranElement.textContent = formatCurrency(sisaPembayaran);
+
+                if (sisaPembayaran > 0) {
+                    sisaPembayaranElement.className = 'value fw-bold text-danger';
+                    statusAlertElement.textContent = 'Status: Belum Lunas';
+                    statusAlertElement.className = 'summary-alert alert alert-danger text-center';
+                } else if (sisaPembayaran < 0) {
+                    sisaPembayaranElement.className = 'value fw-bold text-success';
+                    statusAlertElement.textContent = 'Status: Pembayaran Melebihi Harga';
+                    statusAlertElement.className = 'summary-alert alert alert-info text-center';
+                } else {
+                    sisaPembayaranElement.className = 'value fw-bold text-success';
+                    statusAlertElement.textContent = 'Status: Lunas';
+                    statusAlertElement.className = 'summary-alert alert alert-success text-center';
+                }
+            }
         }
 
         // Payment item management
         function addPaymentItem() {
             const wrapperElement = document.getElementById('pembayaran-wrapper');
+            const initialAlert = wrapperElement.querySelector('.alert-info');
+            if (initialAlert) {
+                initialAlert.remove();
+            }
+
             const newItem = document.createElement('div');
             newItem.className = 'pembayaran-item mb-3 p-3 position-relative animate__animated animate__fadeIn';
             newItem.innerHTML = `
@@ -592,7 +611,8 @@ function calculateSummary() {
                     </div>
                     <div class="col-md-4">
                         <label class="form-label text-muted">Jumlah Pembayaran</label>
-                        <input type="number" name="pembayaran[${pembayaranIndex}][jumlah_pembayaran]" class="form-control payment-detail-input" required step="0.01" min="0">
+                        <input type="text" name="pembayaran[${pembayaranIndex}][jumlah_pembayaran]" class="form-control payment-detail-input"
+                            value="0" required min="0">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label text-muted">Tanggal Pembayaran</label>
@@ -605,6 +625,7 @@ function calculateSummary() {
                     <div class="col-md-12 mt-3">
                         <label class="form-label text-muted">File Bukti Pembayaran</label>
                         <input type="file" name="pembayaran[${pembayaranIndex}][bukti_pembayaran_detail]" class="form-control shadow-sm">
+                        <small class="form-text text-muted">Unggah bukti pembayaran (maks. 2MB, format: JPG, JPEG, PNG, PDF).</small>
                     </div>
                     <div class="col-12 mt-2 text-end">
                         <button type="button" class="btn btn-danger btn-sm rounded-3 remove-btn">
@@ -617,15 +638,26 @@ function calculateSummary() {
             wrapperElement.appendChild(newItem);
             pembayaranIndex++;
 
-            // Add event listeners to new inputs
+            // Add event listeners to newly created inputs
             newItem.querySelectorAll('.payment-detail-input').forEach(input => {
-                input.addEventListener('input', calculateSummary);
+                if (input.name.includes('[jumlah_pembayaran]')) {
+                    input.addEventListener('input', function() {
+                        formatNumberInput(this);
+                        calculateSummary();
+                    });
+                    input.addEventListener('blur', function() {
+                        if (!this.value) { this.value = '0'; }
+                        calculateSummary();
+                    });
+                } else {
+                    input.addEventListener('input', calculateSummary);
+                }
             });
 
-            // Add remove button functionality
+            // Add remove button functionality to show modal
             newItem.querySelector('.remove-btn').addEventListener('click', function() {
-                newItem.remove();
-                calculateSummary();
+                itemToDelete = newItem;
+                confirmDeletePaymentModal.show();
             });
 
             calculateSummary();
@@ -638,33 +670,107 @@ function calculateSummary() {
 
             if (metodePembayaran === 'kredit') {
                 kreditSection.style.display = 'block';
+                document.getElementById('tempo').setAttribute('required', 'required');
+                document.getElementById('leasing').setAttribute('required', 'required');
+                document.getElementById('angsuran_per_bulan').setAttribute('required', 'required');
             } else {
                 kreditSection.style.display = 'none';
+                document.getElementById('tempo').removeAttribute('required');
+                document.getElementById('leasing').removeAttribute('required');
+                document.getElementById('angsuran_per_bulan').removeAttribute('required');
+                // Clear values when hidden
+                document.getElementById('tempo').value = '';
+                document.getElementById('leasing').value = '';
+                document.getElementById('angsuran_per_bulan').value = '0';
+                document.getElementById('refund').value = '0';
             }
 
             calculateSummary();
         }
 
-        // Add event listeners
+        // Centralized event listeners for static inputs
+        const hargaNegosiasiInput = document.getElementById('harga_negosiasi');
+        const tempoInput = document.getElementById('tempo');
+        const leasingInput = document.getElementById('leasing');
+        const angsuranPerBulanInput = document.getElementById('angsuran_per_bulan');
+        const refundInput = document.getElementById('refund');
+        const metodePembayaranSelect = document.getElementById('metode_pembayaran');
+        const mobilSelect = document.getElementById('mobil_id'); // Using native JS element for listener
+        const pembeliSelect = document.getElementById('pembeli_id'); // Using native JS element for listener
+
+
+        // Event listeners for inputs that also need formatting
+        if (hargaNegosiasiInput) {
+            hargaNegosiasiInput.addEventListener('input', function() {
+                formatNumberInput(this);
+                calculateSummary();
+            });
+            hargaNegosiasiInput.addEventListener('blur', function() {
+                if (!this.value) { this.value = '0'; }
+                calculateSummary();
+            });
+        }
+        if (angsuranPerBulanInput) {
+            angsuranPerBulanInput.addEventListener('input', function() {
+                formatNumberInput(this);
+                calculateSummary();
+            });
+            angsuranPerBulanInput.addEventListener('blur', function() {
+                if (!this.value) { this.value = '0'; }
+                calculateSummary();
+            });
+        }
+        if (refundInput) {
+            refundInput.addEventListener('input', function() {
+                formatNumberInput(this);
+                calculateSummary();
+            });
+            refundInput.addEventListener('blur', function() {
+                if (!this.value) { this.value = '0'; }
+                calculateSummary();
+            });
+        }
+
+        // Event listeners for inputs that only need summary calculation
+        if (tempoInput) {
+            tempoInput.addEventListener('input', calculateSummary);
+        }
+        if (leasingInput) {
+            leasingInput.addEventListener('input', calculateSummary);
+        }
+
+        // Event listeners for select changes
         document.getElementById('addPembayaranBtn').addEventListener('click', addPaymentItem);
+        if (metodePembayaranSelect) {
+            metodePembayaranSelect.addEventListener('change', toggleKreditDetails);
+        }
+        if (mobilSelect) {
+            $(mobilSelect).on('change', calculateSummary); // Select2 events are typically handled by jQuery's on method
+        }
+        if (pembeliSelect) {
+            $(pembeliSelect).on('change', calculateSummary); // Select2 events are typically handled by jQuery's on method
+        }
 
-        document.getElementById('metode_pembayaran').addEventListener('change', toggleKreditDetails);
-
-        document.querySelectorAll('#pembayaran-wrapper .payment-detail-input').forEach(input => {
-            input.addEventListener('input', calculateSummary);
+        // Event listener for confirm delete button in modal
+        confirmDeletePaymentBtn.addEventListener('click', function() {
+            if (itemToDelete) {
+                itemToDelete.remove();
+                calculateSummary();
+                if (document.getElementById('pembayaran-wrapper').children.length === 0) {
+                    const newEmptyAlert = document.createElement('div');
+                    newEmptyAlert.classList.add('alert', 'alert-info', 'text-center', 'py-3', 'animate__animated', 'animate__fadeIn');
+                    newEmptyAlert.innerHTML = `<i class="bi bi-info-circle-fill me-2"></i> Klik "Tambah Pembayaran" untuk menambahkan detail pembayaran.`;
+                    document.getElementById('pembayaran-wrapper').appendChild(newEmptyAlert);
+                }
+                itemToDelete = null;
+                confirmDeletePaymentModal.hide();
+            }
         });
 
-        document.getElementById('mobil_id').addEventListener('change', calculateSummary);
-        document.getElementById('pembeli_id').addEventListener('change', calculateSummary);
-        document.getElementById('harga_negosiasi').addEventListener('input', calculateSummary);
-        document.getElementById('tempo').addEventListener('input', calculateSummary);
-        document.getElementById('angsuran_per_bulan').addEventListener('input', calculateSummary);
-        document.getElementById('leasing').addEventListener('input', calculateSummary);
-        document.getElementById('refund').addEventListener('input', calculateSummary); // Tambahkan event listener untuk refund
 
-        // Initial calculation
+        // Initial calculation on page load
         calculateSummary();
-    });
+        toggleKreditDetails();
 
     // Form validation
     (function() {
@@ -672,6 +778,16 @@ function calculateSummary() {
         var forms = document.querySelectorAll('.needs-validation');
         Array.prototype.slice.call(forms).forEach(function(form) {
             form.addEventListener('submit', function(event) {
+                // Before submission, remove dots from number inputs to ensure backend receives clean numbers
+                document.querySelectorAll(
+                    'input[name="harga_negosiasi"], ' +
+                    'input[name^="pembayaran"][name$="[jumlah_pembayaran]"], ' +
+                    'input[name="angsuran_per_bulan"], ' +
+                    'input[name="refund"]'
+                ).forEach(input => {
+                    input.value = input.value.replace(/\./g, '');
+                });
+
                 if (!form.checkValidity()) {
                     event.preventDefault();
                     event.stopPropagation();
@@ -680,5 +796,6 @@ function calculateSummary() {
             }, false);
         });
     })();
+});
 </script>
 @endsection
