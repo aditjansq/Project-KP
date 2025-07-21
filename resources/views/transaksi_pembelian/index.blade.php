@@ -7,7 +7,6 @@
 @php
     use Carbon\Carbon;
     $job = strtolower(auth()->user()->job ?? '');
-
 @endphp
 
 <head>
@@ -327,26 +326,33 @@
                 <label for="searchInput" class="form-label text-muted">Cari Transaksi</label>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
-                    <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Cari berdasarkan kode, mobil, atau penjual...">
+                    {{-- Nilai input diambil dari parameter URL 'search' --}}
+                    <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Cari berdasarkan kode, mobil, atau penjual..." value="{{ request('search') }}">
                 </div>
             </div>
             <div class="col-md-3">
                 <label for="statusFilter" class="form-label text-muted">Filter Status Pembayaran</label>
+                {{-- Nilai select diambil dari parameter URL 'status' --}}
                 <select id="statusFilter" class="form-select">
                     <option value="">Semua Status</option>
-                    <option value="lunas">Lunas</option>
-                    <option value="sebagian dibayar">Sebagian Dibayar</option>
-                    <option value="dp">DP</option>
+                    <option value="lunas" {{ request('status') == 'lunas' ? 'selected' : '' }}>Lunas</option>
+                    <option value="sebagian dibayar" {{ request('status') == 'sebagian dibayar' ? 'selected' : '' }}>Sebagian Dibayar</option>
+                    {{-- <option value="belum dibayar" {{ request('status') == 'belum dibayar' ? 'selected' : '' }}>Belum Dibayar</option> --}}
+                    {{-- Tambahkan 'dp' jika status 'dp' memang ada di database --}}
+                    {{-- <option value="dp" {{ request('status') == 'dp' ? 'selected' : '' }}>DP</option> --}}
                 </select>
             </div>
             <div class="col-md-3">
                 <label for="tahunFilter" class="form-label text-muted">Filter Tahun Mobil</label>
+                {{-- Nilai select diambil dari parameter URL 'year' --}}
                 <select id="tahunFilter" class="form-select">
                     <option value="">Semua Tahun</option>
                     @php
                         $currentYear = Carbon::now()->year;
-                        for ($year = $currentYear; $year >= 2018; $year--) {
-                            echo "<option value='{$year}'>{$year}</option>";
+                        // Asumsi data mobil paling lama 2010. Sesuaikan jika perlu.
+                        for ($year = $currentYear; $year >= 2010; $year--) {
+                            $selected = (request('year') == $year) ? 'selected' : '';
+                            echo "<option value='{$year}' {$selected}>{$year}</option>";
                         }
                     @endphp
                 </select>
@@ -381,16 +387,8 @@
                     </thead>
                     <tbody>
                         @forelse($transaksis as $transaksi)
-                            <tr class="data-row"
-                                data-kode-transaksi="{{ strtolower($transaksi->kode_transaksi) }}"
-                                data-mobil-merek="{{ strtolower($transaksi->mobil->merek_mobil ?? '') }}"
-                                data-mobil-tipe="{{ strtolower($transaksi->mobil->tipe_mobil ?? '') }}"
-                                data-mobil-tahun="{{ strtolower($transaksi->mobil->tahun_pembuatan ?? '') }}" {{-- Gunakan strtolower untuk pencarian case-insensitive --}}
-                                data-mobil-nomor-polisi="{{ strtolower($transaksi->mobil->nomor_polisi ?? '') }}" {{-- BARU: Untuk nomor polisi mobil --}}
-                                data-penjual="{{ strtolower($transaksi->penjual->nama ?? '') }}"
-                                data-penjual-telepon="{{ strtolower($transaksi->penjual->no_telepon ?? '') }}" {{-- BARU: Untuk nomor telepon penjual --}}
-                                data-status="{{ strtolower($transaksi->status_pembayaran) }}">
-                                <td class="text-center">{{ $loop->iteration }}</td>
+                            <tr class="data-row">
+                                <td class="text-center">{{ $loop->iteration + ($transaksis->currentPage() - 1) * $transaksis->perPage() }}</td>
                                 <td class="text-center fw-bold" data-label="Kode Transaksi">{{ $transaksi->kode_transaksi }}</td>
                                 <td class="text-center" data-label="Tanggal">{{ Carbon::parse($transaksi->tanggal_transaksi)->translatedFormat('d M Y') }}</td>
                                 <td data-label="Mobil">
@@ -410,12 +408,14 @@
                                             $statusClass = 'status-payment lunas';
                                             $displayText = 'Lunas';
                                         } elseif (strtolower($transaksi->status_pembayaran) === 'sebagian dibayar') {
-                                            $statusClass = 'status-payment belum-lunas';
+                                            $statusClass = 'status-payment belum-lunas'; // Anda bisa membuat kelas baru jika ingin warna berbeda untuk 'sebagian dibayar'
                                             $displayText = 'Sebagian Dibayar';
                                         } elseif (strtolower($transaksi->status_pembayaran) === 'dp') {
-                                            $statusClass = 'status-payment dp ';
+                                            $statusClass = 'status-payment dp';
                                             $displayText = 'DP';
                                         } else {
+                                            // Asumsi 'Belum Dibayar' atau status lain akan masuk sini
+                                            $statusClass = 'status-payment belum-lunas'; // Default ke 'belum-lunas' jika belum ada kelas spesifik
                                             $displayText = ucfirst(str_replace('_', ' ', $transaksi->status_pembayaran));
                                         }
                                     @endphp
@@ -431,13 +431,25 @@
                                         <a href="{{ route('transaksi-pembelian.edit', $transaksi->id) }}" class="btn btn-custom-edit">
                                             <i class="fas fa-edit me-1"></i> Edit
                                         </a>
+                                        {{-- Jika Anda ingin menambahkan delete button, tambahkan di sini --}}
+                                        {{-- <form action="{{ route('transaksi-pembelian.destroy', $transaksi->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus transaksi ini?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-custom-delete">
+                                                <i class="fas fa-trash-alt me-1"></i> Hapus
+                                            </button>
+                                        </form> --}}
                                         @endif
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center py-4 text-muted">Tidak ada data transaksi pembelian yang tersedia.</td>
+                                <td colspan="9" class="text-center py-4 text-muted empty-state-message">
+                                    <i class="bi bi-info-circle-fill fs-3 mb-2 d-block"></i>
+                                    <p class="mb-1">Tidak ada data transaksi pembelian yang tersedia dengan filter ini.</p>
+                                    <p class="mb-0">Coba kata kunci atau filter lain.</p>
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -460,88 +472,56 @@
         const statusFilter = document.getElementById('statusFilter');
         const tahunFilter = document.getElementById('tahunFilter');
         const resetFiltersBtn = document.getElementById('resetFiltersBtn');
-        const transaksiTableBody = document.querySelector('#transaksiTable tbody');
-        const rows = Array.from(transaksiTableBody.querySelectorAll('tr.data-row'));
 
-        function applyFiltersAndSearch() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const selectedStatus = statusFilter.value.toLowerCase();
-            const selectedTahun = tahunFilter.value;
-            let foundVisibleRows = false;
+        // Fungsi untuk mengupdate URL berdasarkan filter dan melakukan redirect
+        function updateUrlAndRedirect() {
+            const currentUrl = new URL(window.location.href);
+            const params = currentUrl.searchParams;
 
-            rows.forEach(row => {
-                const kodeTransaksi = row.dataset.kodeTransaksi;
-                const mobilMerek = row.dataset.mobilMerek;
-                const mobilTipe = row.dataset.mobilTipe;
-                const mobilTahun = row.dataset.mobilTahun;
-                const mobilNomorPolisi = row.dataset.mobilNomorPolisi; // BARU
-                const penjual = row.dataset.penjual;
-                const penjualTelepon = row.dataset.penjualTelepon; // BARU
-                const status = row.dataset.status;
+            // Hapus semua parameter filter yang mungkin ada sebelumnya
+            params.delete('search');
+            params.delete('status');
+            params.delete('year');
+            params.delete('page'); // Hapus parameter halaman saat filter diubah agar kembali ke halaman 1
 
-                const matchesSearch = kodeTransaksi.includes(searchTerm) ||
-                                      mobilMerek.includes(searchTerm) ||
-                                      mobilTipe.includes(searchTerm) ||
-                                      mobilTahun.includes(searchTerm) || // SEKARANG JUGA DICARI OLEH SEARCH UTAMA
-                                      mobilNomorPolisi.includes(searchTerm) || // BARU
-                                      penjual.includes(searchTerm) ||
-                                      penjualTelepon.includes(searchTerm); // BARU
-
-                const matchesStatus = selectedStatus === '' || status === selectedStatus;
-                const matchesTahun = selectedTahun === '' || mobilTahun === selectedTahun;
-
-                if (matchesSearch && matchesStatus && matchesTahun) {
-                    row.style.display = '';
-                    foundVisibleRows = true;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-
-            // Handle empty state message
-            let emptyStateRow = transaksiTableBody.querySelector('.empty-state-message');
-            if (!foundVisibleRows) {
-                if (!emptyStateRow) {
-                    emptyStateRow = document.createElement('tr');
-                    emptyStateRow.classList.add('empty-state-message');
-                    emptyStateRow.innerHTML = `
-                        <td colspan="9" class="text-center py-4 text-muted">
-                            <i class="bi bi-info-circle-fill fs-3 mb-2 d-block"></i>
-                            <p class="mb-1">Tidak ada data transaksi pembelian yang tersedia dengan filter ini.</p>
-                            <p class="mb-0">Coba kata kunci atau filter lain.</p>
-                        </td>
-                    `;
-                    transaksiTableBody.appendChild(emptyStateRow);
-                } else {
-                    emptyStateRow.style.display = '';
-                }
-            } else {
-                if (emptyStateRow) {
-                    emptyStateRow.style.display = 'none';
-                }
+            // Tambahkan parameter baru jika ada nilainya
+            if (searchInput.value) {
+                params.set('search', searchInput.value);
             }
+            if (statusFilter.value) {
+                params.set('status', statusFilter.value);
+            }
+            if (tahunFilter.value) {
+                params.set('year', tahunFilter.value);
+            }
+
+            // Arahkan browser ke URL baru
+            window.location.href = currentUrl.toString();
         }
 
-        // Attach event listeners for filtering and searching
-        searchInput.addEventListener('keyup', applyFiltersAndSearch);
-        statusFilter.addEventListener('change', applyFiltersAndSearch);
-        tahunFilter.addEventListener('change', applyFiltersAndSearch);
+        // Event listeners
+        // Gunakan event 'change' untuk dropdown dan 'keyup' untuk search input
+        // Untuk search input, Anda bisa mempertimbangkan 'input' atau 'change' tergantung preferensi
+        searchInput.addEventListener('change', updateUrlAndRedirect); // Ganti keyup ke change untuk performa lebih baik (tidak setiap ketikan)
+        statusFilter.addEventListener('change', updateUrlAndRedirect);
+        tahunFilter.addEventListener('change', updateUrlAndRedirect);
+
         resetFiltersBtn.addEventListener('click', function() {
             searchInput.value = '';
             statusFilter.value = '';
             tahunFilter.value = '';
-            applyFiltersAndSearch();
+            updateUrlAndRedirect(); // Panggil fungsi untuk mereset URL
         });
 
-        // Initial application of filters on page load
-        applyFiltersAndSearch();
-
-        // Sorting logic
+        // Sorting logic (tetap di sisi klien jika Anda tidak ingin server-side sorting untuk ini)
+        // Saya mempertahankan logika sorting yang sudah ada di sini, tapi ingat bahwa ini hanya menyortir data yang ada di halaman saat ini.
+        // Untuk data yang banyak, sorting di sisi server (dengan parameter URL juga) akan lebih baik.
         document.querySelectorAll('th[data-sort-type]').forEach(header => {
             header.addEventListener('click', function() {
                 const table = this.closest('table');
                 const tbody = table.querySelector('tbody');
-                const rows = Array.from(tbody.querySelectorAll('tr.data-row'));
+                // Hanya ambil baris yang visible (tidak didisplay:none oleh JS sebelumnya jika ada)
+                const rows = Array.from(tbody.querySelectorAll('tr.data-row:not(.empty-state-message)'));
                 const columnIndex = Array.from(this.parentNode.children).indexOf(this);
                 const sortType = this.dataset.sortType;
                 const currentDirection = this.dataset.sortDirection || 'asc';
@@ -560,7 +540,8 @@
                 const statusOrder = {
                     'lunas': 3,
                     'dp': 2,
-                    'sebagian dibayar': 1
+                    'sebagian dibayar': 1,
+                    'belum dibayar': 0 // Tambahkan 'belum dibayar'
                 };
 
                 rows.sort((rowA, rowB) => {
@@ -573,13 +554,15 @@
                     let cellAValue, cellBValue;
                     switch (sortType) {
                         case 'numeric':
-                            cellAValue = parseFloat(valA.replace(/[^0-9,-]+/g,"").replace(",", "."));
-                            cellBValue = parseFloat(valB.replace(/[^0-9,-]+/g,"").replace(",", "."));
+                            // Handle 'Rp' prefix and thousands separator
+                            cellAValue = parseFloat(valA.replace(/Rp|\./g, "").replace(",", "."));
+                            cellBValue = parseFloat(valB.replace(/Rp|\./g, "").replace(",", "."));
                             break;
                         case 'date':
                             const parseDate = (dateString) => {
                                 const parts = dateString.split(' ');
                                 const day = parseInt(parts[0]);
+                                // Pastikan nama bulan sesuai dengan format Carbon::translatedFormat('d M Y')
                                 const monthNames = {
                                     'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'Mei': 4, 'Jun': 5,
                                     'Jul': 6, 'Agu': 7, 'Sep': 8, 'Okt': 9, 'Nov': 10, 'Des': 11
@@ -592,14 +575,18 @@
                             cellBValue = parseDate(valB);
                             break;
                         case 'status':
-                            cellAValue = statusOrder[rowA.dataset.status] || 0;
-                            cellBValue = statusOrder[rowB.dataset.status] || 0;
+                             // Dapatkan teks status dari kolom dan konversi ke lowercase untuk perbandingan
+                             const statusTextA = cellA.querySelector('.status-payment') ? cellA.querySelector('.status-payment').textContent.trim().toLowerCase() : '';
+                             const statusTextB = cellB.querySelector('.status-payment') ? cellB.querySelector('.status-payment').textContent.trim().toLowerCase() : '';
+                             cellAValue = statusOrder[statusTextA] || 0;
+                             cellBValue = statusOrder[statusTextB] || 0;
                             break;
                         case 'mobil':
-                            const mobilA = rowA.dataset.mobilMerek + ' ' + rowA.dataset.mobilTipe;
-                            const mobilB = rowB.dataset.mobilMerek + ' ' + rowB.dataset.mobilTipe;
-                            cellAValue = mobilA.toLowerCase();
-                            cellBValue = mobilB.toLowerCase();
+                            // Gunakan data-label untuk mobil karena data- attributes tidak lagi ada di <tr>
+                            const mobilDataA = rowA.querySelector('td[data-label="Mobil"] strong').textContent.trim() + ' ' + rowA.querySelector('td[data-label="Mobil"] small').textContent.trim();
+                            const mobilDataB = rowB.querySelector('td[data-label="Mobil"] strong').textContent.trim() + ' ' + rowB.querySelector('td[data-label="Mobil"] small').textContent.trim();
+                            cellAValue = mobilDataA.toLowerCase();
+                            cellBValue = mobilDataB.toLowerCase();
                             break;
                         default:
                             cellAValue = valA.toLowerCase();
@@ -618,6 +605,11 @@
                 });
 
                 rows.forEach(row => tbody.appendChild(row));
+                // Pastikan pesan "Tidak ada data" dihapus jika sorting mengembalikan data
+                const emptyStateRow = tbody.querySelector('.empty-state-message');
+                if (emptyStateRow && rows.length > 0) {
+                    emptyStateRow.remove();
+                }
             });
         });
 

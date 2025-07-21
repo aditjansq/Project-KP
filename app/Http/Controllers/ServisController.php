@@ -16,15 +16,85 @@ class ServisController extends Controller
      * Menampilkan daftar semua servis.
      * Mengambil data servis dengan eager loading untuk relasi 'mobil' dan 'items',
      * mengurutkannya berdasarkan tanggal servis terbaru, dan melakukan paginasi.
+     * Menerapkan filter dari request URL.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $servis = Servis::with(['mobil', 'items', 'mobil.transaksiPembelian'])
-                        ->orderBy('tanggal_servis', 'desc')
-                        ->orderBy('id', 'desc')
-                        ->paginate(10);
+        $query = Servis::with(['mobil', 'items', 'mobil.transaksiPembelian']);
 
-        return view('servis.index', compact('servis'));
+        // Filter berdasarkan pencarian umum
+        if ($request->has('search') && $request->input('search') != '') {
+            $searchTerm = strtolower($request->input('search'));
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where(DB::raw('lower(kode_servis)'), 'like', '%' . $searchTerm . '%')
+                  ->orWhereHas('mobil', function ($qMobil) use ($searchTerm) {
+                      $qMobil->where(DB::raw('lower(nomor_polisi)'), 'like', '%' . $searchTerm . '%')
+                             ->orWhere(DB::raw('lower(merek_mobil)'), 'like', '%' . $searchTerm . '%')
+                             ->orWhere(DB::raw('lower(tipe_mobil)'), 'like', '%' . $searchTerm . '%');
+                  })
+                  ->orWhere(DB::raw('lower(status)'), 'like', '%' . $searchTerm . '%'); // Tambahkan pencarian status juga
+            });
+        }
+
+        // Filter berdasarkan status
+        if ($request->has('status') && $request->input('status') != '') {
+            $status = strtolower($request->input('status'));
+            if ($status === 'null') { // Menangani status 'Tidak Ada'
+                 $query->whereNull('status');
+            } else {
+                 $query->where(DB::raw('lower(status)'), $status);
+            }
+        }
+
+        // Filter berdasarkan tanggal servis (start_date)
+        if ($request->has('start_date') && $request->input('start_date') != '') {
+            $query->whereDate('tanggal_servis', '>=', $request->input('start_date'));
+        }
+
+        // Filter berdasarkan tanggal servis (end_date)
+        if ($request->has('end_date') && $request->input('end_date') != '') {
+            $query->whereDate('tanggal_servis', '<=', $request->input('end_date'));
+        }
+
+        // Filter berdasarkan tahun servis
+        if ($request->has('tahun_servis') && $request->input('tahun_servis') != '') {
+            $query->whereYear('tanggal_servis', $request->input('tahun_servis'));
+        }
+
+        // Filter berdasarkan merek mobil
+        if ($request->has('mobil_merek') && $request->input('mobil_merek') != '') {
+            $mobilMerek = strtolower($request->input('mobil_merek'));
+            $query->whereHas('mobil', function ($qMobil) use ($mobilMerek) {
+                $qMobil->where(DB::raw('lower(merek_mobil)'), $mobilMerek);
+            });
+        }
+
+        // Filter berdasarkan tipe mobil
+        if ($request->has('mobil_tipe') && $request->input('mobil_tipe') != '') {
+            $mobilTipe = strtolower($request->input('mobil_tipe'));
+            $query->whereHas('mobil', function ($qMobil) use ($mobilTipe) {
+                $qMobil->where(DB::raw('lower(tipe_mobil)'), $mobilTipe);
+            });
+        }
+
+        // Filter berdasarkan nomor polisi mobil
+        if ($request->has('mobil_nopol') && $request->input('mobil_nopol') != '') {
+            $mobilNopol = strtolower($request->input('mobil_nopol'));
+            $query->whereHas('mobil', function ($qMobil) use ($mobilNopol) {
+                $qMobil->where(DB::raw('lower(nomor_polisi)'), 'like', '%' . $mobilNopol . '%');
+            });
+        }
+
+        $servis = $query->orderBy('tanggal_servis', 'desc')
+                        ->orderBy('id', 'desc')
+                        ->paginate(10)
+                        ->appends($request->except('page')); // Penting: Pertahankan filter saat paginasi
+
+        // Dapatkan semua merek dan tipe mobil unik untuk filter dropdown
+        $allMerek = Mobil::distinct()->pluck('merek_mobil')->filter()->sort()->map(fn($m) => strtolower($m));
+        $allTipe = Mobil::distinct()->pluck('tipe_mobil')->filter()->sort()->map(fn($t) => strtolower($t));
+
+        return view('servis.index', compact('servis', 'allMerek', 'allTipe'));
     }
 
     /**

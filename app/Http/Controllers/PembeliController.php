@@ -10,10 +10,30 @@ use Carbon\Carbon;
 class PembeliController extends Controller
 {
     // Menampilkan daftar pembeli
-    public function index()
+    public function index(Request $request) // Tambahkan parameter Request $request
     {
-        $pembelis = Pembeli::paginate(10);
-        return view('pembeli.index', compact('pembelis'));
+        $search = $request->query('search'); // Ambil nilai 'search' dari URL
+
+        $pembelis = Pembeli::query(); // Mulai query Pembeli
+
+        // Terapkan filter pencarian jika ada
+        if ($search) {
+            $pembelis->where(function($query) use ($search) {
+                $query->where('kode_pembeli', 'like', '%' . $search . '%')
+                      ->orWhere('nama', 'like', '%' . $search . '%')
+                      ->orWhere('no_telepon', 'like', '%' . $search . '%')
+                      ->orWhere('alamat', 'like', '%' . $search . '%')
+                      ->orWhere('pekerjaan', 'like', '%' . $search . '%')
+                      // Jika Anda ingin mencari berdasarkan bagian dari tanggal (misal 'Apr'),
+                      // Anda perlu mengonversi tanggal_lahir ke string
+                      ->orWhereRaw("DATE_FORMAT(tanggal_lahir, '%d %b %Y') LIKE ?", ['%' . $search . '%']);
+            });
+        }
+
+        $pembelis = $pembelis->paginate(1); // Lakukan paginasi setelah filter diterapkan
+
+        // Kirim nilai pencarian kembali ke view agar input tetap terisi
+        return view('pembeli.index', compact('pembelis', 'search'));
     }
 
     // Menampilkan form untuk membuat pembeli baru

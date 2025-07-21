@@ -78,7 +78,7 @@ class MobilController extends Controller
 
 
         // Menggunakan paginate() untuk memuat data mobil dengan paginasi setelah filter diterapkan
-        $mobils = $query->paginate(10); // Misalnya, 10 item per halaman. Anda bisa menyesuaikan angkanya.
+        $mobils = $query->paginate(5); // Misalnya, 10 item per halaman. Anda bisa menyesuaikan angkanya.
 
         // Menambahkan parameter query ke link paginasi agar filter tetap berlaku saat navigasi halaman
         $mobils->appends($request->query());

@@ -476,7 +476,7 @@
             background-color: #fcfdfe; /* Slightly off-white background */
         }
 
-        .info-section-bordered h6.text-primary {
+        .info-section-bordered h6 class="text-primary" {
             margin-top: 0;
             margin-bottom: 1.5rem !important;
         }
@@ -541,7 +541,8 @@
                 <label for="searchInput" class="form-label text-muted">Cari Pembeli</label>
                 <div class="input-group">
                     <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                    <input type="text" id="searchInput" class="form-control border-start-0 rounded-end" placeholder="Cari berdasarkan kode, nama, atau nomor telepon...">
+                    {{-- Tambahkan value dari $search --}}
+                    <input type="text" id="searchInput" class="form-control border-start-0 rounded-end" placeholder="Cari berdasarkan kode, nama, atau nomor telepon..." value="{{ $search ?? '' }}">
                 </div>
             </div>
             {{-- Filter Pekerjaan Dihapus --}}
@@ -658,7 +659,7 @@
         <div class="card-footer bg-light border-0 py-3 px-4 d-flex flex-column flex-md-row justify-content-between align-items-center rounded-bottom-4 gap-3">
             <small class="text-muted">Data diperbarui terakhir: {{ Carbon::now()->format('d M Y H:i') }} WIB</small>
             {{-- Pagination Links (Pastikan $pembelis adalah instance Paginator) --}}
-            {{ optional($pembelis)->links('pagination::bootstrap-5') }}
+            {{ optional($pembelis)->appends(request()->query())->links('pagination::bootstrap-5') }} {{-- Tambahkan appends() --}}
         </div>
     </div>
 </div>
@@ -909,74 +910,40 @@
             });
         }
 
-        // --- Logika Filter dan Pencarian ---
+        // --- Logika Filter dan Pencarian BERDASARKAN URL ---
         const searchInput = document.getElementById('searchInput');
         const resetFiltersBtn = document.getElementById('resetFiltersBtn');
-        const pembeliTable = document.getElementById('pembeliTable');
-        let tableRows = pembeliTable.querySelectorAll('tbody tr.data-row'); // Gunakan let untuk memungkinkan pengambilan ulang jika konten tabel berubah
 
-        function applyFiltersAndSearch() {
-            const searchTerm = searchInput.value.toLowerCase().trim();
-            let foundVisibleRows = false;
+        // Fungsi untuk menerapkan filter dengan memperbarui URL
+        function applyFiltersToUrl() {
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.delete('page'); // Reset page saat menerapkan filter baru
 
-            tableRows.forEach(row => {
-                const kodePembeli = row.dataset.kodePembeli || '';
-                const nama = row.dataset.nama || '';
-                const noTelepon = row.dataset.noTelepon || '';
-                const alamat = row.dataset.alamat || '';
-                const pekerjaan = row.dataset.pekerjaan || '';
-                const tanggalLahirFormatted = row.dataset.tanggalLahirFormatted || ''; // Gunakan ini untuk pencarian
-
-                const matchesSearch = searchTerm === '' ||
-                                      kodePembeli.includes(searchTerm) ||
-                                      nama.includes(searchTerm) ||
-                                      noTelepon.includes(searchTerm) ||
-                                      alamat.includes(searchTerm) ||
-                                      pekerjaan.includes(searchTerm) ||
-                                      tanggalLahirFormatted.includes(searchTerm);
-
-                if (matchesSearch) {
-                    row.style.display = '';
-                    foundVisibleRows = true;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-
-            // Tangani pesan keadaan kosong
-            const currentEmptyStateRow = pembeliTable.querySelector('.empty-state');
-            if (foundVisibleRows) {
-                if (currentEmptyStateRow) {
-                    currentEmptyStateRow.remove();
-                }
+            if (searchInput.value) {
+                newUrl.searchParams.set('search', searchInput.value);
             } else {
-                if (!currentEmptyStateRow) {
-                    const newEmptyStateRow = document.createElement('tr');
-                    newEmptyStateRow.classList.add('empty-state');
-                    newEmptyStateRow.innerHTML = `
-                        <td colspan="7" class="text-center py-4 text-muted"> {{-- Disesuaikan dengan jumlah kolom yang terlihat --}}
-                            <i class="bi bi-info-circle-fill fs-3 mb-2 d-block"></i>
-                            <p class="mb-1">Tidak ada hasil ditemukan untuk pencarian Anda.</p>
-                            <p class="mb-0">Coba kata kunci lain.</p>
-                        </td>
-                    `;
-                    pembeliTable.querySelector('tbody').appendChild(newEmptyStateRow);
-                }
+                newUrl.searchParams.delete('search');
             }
+
+            window.location.href = newUrl.toString(); // Redirect ke URL baru
         }
 
-        // Lampirkan event listener untuk pencarian
-        searchInput.addEventListener('keyup', applyFiltersAndSearch);
-
-        resetFiltersBtn.addEventListener('click', function() {
-            searchInput.value = '';
-            applyFiltersAndSearch(); // Terapkan filter dengan nilai yang sudah dibersihkan
+        // Event listener untuk input pencarian (saat menekan Enter)
+        searchInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                applyFiltersToUrl();
+            }
         });
 
-        // Pengaturan awal saat halaman dimuat
-        applyFiltersAndSearch();
+        // Event listener untuk tombol "Reset Filter"
+        resetFiltersBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            applyFiltersToUrl(); // Terapkan filter kosong untuk mereset
+        });
 
-        // Logika Pengurutan Tabel
+        // --- Logika Pengurutan Tabel (tetap di sisi klien karena data yang difilter sudah ada di halaman) ---
+        // Perhatikan: Jika Anda memfilter dengan server, sorting ini hanya akan mengurutkan data yang *sudah ada* di halaman saat ini.
+        // Untuk sorting yang mencakup semua data, sorting juga harus dilakukan di server (controller).
         document.querySelectorAll('th[data-sort-type]').forEach(header => {
             header.addEventListener('click', function() {
                 const table = this.closest('table');
@@ -1018,6 +985,7 @@
                         return newDirection === 'asc' ? comparison : -comparison;
 
                     } else if (sortType === 'numeric') {
+                        // Tidak ada kolom numerik di sini yang perlu sorting kustom, tapi tetap pertahankan jika ada.
                         valA = parseFloat(rowA.children[columnIndex].textContent.trim().replace(/[^0-9.-]+/g,""));
                         valB = parseFloat(rowB.children[columnIndex].textContent.trim().replace(/[^0-9.-]+/g,""));
                     } else { // 'text' type

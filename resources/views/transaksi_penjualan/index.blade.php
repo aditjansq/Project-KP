@@ -9,7 +9,7 @@
 @section('content')
 <head>
     {{-- Google Fonts Poppins (opsional, bisa dipertahankan jika diinginkan) --}}
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     {{-- Animate.css (opsional, bisa dipertahankan untuk animasi) --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     {{-- Font Awesome untuk ikon (pastikan sudah dimuat di layouts.app juga) --}}
@@ -20,7 +20,7 @@
     {{-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-QWTKZyjpPEjGFoRxTtzg2RlQngQ1L+xWj7s1Q2uOQW+LpM3M4tWd2bL9R+N" crossorigin="anonymous"> --}}
     <style>
         /* Google Fonts - Poppins */
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
         body {
             background-color: #f0f2f5; /* Light gray background for a clean feel */
@@ -313,27 +313,33 @@
                 <label for="searchInput" class="form-label text-muted">Cari Transaksi</label>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
-                    <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Cari berdasarkan kode, mobil, atau pembeli...">
+                    {{-- Tambahkan value dari $search --}}
+                    <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Cari berdasarkan kode, mobil, atau pembeli..." value="{{ $search ?? '' }}">
                 </div>
             </div>
             <div class="col-md-3">
                 <label for="statusFilter" class="form-label text-muted">Filter Status</label>
+                {{-- Tambahkan selected dari $statusFilter --}}
                 <select id="statusFilter" class="form-select">
                     <option value="">Semua Status</option>
-                    <option value="lunas">Lunas</option>
-                    <option value="belum lunas">Belum Lunas</option>
-                    <option value="dp">DP</option>
+                    <option value="lunas" {{ ($statusFilter ?? '') == 'lunas' ? 'selected' : '' }}>Lunas</option>
+                    <option value="belum lunas" {{ ($statusFilter ?? '') == 'belum lunas' ? 'selected' : '' }}>Belum Lunas</option>
+                    <option value="dp" {{ ($statusFilter ?? '') == 'dp' ? 'selected' : '' }}>DP</option>
                 </select>
             </div>
             <div class="col-md-3">
                 <label for="metodePembayaranFilter" class="form-label text-muted">Filter Metode Pembayaran</label>
+                {{-- Tambahkan selected dari $metodePembayaranFilter --}}
                 <select id="metodePembayaranFilter" class="form-select">
                     <option value="">Semua Metode</option>
-                    <option value="non_kredit">Non-Kredit</option>
-                    <option value="kredit">Kredit</option>
+                    <option value="non_kredit" {{ ($metodePembayaranFilter ?? '') == 'non_kredit' ? 'selected' : '' }}>Non-Kredit</option>
+                    <option value="kredit" {{ ($metodePembayaranFilter ?? '') == 'kredit' ? 'selected' : '' }}>Kredit</option>
                 </select>
             </div>
             <div class="col-md-2 text-end">
+                <button id="applyFiltersBtn" class="btn btn-primary w-100 mb-2" style="display: none;">
+                    <i class="bi bi-funnel-fill me-2"></i> Terapkan Filter
+                </button>
                 <button id="resetFiltersBtn" class="btn btn-outline-secondary w-100">
                     <i class="bi bi-arrow-counterclockwise me-2"></i> Reset Filter
                 </button>
@@ -363,6 +369,7 @@
                     </thead>
                     <tbody>
                         @forelse ($transaksis as $transaksi)
+                            {{-- Data attributes ini tidak lagi digunakan untuk filtering JS, tapi bisa tetap ada untuk debugging atau keperluan lain --}}
                             <tr data-kode-transaksi="{{ strtolower($transaksi->kode_transaksi) }}"
                                 data-mobil="{{ strtolower($transaksi->mobil->merek_mobil ?? '') }} {{ strtolower($transaksi->mobil->tipe_mobil ?? '') }} {{ strtolower($transaksi->mobil->tahun_pembuatan ?? '') }} {{ strtolower($transaksi->mobil->nomor_polisi ?? '') }}"
                                 data-pembeli="{{ strtolower($transaksi->pembeli->nama ?? '') }}"
@@ -429,7 +436,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center py-4 text-muted">
+                                <td colspan="9" class="text-center py-4 text-muted empty-state"> {{-- Tambahkan class empty-state --}}
                                     <i class="bi bi-info-circle-fill fs-3 mb-2 d-block"></i>
                                     <p class="mb-1">Tidak ada hasil ditemukan untuk pencarian atau filter Anda.</p>
                                     <p class="mb-0">Coba kata kunci atau filter lain.</p>
@@ -454,91 +461,66 @@
         const searchInput = document.getElementById('searchInput');
         const statusFilter = document.getElementById('statusFilter');
         const metodePembayaranFilter = document.getElementById('metodePembayaranFilter');
+        const applyFiltersBtn = document.getElementById('applyFiltersBtn');
         const resetFiltersBtn = document.getElementById('resetFiltersBtn');
-        const transaksiTable = document.querySelector('.table tbody');
-        const rows = Array.from(transaksiTable.querySelectorAll('tr')); // Get all rows initially
 
-        function applyFiltersAndSearch() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const selectedStatus = statusFilter.value.toLowerCase();
-            const selectedMetodePembayaran = metodePembayaranFilter.value.toLowerCase();
-            let foundVisibleRows = false;
+        // Fungsi untuk menerapkan filter dengan memperbarui URL
+        function applyFiltersToUrl() {
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.delete('page'); // Reset page saat menerapkan filter baru
 
-            rows.forEach(row => {
-                // Skip the empty state row from filtering logic
-                if (row.classList.contains('empty-state')) {
-                    row.style.display = 'none'; // Ensure empty state is hidden by default
-                    return;
-                }
-
-                const kodeTransaksi = row.dataset.kodeTransaksi;
-                const mobil = row.dataset.mobil; // Ini sekarang mencakup merek, tipe, tahun, dan nomor polisi
-                const pembeli = row.dataset.pembeli;
-                const pembeliTelepon = row.dataset.pembeliTelepon; // BARU
-                const status = row.dataset.status;
-                const metodePembayaran = row.dataset.metodePembayaran;
-
-                const matchesSearch = kodeTransaksi.includes(searchTerm) ||
-                                      mobil.includes(searchTerm) || // Akan mencari tahun dan nomor polisi juga
-                                      pembeli.includes(searchTerm) ||
-                                      pembeliTelepon.includes(searchTerm); // BARU
-
-                const matchesStatus = selectedStatus === '' || status === selectedStatus;
-                const matchesMetodePembayaran = selectedMetodePembayaran === '' || metodePembayaran === selectedMetodePembayaran;
-
-                if (matchesSearch && matchesStatus && matchesMetodePembayaran) {
-                    row.style.display = ''; // Show row
-                    foundVisibleRows = true;
-                } else {
-                    row.style.display = 'none'; // Hide row
-                }
-            });
-
-            // Handle empty state message
-            const existingEmptyStateRow = transaksiTable.querySelector('.empty-state');
-            if (!foundVisibleRows) {
-                if (!existingEmptyStateRow) {
-                    const newEmptyStateRow = document.createElement('tr');
-                    newEmptyStateRow.classList.add('empty-state');
-                    newEmptyStateRow.innerHTML = `
-                        <td colspan="9" class="text-center text-muted py-5">
-                            <i class="bi bi-info-circle-fill fs-3 mb-2 d-block"></i>
-                            <p class="mb-1">Tidak ada hasil ditemukan untuk pencarian atau filter Anda.</p>
-                            <p class="mb-0">Coba kata kunci atau filter lain.</p>
-                        </td>
-                    `;
-                    transaksiTable.appendChild(newEmptyStateRow);
-                } else {
-                    existingEmptyStateRow.style.display = ''; // Show existing empty state
-                }
+            if (searchInput.value) {
+                newUrl.searchParams.set('search', searchInput.value);
             } else {
-                if (existingEmptyStateRow) {
-                    existingEmptyStateRow.style.display = 'none'; // Hide empty state if results are found
-                }
+                newUrl.searchParams.delete('search');
             }
+
+            if (statusFilter.value) {
+                newUrl.searchParams.set('status', statusFilter.value);
+            } else {
+                newUrl.searchParams.delete('status');
+            }
+
+            if (metodePembayaranFilter.value) {
+                newUrl.searchParams.set('metode_pembayaran', metodePembayaranFilter.value);
+            } else {
+                newUrl.searchParams.delete('metode_pembayaran');
+            }
+
+            window.location.href = newUrl.toString(); // Redirect ke URL baru
         }
 
-        // Attach event listeners for filtering and searching
-        searchInput.addEventListener('keyup', applyFiltersAndSearch);
-        statusFilter.addEventListener('change', applyFiltersAndSearch);
-        metodePembayaranFilter.addEventListener('change', applyFiltersAndSearch);
+        // Sembunyikan tombol "Terapkan Filter" karena filter akan diterapkan otomatis
+        applyFiltersBtn.style.display = 'none';
 
+        // Event listener untuk perubahan pada dropdown status
+        statusFilter.addEventListener('change', applyFiltersToUrl);
+
+        // Event listener untuk perubahan pada dropdown metode pembayaran
+        metodePembayaranFilter.addEventListener('change', applyFiltersToUrl);
+
+        // Event listener untuk input pencarian (saat menekan Enter)
+        searchInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                applyFiltersToUrl();
+            }
+        });
+
+        // Event listener untuk tombol "Reset Filter"
         resetFiltersBtn.addEventListener('click', function() {
             searchInput.value = '';
             statusFilter.value = '';
             metodePembayaranFilter.value = '';
-            applyFiltersAndSearch();
+            applyFiltersToUrl(); // Terapkan filter kosong untuk mereset
         });
 
-        // Initial application of filters on page load
-        applyFiltersAndSearch();
-
-        // Sorting logic
+        // --- Sorting Logic (tetap di sisi klien karena data sudah ada di halaman) ---
         document.querySelectorAll('th[data-sort-type]').forEach(header => {
             header.addEventListener('click', function() {
                 const table = this.closest('table');
                 const tbody = table.querySelector('tbody');
-                const rows = Array.from(tbody.querySelectorAll('tr:not(.empty-state)')); // Exclude empty state row
+                // Hanya ambil baris yang terlihat (tidak disembunyikan oleh filter server-side)
+                const rows = Array.from(tbody.querySelectorAll('tr:not(.empty-state)'));
                 const columnIndex = Array.from(this.parentNode.children).indexOf(this);
                 const sortType = this.dataset.sortType;
                 const currentDirection = this.dataset.sortDirection || 'asc';
@@ -574,7 +556,6 @@
                             cellBValue = parseFloat(valB.replace(/[^0-9,-]+/g,"").replace(",", "."));
                             break;
                         case 'date': // For 'Tanggal'
-                            // For this table, the date format is 'd M Y', so we need to parse it correctly
                             const parseDate = (dateString) => {
                                 const parts = dateString.split(' ');
                                 const monthNames = {
@@ -594,7 +575,6 @@
                             cellBValue = statusOrder[valB.toLowerCase()] || 0;
                             break;
                         case 'mobil': // For 'Mobil' column, sort by the first line (brand/type/year)
-                            // Since data-mobil now contains more info, we can use that directly for sorting
                             cellAValue = rowA.dataset.mobil.toLowerCase();
                             cellBValue = rowB.dataset.mobil.toLowerCase();
                             break;

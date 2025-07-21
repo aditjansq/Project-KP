@@ -10,19 +10,55 @@ use App\Models\TransaksiPenjualanPembayaranDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon; // Pastikan Carbon sudah diimpor
+use Carbon\Carbon;
 
 class TransaksiPenjualanController extends Controller
 {
     /**
      * Menampilkan daftar transaksi penjualan.
      *
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\View\View
      */
-    public function index()
+    public function index(Request $request) // Tambahkan Request $request
     {
-        $transaksis = TransaksiPenjualan::with('mobil', 'pembeli', 'pembayaranDetails')->latest()->paginate(10);
-        return view('transaksi_penjualan.index', compact('transaksis'));
+        $query = TransaksiPenjualan::with('mobil', 'pembeli', 'pembayaranDetails');
+
+        // Ambil parameter dari URL
+        $search = $request->query('search');
+        $statusFilter = $request->query('status');
+        $metodePembayaranFilter = $request->query('metode_pembayaran');
+
+        // Terapkan filter pencarian
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('kode_transaksi', 'like', '%' . $search . '%')
+                  ->orWhereHas('mobil', function ($sq) use ($search) {
+                      $sq->where('merek_mobil', 'like', '%' . $search . '%')
+                         ->orWhere('tipe_mobil', 'like', '%' . $search . '%')
+                         ->orWhere('tahun_pembuatan', 'like', '%' . $search . '%')
+                         ->orWhere('nomor_polisi', 'like', '%' . $search . '%');
+                  })
+                  ->orWhereHas('pembeli', function ($sq) use ($search) {
+                      $sq->where('nama', 'like', '%' . $search . '%')
+                         ->orWhere('no_telepon', 'like', '%' . $search . '%');
+                  });
+            });
+        }
+
+        // Terapkan filter status
+        if ($statusFilter) {
+            $query->where('status', $statusFilter);
+        }
+
+        // Terapkan filter metode pembayaran
+        if ($metodePembayaranFilter) {
+            $query->where('metode_pembayaran', $metodePembayaranFilter);
+        }
+
+        $transaksis = $query->latest()->paginate(10)->appends($request->query()); // Tambahkan appends() untuk pagination
+
+        return view('transaksi_penjualan.index', compact('transaksis', 'search', 'statusFilter', 'metodePembayaranFilter'));
     }
 
     /**

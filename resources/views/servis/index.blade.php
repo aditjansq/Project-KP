@@ -10,7 +10,7 @@
 
 <head>
     {{-- Google Fonts Poppins --}}
-    <link href="https://fonts.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     {{-- Animate.css untuk animasi masuk --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     {{-- Font Awesome untuk ikon --}}
@@ -23,7 +23,7 @@
     {{-- ======================================================= --}}
     <style>
         /* Google Fonts - Poppins */
-        @import url('https://fonts.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
         body {
             background-color: #f0f2f5; /* Latar belakang abu-abu muda untuk tampilan bersih */
@@ -367,7 +367,7 @@
             background-color: #fcfdfe; /* Latar belakang sedikit off-white */
         }
 
-        .info-section-bordered h6.text-primary {
+        .info-section-bordered h6 class="text-primary" {
             margin-top: 0;
             margin-bottom: 1.5rem !important;
         }
@@ -429,7 +429,7 @@
             opacity: 0.7;
         }
 
-        /* Gaya Modal Filter Utama (Meniru bagian filter umum) */
+        /* Gaya Modal Filter Utama (Meniru moreFiltersModal dari Daftar Mobil) */
         /* Menghapus styling .modal-header.bg-primary-gradient sesuai permintaan pengguna */
         .modal-body .form-control,
         .modal-body .form-select {
@@ -458,7 +458,6 @@
         }
 
         /* Perubahan: Atur ulang gaya backdrop modal untuk mengaktifkannya */
-        /* Menghapus aturan yang menyembunyikan backdrop */
         /* .modal-backdrop {
             display: none !important;
         } */
@@ -495,7 +494,13 @@
                 <label for="searchInput" class="form-label text-muted">Cari Servis</label>
                 <div class="input-group">
                     <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                    <input type="text" id="searchInput" class="form-control border-start-0 rounded-end" placeholder="Cari berdasarkan kode servis, nopol, atau informasi mobil...">
+                    {{-- Input search sekarang akan mengirimkan ke URL --}}
+                    <input type="text" id="searchInput" class="form-control border-start-0 rounded-end" placeholder="Cari berdasarkan kode servis, nopol, atau informasi mobil..." value="{{ request('search') }}">
+                    {{-- Perubahan di sini: Menambahkan tombol reset di samping searchInput --}}
+                    <button type="button" id="resetSearchBtn" class="btn btn-outline-secondary border-start-0 rounded-start-0 rounded-end">
+                        <i class="bi bi-x-circle me-2"></i> Reset Cari
+                    </button>
+                    {{-- Akhir Perubahan --}}
                 </div>
             </div>
             <div class="col-md-2 text-end">
@@ -530,6 +535,7 @@
                     <tbody>
                         @forelse($servis as $item)
                         <tr class="data-row"
+                            {{-- Data attributes ini sekarang hanya untuk JS detail modal, bukan filter --}}
                             data-kode="{{ strtolower($item->kode_servis) }}"
                             data-mobil="{{ strtolower($item->mobil->nomor_polisi ?? '') }}"
                             data-status="{{ strtolower($item->status ?? 'null') }}"
@@ -540,7 +546,7 @@
                             data-harga-dibeli="{{ $item->mobil->transaksiPembelian->sum('harga_beli_mobil_final') ?? 0 }}"
                             data-biaya-perbaikan="{{ $item->total_harga }}"
                             data-modal-mobil="{{ $item->total_biaya_keseluruhan }}">
-                            <td class="text-center">{{ $loop->iteration }}</td>
+                            <td class="text-center">{{ $loop->iteration + ($servis->currentPage() - 1) * $servis->perPage() }}</td>
                             <td class="text-center">{{ $item->kode_servis }}</td>
                             <td class="text-center">{{ \Carbon\Carbon::parse($item->tanggal_servis)->format('d M Y') }}</td>
                             <td class="text-break">
@@ -669,10 +675,8 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Nama Barang</th>
-                                    {{-- Kolom Kemasan dihapus karena inputnya sudah tidak digunakan --}}
                                     <th class="text-center">Qty</th>
                                     <th class="text-end">Harga Satuan</th>
-                                    {{-- Kolom Diskon (%) dihapus karena inputnya sudah tidak digunakan --}}
                                     <th class="text-end">Jumlah</th>
                                 </tr>
                             </thead>
@@ -712,7 +716,6 @@
 <div class="modal fade" id="mainFilterModal" tabindex="-1" aria-labelledby="mainFilterModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content rounded-4 shadow-lg">
-            {{-- Header modal dihapus sesuai permintaan pengguna --}}
             <div class="modal-body p-4">
                 <div class="d-flex justify-content-between align-items-start mb-4">
                     <h5 class="modal-title fw-bold text-dark mb-0" id="mainFilterModalLabel"><i class="bi bi-funnel-fill me-2"></i> Filter Tambahan Servis</h5>
@@ -722,39 +725,41 @@
                 <div class="row g-3">
                     @php
                         $today = date('Y-m-d');
-                        // Tidak ada tanggal min spesifik yang diberikan, jadi mari kita izinkan beberapa tahun ke belakang untuk pemfilteran praktis
                         $minDateFilter = date('Y-m-d', strtotime('-5 years'));
                     @endphp
                     <div class="col-md-6">
                         <label for="startDateFilter" class="form-label text-muted">Dari Tanggal Servis:</label>
-                        <input type="date" id="startDateFilter" class="form-control" max="{{ $today }}" min="{{ $minDateFilter }}">
+                        <input type="date" id="startDateFilter" name="start_date" class="form-control" max="{{ $today }}" min="{{ $minDateFilter }}" value="{{ request('start_date') }}">
                     </div>
                     <div class="col-md-6">
                         <label for="endDateFilter" class="form-label text-muted">Sampai Tanggal Servis:</label>
-                        <input type="date" id="endDateFilter" class="form-control" max="{{ $today }}" min="{{ $minDateFilter }}">
+                        <input type="date" id="endDateFilter" name="end_date" class="form-control" max="{{ $today }}" min="{{ $minDateFilter }}" value="{{ request('end_date') }}">
                     </div>
                     <div class="col-md-6">
                         <label for="statusFilterModal" class="form-label text-muted">Status Servis:</label>
-                        <select id="statusFilterModal" class="form-select">
+                        <select id="statusFilterModal" name="status" class="form-select">
                             <option value="">Semua Status</option>
-                            <option value="selesai">Selesai</option>
-                            <option value="proses">Proses</option>
-                            <option value="batal">Batal</option>
-                            <option value="null">Tidak Ada</option>
+                            <option value="selesai" {{ request('status') == 'selesai' ? 'selected' : '' }}>Selesai</option>
+                            <option value="proses" {{ request('status') == 'proses' ? 'selected' : '' }}>Proses</option>
+                            <option value="batal" {{ request('status') == 'batal' ? 'selected' : '' }}>Batal</option>
+                            <option value="null" {{ request('status') == 'null' ? 'selected' : '' }}>Tidak Ada</option>
                         </select>
                     </div>
                     <div class="col-md-6">
                         <label for="tahunServisFilterModal" class="form-label text-muted">Tahun Servis:</label>
-                        <select id="tahunServisFilterModal" class="form-select">
+                        <select id="tahunServisFilterModal" name="tahun_servis" class="form-select">
                             <option value="">Semua Tahun Servis</option>
                             @php
                                 // Dapatkan tahun unik dari koleksi $servis yang diteruskan ke view
+                                // Atau dari variabel $allMerek dan $allTipe jika sudah ada
                                 $uniqueYears = optional($servis)->map(function($s) {
                                     return \Carbon\Carbon::parse($s->tanggal_servis)->year;
                                 })->unique()->sortDesc();
+                                // Alternatif: Jika ingin semua tahun yang ada di database, meskipun tidak ada di hasil paginasi saat ini:
+                                // $allAvailableYears = \App\Models\Servis::selectRaw('YEAR(tanggal_servis) as year')->distinct()->pluck('year')->sortDesc();
                             @endphp
                             @foreach($uniqueYears as $year)
-                                <option value="{{ $year }}">{{ $year }}</option>
+                                <option value="{{ $year }}" {{ request('tahun_servis') == $year ? 'selected' : '' }}>{{ $year }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -766,21 +771,31 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label for="mobilMerekFilterModal" class="form-label text-muted">Merek Mobil:</label>
-                        <select id="mobilMerekFilterModal" class="form-select">
+                        <select id="mobilMerekFilterModal" name="mobil_merek" class="form-select">
                             <option value="">Semua Merek</option>
-                            {{-- Opsi akan diisi oleh JavaScript --}}
+                            {{-- Opsi akan diisi oleh JavaScript atau dari PHP jika $allMerek dilewatkan --}}
+                            @isset($allMerek)
+                                @foreach($allMerek as $merek)
+                                    <option value="{{ $merek }}" {{ request('mobil_merek') == $merek ? 'selected' : '' }}>{{ ucfirst($merek) }}</option>
+                                @endforeach
+                            @endisset
                         </select>
                     </div>
                     <div class="col-md-6">
                         <label for="mobilTipeFilterModal" class="form-label text-muted">Tipe Mobil:</label>
-                        <select id="mobilTipeFilterModal" class="form-select">
+                        <select id="mobilTipeFilterModal" name="mobil_tipe" class="form-select">
                             <option value="">Semua Tipe</option>
-                            {{-- Opsi akan diisi oleh JavaScript --}}
+                            {{-- Opsi akan diisi oleh JavaScript atau dari PHP jika $allTipe dilewatkan --}}
+                            @isset($allTipe)
+                                @foreach($allTipe as $tipe)
+                                    <option value="{{ $tipe }}" {{ request('mobil_tipe') == $tipe ? 'selected' : '' }}>{{ ucfirst($tipe) }}</option>
+                                @endforeach
+                            @endisset
                         </select>
                     </div>
                     <div class="col-12">
                         <label for="mobilNopolFilterModal" class="form-label text-muted">Nomor Polisi:</label>
-                        <input type="text" id="mobilNopolFilterModal" class="form-control" placeholder="Contoh: B 1234 CD">
+                        <input type="text" id="mobilNopolFilterModal" name="mobil_nopol" class="form-control" placeholder="Contoh: B 1234 CD" value="{{ request('mobil_nopol') }}">
                     </div>
                 </div>
             </div>
@@ -806,23 +821,20 @@
     document.addEventListener('DOMContentLoaded', function() {
         // --- Logika Modal (Detail Servis) ---
         const detailModalElement = document.getElementById('detailModal');
-        const detailModal = new bootstrap.Modal(detailModalElement); // Dapatkan instance modal Bootstrap
+        const detailModal = new bootstrap.Modal(detailModalElement);
 
         if (detailModalElement) {
             detailModalElement.addEventListener('show.bs.modal', function (event) {
-                var button = $(event.relatedTarget); // Tombol yang diklik
-                var id = button.data('id'); // ID servis dari data-id tombol
+                var button = $(event.relatedTarget);
+                var id = button.data('id');
 
-                // Ambil data servis berdasarkan ID
                 $.ajax({
-                    url: '/servis/' + id, // Route API untuk mengambil detail servis
+                    url: '/servis/' + id,
                     method: 'GET',
                     success: function(data) {
-                        // Menampilkan informasi servis utama di modal
                         $('#detail-kode').text(data.kode_servis || 'Tidak Tersedia');
                         $('#detail-tanggal').text(data.tanggal_servis ? moment(data.tanggal_servis).format('DD MMMM YYYY') : 'Tidak Tersedia');
 
-                        // Menampilkan informasi mobil lengkap di modal
                         let mobilInfoDetail = '';
                         if (data.mobil) {
                             if (data.mobil.tahun_pembuatan) {
@@ -843,17 +855,12 @@
                         $('#detail-metode').text(data.metode_pembayaran || 'Tidak Tersedia');
                         $('#detail-status').text(data.status ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : 'Tidak Ada');
 
-                        // Menampilkan Harga Mobil Dibeli (dari transaksi)
                         $('#detail-harga-dibeli').text('Rp' + parseFloat(data.total_harga_mobil_dibeli || 0).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
-                        // Menampilkan Biaya Perbaikan (total_harga servis)
                         $('#detail-biaya-perbaikan').text('Rp' + parseFloat(data.total_harga || 0).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
-                        // Menampilkan Modal Mobil (total_biaya_keseluruhan)
                         $('#detail-modal-mobil').text('Rp' + parseFloat(data.total_biaya_keseluruhan || 0).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
 
-
-                        // Menampilkan daftar item servis di modal
                         const itemsBody = document.getElementById('detail-items-body');
-                        itemsBody.innerHTML = ''; // Bersihkan item sebelumnya
+                        itemsBody.innerHTML = '';
                         let itemList = '';
                         if (data.items && data.items.length > 0) {
                             $.each(data.items, function(index, item) {
@@ -863,20 +870,17 @@
                                 itemList += `
                                     <tr>
                                         <td>${item.item_name || 'N/A'}</td>
-                                        {{-- <td>${item.item_package || 'N/A'}</td> --}} {{-- Dihapus --}}
                                         <td class="text-center">${item.item_qty || 0}</td>
                                         <td class="text-end">Rp${hargaSatuanFormatted}</td>
-                                        {{-- <td class="text-end">${parseFloat(item.item_discount || 0).toFixed(0)}%</td> --}} {{-- Dihapus --}}
                                         <td class="text-end">Rp${jumlahFormatted}</td>
                                     </tr>
                                 `;
                             });
                             itemsBody.innerHTML = itemList;
                         } else {
-                            itemsBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Tidak ada item servis.</td></tr>`; // colspan diubah dari 6 menjadi 4
+                            itemsBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Tidak ada item servis.</td></tr>`;
                         }
 
-                        // Menampilkan created_at dan updated_at (asumsi API endpoint mengembalikan data ini)
                         $('#detail_created_at').text(data.created_at ? moment(data.created_at).format('DD MMMM YYYY HH:mm') : 'Tidak Tersedia');
                         $('#detail_updated_at').text(data.updated_at ? moment(data.updated_at).format('DD MMMM YYYY HH:mm') : 'Tidak Tersedia');
                     },
@@ -889,200 +893,85 @@
             });
         }
 
-        // --- Logika Modal Filter Utama (Diperbarui untuk Halaman Servis) ---
+        // --- Logika Filter Utama (via URL) ---
         const mainFilterModalElement = document.getElementById('mainFilterModal');
-        // Inisialisasi modal dengan backdrop yang diaktifkan secara eksplisit (defaultnya memang true)
         const mainFilterModal = new bootstrap.Modal(mainFilterModalElement, { backdrop: true });
 
-        const searchInput = document.getElementById('searchInput'); // Bilah pencarian utama di luar modal
+        const searchInput = document.getElementById('searchInput');
         const startDateFilter = document.getElementById('startDateFilter');
         const endDateFilter = document.getElementById('endDateFilter');
-        const statusFilterModal = document.getElementById('statusFilterModal'); // Filter di dalam modal
-        const tahunServisFilterModal = document.getElementById('tahunServisFilterModal'); // Filter di dalam modal
-        const mobilMerekFilterModal = document.getElementById('mobilMerekFilterModal'); // Filter di dalam modal
-        const mobilTipeFilterModal = document.getElementById('mobilTipeFilterModal'); // Filter di dalam modal
-        const mobilNopolFilterModal = document.getElementById('mobilNopolFilterModal'); // Filter di dalam modal
+        const statusFilterModal = document.getElementById('statusFilterModal');
+        const tahunServisFilterModal = document.getElementById('tahunServisFilterModal');
+        const mobilMerekFilterModal = document.getElementById('mobilMerekFilterModal');
+        const mobilTipeFilterModal = document.getElementById('mobilTipeFilterModal');
+        const mobilNopolFilterModal = document.getElementById('mobilNopolFilterModal');
 
         const applyAllFiltersBtn = document.getElementById('applyAllFiltersBtn');
         const resetAllFiltersBtn = document.getElementById('resetAllFiltersBtn');
+        const resetSearchBtn = document.getElementById('resetSearchBtn'); // Tombol reset baru di samping search
 
         const servisTable = document.getElementById('servisTable');
-        let tableRows = servisTable.querySelectorAll('tbody tr.data-row'); // Dapatkan semua baris data awalnya
         const tableResponsiveContainer = document.getElementById('tableResponsiveContainer');
 
+        // Fungsi untuk mengarahkan ulang dengan parameter URL baru
+        function redirectToFilteredUrl() {
+            const url = new URL(window.location.href);
 
-        // *** START PERBAIKAN PENTING UNTUK MASALAH BACKDROP ***
-        // Fungsi untuk memastikan modal backdrop dan kelas/style terkait dihapus
-        function removeModalBackdrop() {
-            // Hapus elemen backdrop
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) {
-                backdrop.remove();
+            // Bersihkan semua parameter filter lama sebelum menambahkan yang baru
+            url.searchParams.delete('search');
+            url.searchParams.delete('status');
+            url.searchParams.delete('start_date');
+            url.searchParams.delete('end_date');
+            url.searchParams.delete('tahun_servis');
+            url.searchParams.delete('mobil_merek');
+            url.searchParams.delete('mobil_tipe');
+            url.searchParams.delete('mobil_nopol');
+            url.searchParams.delete('page'); // Selalu reset halaman ke 1 saat filter berubah
+
+            // Tambahkan parameter filter baru dari input jika nilainya tidak kosong
+            if (searchInput.value.trim() !== '') {
+                url.searchParams.set('search', searchInput.value.trim());
             }
-            // Pastikan kelas 'modal-open' dihapus dari body
-            document.body.classList.remove('modal-open');
-            // Pastikan inline style yang ditambahkan Bootstrap dihapus dari body
-            document.body.style.removeProperty('overflow');
-            document.body.style.removeProperty('padding-right'); // Penting untuk scrollbar
-            console.log('removeModalBackdrop executed: body classes/styles cleared.');
+            if (statusFilterModal.value.trim() !== '') {
+                url.searchParams.set('status', statusFilterModal.value.trim());
+            }
+            if (startDateFilter.value.trim() !== '') {
+                url.searchParams.set('start_date', startDateFilter.value.trim());
+            }
+            if (endDateFilter.value.trim() !== '') {
+                url.searchParams.set('end_date', endDateFilter.value.trim());
+            }
+            if (tahunServisFilterModal.value.trim() !== '') {
+                url.searchParams.set('tahun_servis', tahunServisFilterModal.value.trim());
+            }
+            if (mobilMerekFilterModal.value.trim() !== '') {
+                url.searchParams.set('mobil_merek', mobilMerekFilterModal.value.trim());
+            }
+            if (mobilTipeFilterModal.value.trim() !== '') {
+                url.searchParams.set('mobil_tipe', mobilTipeFilterModal.value.trim());
+            }
+            if (mobilNopolFilterModal.value.trim() !== '') {
+                url.searchParams.set('mobil_nopol', mobilNopolFilterModal.value.trim());
+            }
+
+            // Arahkan ulang ke URL baru
+            window.location.href = url.toString();
         }
 
-        // Event listener untuk memastikan backdrop terhapus saat modal benar-benar tersembunyi
-        mainFilterModalElement.addEventListener('hidden.bs.modal', function () {
-            console.log('Modal hidden event fired. Removing backdrop.');
-            removeModalBackdrop();
+        // Event listeners untuk filter
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                redirectToFilteredUrl();
+            }
         });
-        // *** END PERBAIKAN PENTING UNTUK MASALAH BACKDROP ***
 
-
-        const scrollToRight = () => {
-            if (tableResponsiveContainer) {
-                if (tableResponsiveContainer.scrollWidth > tableResponsiveContainer.clientWidth) {
-                    tableResponsiveContainer.scrollLeft = tableResponsiveContainer.scrollWidth;
-                }
-            }
-        };
-
-        // Isi Filter Merek dan Tipe Mobil di dalam modal
-        function populateMobilFilters() {
-            const uniqueMerek = new Set();
-            const uniqueTipe = new Set();
-
-            // Iterasi semua baris untuk mengumpulkan merek dan tipe mobil unik
-            servisTable.querySelectorAll('tbody tr.data-row').forEach(row => {
-                const merek = row.getAttribute('data-merek');
-                const tipe = row.getAttribute('data-tipe');
-                if (merek && merek !== 'n/a') uniqueMerek.add(merek);
-                if (tipe && tipe !== 'n/a') uniqueTipe.add(tipe);
-            });
-
-            // Isi dropdown Merek
-            mobilMerekFilterModal.innerHTML = '<option value="">Semua Merek</option>';
-            Array.from(uniqueMerek).sort().forEach(merek => {
-                const option = document.createElement('option');
-                option.value = merek;
-                option.textContent = merek.charAt(0).toUpperCase() + merek.slice(1);
-                mobilMerekFilterModal.appendChild(option);
-            });
-
-            // Isi dropdown Tipe
-            mobilTipeFilterModal.innerHTML = '<option value="">Semua Tipe</option>';
-            Array.from(uniqueTipe).sort().forEach(tipe => {
-                const option = document.createElement('option');
-                option.value = tipe;
-                option.textContent = tipe.charAt(0).toUpperCase() + tipe.slice(1);
-                mobilTipeFilterModal.appendChild(option);
-            });
-        }
-
-
-        function applyFiltersAndSearch() {
-            const searchTerm = searchInput.value.toLowerCase().trim(); // Bilah pencarian utama di luar modal
-            const selectedStatus = statusFilterModal.value.toLowerCase().trim(); // Dari modal
-            const selectedTahunServis = tahunServisFilterModal.value.toLowerCase().trim(); // Dari modal
-            const selectedStartDate = startDateFilter.value; // Dari modal
-            const selectedEndDate = endDateFilter.value; // Dari modal
-
-            const selectedMobilMerek = mobilMerekFilterModal.value.toLowerCase().trim(); // Dari modal
-            const selectedMobilTipe = mobilTipeFilterModal.value.toLowerCase().trim(); // Dari modal
-            const mobilNopolSearchTerm = mobilNopolFilterModal.value.toLowerCase().trim(); // Dari modal
-
-            let foundVisibleRows = false;
-
-            // Ambil ulang baris tabel untuk memastikan status saat ini (misalnya, setelah pengurutan)
-            tableRows = servisTable.querySelectorAll('tbody tr.data-row');
-
-            tableRows.forEach(row => {
-                const rowKode = row.getAttribute('data-kode');
-                const rowMobilNopol = row.getAttribute('data-mobil');
-                const rowStatus = row.getAttribute('data-status');
-                const rowTahunServis = row.getAttribute('data-tahunservis');
-                const rowTanggalServis = row.getAttribute('data-tanggal');
-                const rowMerek = row.getAttribute('data-merek');
-                const rowTipe = row.getAttribute('data-tipe');
-
-                // Pencarian Umum (berlaku untuk beberapa atribut)
-                const matchesSearch = searchTerm === '' ||
-                                      rowKode.includes(searchTerm) ||
-                                      rowMobilNopol.includes(searchTerm) ||
-                                      row.textContent.toLowerCase().includes(searchTerm); // Fallback ke konten teks umum
-
-                // Filter Status
-                const matchesStatus = selectedStatus === '' || rowStatus === selectedStatus;
-
-                // Filter Tahun Servis
-                const matchesTahunServis = selectedTahunServis === '' || rowTahunServis === selectedTahunServis;
-
-                // Filter Rentang Tanggal
-                let matchesDateRange = true;
-                if (selectedStartDate && rowTanggalServis < selectedStartDate) {
-                    matchesDateRange = false;
-                }
-                if (selectedEndDate && rowTanggalServis > selectedEndDate) {
-                    matchesDateRange = false;
-                }
-
-                // Filter Mobil (dari modal)
-                const matchesMobilMerek = selectedMobilMerek === '' || rowMerek === selectedMobilMerek;
-                const matchesMobilTipe = selectedMobilTipe === '' || rowTipe === selectedMobilTipe;
-                const matchesMobilNopol = mobilNopolSearchTerm === '' || rowMobilNopol.includes(mobilNopolSearchTerm);
-
-
-                if (matchesSearch && matchesStatus && matchesTahunServis && matchesDateRange &&
-                    matchesMobilMerek && matchesMobilTipe && matchesMobilNopol) {
-                    row.style.display = '';
-                    foundVisibleRows = true;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-
-            // Tangani pesan status kosong
-            const currentEmptyStateRow = servisTable.querySelector('.empty-state');
-            if (foundVisibleRows) {
-                if (currentEmptyStateRow) {
-                    currentEmptyStateRow.remove();
-                }
-            } else {
-                if (!currentEmptyStateRow) {
-                    const newEmptyStateRow = document.createElement('tr');
-                    newEmptyStateRow.classList.add('empty-state');
-                    newEmptyStateRow.innerHTML = `
-                        <td colspan="10" class="text-center text-muted py-5">
-                            <i class="bi bi-info-circle-fill fs-3 mb-2 d-block"></i>
-                            <p class="mb-1">Tidak ada hasil ditemukan untuk pencarian atau filter Anda.</p>
-                            <p class="mb-0">Coba kata kunci atau filter lain.</p>
-                        </td>
-                    `;
-                    servisTable.querySelector('tbody').appendChild(newEmptyStateRow);
-                }
-            }
-        }
-
-        // Event listener untuk searchInput (di luar modal)
-        searchInput.addEventListener('keyup', applyFiltersAndSearch);
-
-        // Tambahkan log saat tombol "Filter Lainnya" diklik untuk membuka modal
-        const filterLainnyaButton = document.querySelector('[data-bs-target="#mainFilterModal"]');
-        if (filterLainnyaButton) {
-            filterLainnyaButton.addEventListener('click', function() {
-                console.log('Tombol Filter Lainnya diklik. Mencoba membuka modal.');
-            });
-        }
-
-        // Tambahkan log saat tombol "Terapkan Filter" diklik
         applyAllFiltersBtn.addEventListener('click', function() {
-            console.log('Tombol Terapkan Filter diklik. Menerapkan filter dan menyembunyikan modal.');
-            applyFiltersAndSearch();
-            mainFilterModal.hide(); // Bootstrap akan memicu hidden.bs.modal, yang akan menjalankan removeModalBackdrop
+            redirectToFilteredUrl();
         });
 
-
-        // Event listener untuk tombol "Reset Semua Filter" di dalam modal
         resetAllFiltersBtn.addEventListener('click', function() {
-            // Reset input pencarian utama
-            searchInput.value = '';
-            // Reset semua input filter di dalam modal
+            // Kosongkan semua nilai input filter secara manual (termasuk searchInput)
+            searchInput.value = ''; // Ini penting untuk tombol reset di modal
             startDateFilter.value = '';
             endDateFilter.value = '';
             statusFilterModal.value = '';
@@ -1091,36 +980,52 @@
             mobilTipeFilterModal.value = '';
             mobilNopolFilterModal.value = '';
 
-            applyFiltersAndSearch(); // Terapkan filter dengan nilai yang dihapus
-            mainFilterModal.hide(); // Sembunyikan modal setelah reset
+            // Setelah mengosongkan semua input, panggil fungsi untuk mengarahkan ulang
+            redirectToFilteredUrl();
         });
 
-        // Event listener untuk saat modal ditampilkan, untuk menyinkronkan nilai jika diperlukan
-        mainFilterModalElement.addEventListener('show.bs.modal', function () {
-            // Tidak perlu menyinkronkan dari filter utama, karena semua filter yang relevan sekarang ada di dalam modal.
-            // Tetapi pastikan dropdown seperti merek/tipe mobil diisi sebelum ditampilkan.
-            populateMobilFilters();
+        // Event listener untuk tombol reset di samping searchInput
+        resetSearchBtn.addEventListener('click', function() {
+            searchInput.value = ''; // Hanya mengosongkan search input
+            redirectToFilteredUrl(); // Terapkan filter yang tersisa (jika ada) atau tampilkan semua
         });
 
 
-        // Logika Pengurutan Tabel (Meniru dari Penjual)
+        // Fungsi untuk mengisi nilai filter dari URL saat halaman dimuat
+        function populateFiltersFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+
+            searchInput.value = params.get('search') || '';
+            startDateFilter.value = params.get('start_date') || '';
+            endDateFilter.value = params.get('end_date') || '';
+            statusFilterModal.value = params.get('status') || '';
+            tahunServisFilterModal.value = params.get('tahun_servis') || '';
+            mobilMerekFilterModal.value = params.get('mobil_merek') || '';
+            mobilTipeFilterModal.value = params.get('mobil_tipe') || '';
+            mobilNopolFilterModal.value = params.get('mobil_nopol') || '';
+        }
+
+        // Panggil saat DOMContentLoaded (saat halaman pertama kali dimuat)
+        populateFiltersFromUrl();
+
+
+        // --- Logika Pengurutan Tabel (tetap sisi klien karena data sudah ada di halaman) ---
         document.querySelectorAll('th[data-sort-type]').forEach(header => {
             header.addEventListener('click', function() {
                 const table = this.closest('table');
                 const tbody = table.querySelector('tbody');
-                const rows = Array.from(tbody.querySelectorAll('tr.data-row')); // Hanya urutkan baris data
+                // Hanya ambil baris yang terlihat setelah filtering oleh backend (atau semua jika tidak ada filter)
+                const rows = Array.from(tbody.querySelectorAll('tr.data-row:not(.empty-state)'));
                 const columnIndex = Array.from(this.parentNode.children).indexOf(this);
                 const sortType = this.dataset.sortType;
                 const currentDirection = this.dataset.sortDirection || 'asc';
                 const newDirection = currentDirection === 'asc' ? 'desc' : 'asc';
 
-                // Hapus kelas dan atribut arah pengurutan dari semua header
                 document.querySelectorAll('th[data-sort-type]').forEach(th => {
                     th.classList.remove('asc', 'desc');
-                    th.removeAttribute('data-sort-direction'); // Hapus data-sort-direction
+                    th.removeAttribute('data-sort-direction');
                 });
 
-                // Tambahkan kelas dan atribut arah pengurutan baru ke header yang diklik
                 this.classList.add(newDirection);
                 this.dataset.sortDirection = newDirection;
 
@@ -1128,25 +1033,14 @@
                     let valA, valB;
 
                     if (sortType === 'date') {
-                        // Untuk mengurutkan tanggal, gunakan data-tanggal (YYYY-MM-DD)
                         valA = rowA.getAttribute('data-tanggal') || '';
                         valB = rowB.getAttribute('data-tanggal') || '';
-
-                        // Konversi ke objek Date untuk perbandingan yang akurat
-                        const dateA = valA ? new Date(valA) : new Date(0); // Gunakan epoch untuk tanggal null/tidak valid
+                        const dateA = valA ? new Date(valA) : new Date(0);
                         const dateB = valB ? new Date(valB) : new Date(0);
-
                         let comparison = 0;
-                        if (dateA > dateB) {
-                            comparison = 1;
-                        } else if (dateA < dateB) {
-                            comparison = -1;
-                        }
+                        if (dateA > dateB) { comparison = 1; } else if (dateA < dateB) { comparison = -1; }
                         return newDirection === 'asc' ? comparison : -comparison;
-
                     } else if (sortType === 'numeric') {
-                        // Untuk kolom numerik, ambil nilai dari data-attributenya
-                        // atau fallback ke textContent jika tidak ada data-attribute spesifik
                         const dataAttrMap = {
                             'Harga Mobil Dibeli': 'data-harga-dibeli',
                             'Biaya Perbaikan': 'data-biaya-perbaikan',
@@ -1162,26 +1056,35 @@
                             valA = parseFloat(rowA.children[columnIndex].textContent.trim().replace(/[^0-9.-]+/g,"") || 0);
                             valB = parseFloat(rowB.children[columnIndex].textContent.trim().replace(/[^0-9.-]+/g,"") || 0);
                         }
-
                     } else { // Tipe 'text'
-                        // Sesuaikan columnIndex untuk memperhitungkan kolom '#' baru
                         const adjustedColumnIndex = columnIndex;
                         valA = rowA.children[adjustedColumnIndex].textContent.trim().toLowerCase();
                         valB = rowB.children[adjustedColumnIndex].textContent.trim().toLowerCase();
                     }
 
                     let comparison = 0;
-                    if (valA > valB) {
-                        comparison = 1;
-                    } else if (valA < valB) {
-                        comparison = -1;
-                    }
-
+                    if (valA > valB) { comparison = 1; } else if (valA < valB) { comparison = -1; }
                     return newDirection === 'asc' ? comparison : -comparison;
                 });
 
-                // Tambahkan kembali baris yang sudah diurutkan ke body tabel
                 rows.forEach(row => tbody.appendChild(row));
+                // Pastikan pesan "Tidak ada hasil" dihapus jika ada baris data setelah pengurutan
+                const currentEmptyStateRow = servisTable.querySelector('.empty-state');
+                if (rows.length > 0 && currentEmptyStateRow) {
+                    currentEmptyStateRow.remove();
+                } else if (rows.length === 0 && !currentEmptyStateRow) {
+                     // Jika tidak ada baris setelah sort (karena tidak ada data sama sekali atau semua terfilter), tampilkan pesan kosong
+                     const newEmptyStateRow = document.createElement('tr');
+                     newEmptyStateRow.classList.add('empty-state');
+                     newEmptyStateRow.innerHTML = `
+                         <td colspan="10" class="text-center text-muted py-5">
+                             <i class="bi bi-info-circle-fill fs-3 mb-2 d-block"></i>
+                             <p class="mb-1">Tidak ada hasil ditemukan untuk pencarian atau filter Anda.</p>
+                             <p class="mb-0">Coba kata kunci atau filter lain.</p>
+                         </td>
+                     `;
+                     tbody.appendChild(newEmptyStateRow);
+                }
             });
         });
 
@@ -1197,10 +1100,8 @@
             }
         }
 
-        // Panggil saat DOMContentLoaded (saat halaman pertama kali dimuat)
         ensureHeaderPosition();
 
-        // Panggil saat halaman diakses dari back/forward cache (saat tombol 'back' ditekan)
         window.addEventListener('pageshow', function(event) {
             if (event.persisted) {
                 console.log('Halaman dimuat dari BFCache. Memastikan posisi header.');
@@ -1209,14 +1110,6 @@
                 console.log('Halaman dimuat secara normal.');
             }
         });
-        // --- Akhir tambahan untuk mengatasi masalah header ---
-
-
-        // Pengaturan awal saat halaman dimuat
-        populateMobilFilters(); // Mengisi filter mobil di dalam modal
-        applyFiltersAndSearch(); // Menerapkan semua filter awalnya
-        scrollToRight();
-        window.addEventListener('resize', scrollToRight);
     });
 </script>
 @endsection

@@ -14,11 +14,29 @@ class PenjualController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function index()
+    public function index(Request $request) // Tambahkan parameter Request $request
     {
+        $search = $request->query('search'); // Ambil nilai 'search' dari URL
+
+        $penjuals = Penjual::query(); // Mulai query Penjual
+
+        // Terapkan filter pencarian jika ada
+        if ($search) {
+            $penjuals->where(function($query) use ($search) {
+                $query->where('kode_penjual', 'like', '%' . $search . '%')
+                      ->orWhere('nama', 'like', '%' . $search . '%')
+                      ->orWhere('no_telepon', 'like', '%' . $search . '%')
+                      ->orWhere('alamat', 'like', '%' . $search . '%')
+                      ->orWhere('pekerjaan', 'like', '%' . $search . '%')
+                      // Jika Anda ingin mencari berdasarkan bagian dari tanggal (misal 'Apr'),
+                      // Anda perlu mengonversi tanggal_lahir ke string
+                      ->orWhereRaw("DATE_FORMAT(tanggal_lahir, '%d %b %Y') LIKE ?", ['%' . $search . '%']);
+            });
+        }
+
         // Mengambil data penjual dengan paginasi
-        $penjuals = Penjual::paginate(10);
-        return view('penjual.index', compact('penjuals')); // Mengubah rute view
+        $penjuals = $penjuals->paginate(1);
+        return view('penjual.index', compact('penjuals', 'search')); // Kirim nilai pencarian ke view
     }
 
     /**
@@ -39,7 +57,7 @@ class PenjualController extends Controller
             }
             $newCode = 'PNJ-' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT); // Mengubah prefix
         } else {
-            $newCode = 'PNJ-' . str_pad(1, 4, '0', STR_PAD_LEFT); // Mengubah prefix
+            $newCode = 'PNJ-' . str_pad(1, 4, '0', STR_PAD_LEFT);
         }
         return view('penjual.create', compact('newCode')); // Mengubah rute view
     }
@@ -52,23 +70,21 @@ class PenjualController extends Controller
      */
     public function store(Request $request)
     {
-        // Validasi data yang masuk dari request
         $validatedData = $request->validate([
-            'kode_penjual' => 'required|string|unique:penjuals,kode_penjual|max:255', // Mengubah tabel dan kolom
+            'kode_penjual' => 'required|string|unique:penjuals,kode_penjual|max:255',
             'nama' => 'required|string|min:3|regex:/^[A-Za-z\s]+$/',
             'tanggal_lahir' => 'required|date|before_or_equal:today',
             'no_telepon' => 'nullable|digits_between:10,15',
             'alamat' => 'required|string|min:4',
             'pekerjaan' => 'nullable|string|min:4|regex:/^[A-Za-z\s]+$/',
-            'ktp_pasangan' => 'nullable|file|mimes:jpeg,png,pdf|max:2048', // Hanya ktp_pasangan
+            'ktp_pasangan' => 'nullable|file|mimes:jpeg,png,pdf|max:2048',
         ]);
 
-        // Mengambil semua data kecuali token dan file yang akan diunggah
-        $data = $request->except(['_token', 'ktp_pasangan']); // Hanya ktp_pasangan
+        $data = $request->except(['_token', 'ktp_pasangan']);
         $kodePenjual = $request->input('kode_penjual');
 
         // Jalur penyimpanan dasar relatif terhadap root disk 'public' (storage/app/public)
-        $storageFolder = 'documents/penjual'; // Tetap di documents/penjual
+        $storageFolder = 'documents/penjual';
 
         // Tangani unggahan KTP Pasangan
         if ($request->hasFile('ktp_pasangan')) {
@@ -78,8 +94,7 @@ class PenjualController extends Controller
             $data['ktp_pasangan'] = Storage::disk('public')->putFileAs($storageFolder, $file, $fileName);
         }
 
-        // Membuat entri penjual baru di database
-        Penjual::create($data);
+        Penjual::create($data); // Mengubah dari Pembeli menjadi Penjual
 
         return redirect()->route('penjual.index')->with('success', 'Penjual berhasil ditambahkan.');
     }
@@ -90,9 +105,9 @@ class PenjualController extends Controller
      * @param  \App\Models\Penjual  $penjual
      * @return \Illuminate\View\View
      */
-    public function edit(Penjual $penjual)
+    public function edit(Penjual $penjual) // Mengubah dari Pembeli menjadi Penjual
     {
-        return view('penjual.edit', compact('penjual'));
+        return view('penjual.edit', compact('penjual')); // Mengubah rute view
     }
 
     /**
@@ -102,21 +117,19 @@ class PenjualController extends Controller
      * @param  \App\Models\Penjual  $penjual
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, Penjual $penjual)
+    public function update(Request $request, Penjual $penjual) // Mengubah dari Pembeli menjadi Penjual
     {
-        // Validasi data yang masuk dari request
         $validatedData = $request->validate([
             'nama' => 'required|string|min:3|regex:/^[A-Za-z\s]+$/',
             'tanggal_lahir' => 'required|date|before_or_equal:today',
             'no_telepon' => 'nullable|digits_between:10,15',
             'alamat' => 'required|string|min:4',
             'pekerjaan' => 'nullable|string|min:4|regex:/^[A-Za-z\s]+$/',
-            'ktp_pasangan' => 'nullable|file|mimes:jpeg,png,pdf|max:2048', // Hanya ktp_pasangan
+            'ktp_pasangan' => 'nullable|file|mimes:jpeg,png,pdf|max:2048',
         ]);
 
-        // Mengambil semua data kecuali token, method, dan file yang akan diunggah
-        $data = $request->except(['_token', '_method', 'ktp_pasangan']); // Hanya ktp_pasangan
-        $kodePenjual = $penjual->kode_penjual;
+        $data = $request->except(['_token', '_method', 'ktp_pasangan']);
+        $kodePenjual = $penjual->kode_penjual; // Mengubah dari kodePembeli
 
         // Jalur penyimpanan dasar relatif terhadap root disk 'public' (storage/app/public)
         $storageFolder = 'documents/penjual'; // Tetap di documents/penjual
@@ -133,7 +146,7 @@ class PenjualController extends Controller
         }
 
         // Memperbarui entri penjual di database
-        $penjual->update($data);
+        $penjual->update($data); // Mengubah dari $pembeli->update($data);
 
         return redirect()->route('penjual.index')->with('success', 'Penjual berhasil diperbarui.');
     }
@@ -144,15 +157,14 @@ class PenjualController extends Controller
      * @param  \App\Models\Penjual  $penjual
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(Penjual $penjual)
+    public function destroy(Penjual $penjual) // Mengubah dari Pembeli menjadi Penjual
     {
         // Hapus file terkait sebelum menghapus penjual
         if ($penjual->ktp_pasangan && Storage::disk('public')->exists($penjual->ktp_pasangan)) {
             Storage::disk('public')->delete($penjual->ktp_pasangan);
         }
 
-        // Menghapus entri penjual dari database
-        $penjual->delete();
+        $penjual->delete(); // Mengubah dari $pembeli->delete();
         return redirect()->route('penjual.index')->with('success', 'Penjual berhasil dihapus.');
     }
 }

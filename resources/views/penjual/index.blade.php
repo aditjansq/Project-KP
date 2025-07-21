@@ -200,7 +200,7 @@
         }
 
         /* Custom Action Buttons */
-        .btn-custom-detail, .btn-custom-edit {
+        .btn-custom-detail, .btn-custom-edit, .btn-custom-delete {
             border: none;
             border-radius: 0.5rem;
             padding: 0.6rem 1.2rem; /* Consistent padding for action buttons */
@@ -232,7 +232,18 @@
             box-shadow: 0 2px 5px rgba(255, 193, 7, 0.3);
         }
 
-        .btn-custom-detail i, .btn-custom-edit i {
+        /* This is now unused as delete button is removed. Keep if you might re-add. */
+        /* .btn-custom-delete {
+            background-color: #dc3545;
+            color: #fff;
+        }
+        .btn-custom-delete:hover {
+            background-color: #c82333;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(220, 53, 69, 0.3);
+        } */
+
+        .btn-custom-detail i, .btn-custom-edit i { /* Removed .btn-custom-delete i */
             margin-right: 0.5rem; /* Spacing for icons in buttons */
         }
 
@@ -257,7 +268,7 @@
             border-color: #dee2e6;
         }
 
-        /* Filter Section Styling (Diambil dari Pembeli) */
+        /* Filter Section Styling */
         .filter-section {
             background-color: #ffffff;
             padding: 1.5rem;
@@ -466,7 +477,7 @@
             background-color: #fcfdfe; /* Slightly off-white background */
         }
 
-        .info-section-bordered h6.text-primary {
+        .info-section-bordered h6 class="text-primary" {
             margin-top: 0;
             margin-bottom: 1.5rem !important;
         }
@@ -506,56 +517,6 @@
             box-shadow: 0 5px 15px rgba(23, 162, 184, 0.2);
             color: white;
         }
-
-        /* Alert Styling (Success) - Refined */
-        .alert-success {
-            background-color: #eafaea; /* Very light green */
-            color: #218838; /* Standard success green */
-            border: 1px solid #28a745;
-            padding: 1rem 1.5rem;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 10px rgba(40, 167, 69, 0.1);
-        }
-        .alert-success .alert-heading {
-            color: #28a745;
-            font-weight: 600;
-        }
-        .alert-success .btn-close {
-            font-size: 0.9rem;
-            color: #218838; /* Make close button green */
-            opacity: 0.7;
-        }
-        .alert-success .btn-close:hover {
-            opacity: 1;
-        }
-
-        /* Custom styling for labels and values for minimalist look in modal detail */
-        .detail-label-new {
-            font-weight: 500;
-            color: #495057;
-            font-size: 0.875rem;
-            margin-bottom: 0.25rem;
-            display: block;
-        }
-
-        .detail-value-new {
-            padding: 0.25rem 0;
-            background-color: transparent;
-            border: none;
-            display: block;
-            color: #212529;
-            font-weight: 400;
-            font-size: 1rem;
-            word-break: break-word;
-            margin-bottom: 1rem;
-        }
-
-        /* Horizontal Rule in Modal - lighter and more modern */
-        hr {
-            border-top: 1px solid #e9ecef;
-            opacity: 0.7;
-        }
-
     </style>
 </head>
 
@@ -574,21 +535,15 @@
         </div>
     </div>
 
-    @if (session('success'))
-    <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-3 animate__animated animate__fadeInDown" role="alert">
-        <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
-    </div>
-    @endif
-
-    {{-- Filter and Search Section (Diambil dari Pembeli) --}}
+    {{-- Filter and Search Section --}}
     <div class="filter-section animate__animated animate__fadeInUp">
         <div class="row g-3 align-items-end">
             <div class="col-md-10">
                 <label for="searchInput" class="form-label text-muted">Cari Penjual</label>
                 <div class="input-group">
                     <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                    <input type="text" id="searchInput" class="form-control border-start-0 rounded-end" placeholder="Cari berdasarkan kode, nama, atau nomor telepon...">
+                    {{-- Tambahkan value dari $search --}}
+                    <input type="text" id="searchInput" class="form-control border-start-0 rounded-end" placeholder="Cari berdasarkan kode, nama, atau nomor telepon..." value="{{ $search ?? '' }}">
                 </div>
             </div>
             <div class="col-md-2 text-end">
@@ -619,61 +574,63 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($penjuals as $penjual)
-                        <tr class="data-row"
-                            data-id="{{ $penjual->id }}"
-                            data-kode-penjual="{{ strtolower($penjual->kode_penjual) }}"
-                            data-nama="{{ strtolower($penjual->nama) }}"
-                            {{-- Gunakan optional() untuk menghindari error jika tanggal_lahir NULL --}}
-                            {{-- Format Y-m-d untuk sorting JS yang optimal --}}
-                            data-tanggal-lahir-iso="{{ optional(Carbon::parse($penjual->tanggal_lahir))->format('Y-m-d') }}"
-                            {{-- Format d M Y untuk tampilan dan detail modal --}}
-                            data-tanggal-lahir-formatted="{{ optional(Carbon::parse($penjual->tanggal_lahir))->translatedFormat('d M Y') }}"
-                            data-pekerjaan="{{ strtolower($penjual->pekerjaan) }}"
-                            data-alamat="{{ strtolower($penjual->alamat) }}"
-                            data-no-telepon="{{ strtolower($penjual->no_telepon) }}"
-                            {{-- Dokumen --}}
-                            data-ktp-pasangan="{{ $penjual->ktp_pasangan ? Storage::url($penjual->ktp_pasangan) : '' }}">
-                            <td class="text-center">{{ $loop->iteration }}</td>
-                            <td>{{ $penjual->kode_penjual }}</td>
-                            <td>{{ $penjual->nama }}</td>
-                            <td class="text-center">{{ optional(Carbon::parse($penjual->tanggal_lahir))->translatedFormat('d M Y') ?: 'N/A' }}</td>
-                            <td>{{ $penjual->pekerjaan }}</td>
-                            <td>{{ $penjual->alamat }}</td>
-                            <td>{{ $penjual->no_telepon }}</td>
-                            <td class="text-center">
-                                <div class="d-flex justify-content-center gap-2">
-                                    <button type="button" class="btn btn-custom-detail view-detail-btn" data-bs-toggle="modal" data-bs-target="#detailPenjualModal"
-                                        data-penjual="{{ json_encode([
-                                            'id' => $penjual->id,
-                                            'kode_penjual' => $penjual->kode_penjual,
-                                            'nama' => $penjual->nama,
-                                            'tanggal_lahir' => $penjual->tanggal_lahir, // Kirim Y-m-d ke JS untuk parsing Date
-                                            'pekerjaan' => $penjual->pekerjaan,
-                                            'alamat' => $penjual->alamat,
-                                            'no_telepon' => $penjual->no_telepon,
-                                            'ktp_pasangan' => $penjual->ktp_pasangan ? Storage::url($penjual->ktp_pasangan) : null,
-                                            'created_at' => $penjual->created_at ? $penjual->created_at->format('d M Y H:i') : null,
-                                            'updated_at' => $penjual->updated_at ? $penjual->updated_at->format('d M Y H:i') : null,
-                                        ]) }}">
-                                        <i class="fas fa-info-circle"></i> Detail
-                                    </button>
-                                    @if(in_array($job, ['admin']))
-                                    <a href="{{ route('penjual.edit', $penjual->id) }}" class="btn btn-custom-edit">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </a>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
+                        @forelse ($penjuals as $penjual)
+                            <tr class="data-row"
+                                data-id="{{ $penjual->id }}"
+                                data-kode-penjual="{{ strtolower($penjual->kode_penjual) }}"
+                                data-nama="{{ strtolower($penjual->nama) }}"
+                                {{-- Gunakan Carbon::parse() untuk memastikan tanggal diproses sebagai objek Carbon --}}
+                                data-tanggal-lahir-iso="{{ $penjual->tanggal_lahir ? Carbon::parse($penjual->tanggal_lahir)->format('Y-m-d') : '' }}"
+                                data-tanggal-lahir-formatted="{{ $penjual->tanggal_lahir ? Carbon::parse($penjual->tanggal_lahir)->translatedFormat('d F Y') : '' }}"
+                                data-pekerjaan="{{ strtolower($penjual->pekerjaan) }}"
+                                data-alamat="{{ strtolower($penjual->alamat) }}"
+                                data-no-telepon="{{ strtolower($penjual->no_telepon) }}"
+                                {{-- Dokumen --}}
+                                data-ktp-pasangan="{{ $penjual->ktp_pasangan ? Storage::url($penjual->ktp_pasangan) : '' }}"
+                                {{-- Created/Updated At --}}
+                                data-created-at="{{ $penjual->created_at ? Carbon::parse($penjual->created_at)->format('d M Y, H:i') : '' }}"
+                                data-updated-at="{{ $penjual->updated_at ? Carbon::parse($penjual->updated_at)->format('d M Y, H:i') : '' }}">
+                                <td class="text-center">{{ $loop->iteration }}</td>
+                                <td>{{ $penjual->kode_penjual }}</td>
+                                <td>{{ $penjual->nama }}</td>
+                                {{-- Tampilkan tanggal dalam format yang diinginkan (contoh: 06 April 1992) --}}
+                                <td>{{ $penjual->tanggal_lahir ? Carbon::parse($penjual->tanggal_lahir)->translatedFormat('d F Y') : 'N/A' }}</td>
+                                <td>{{ $penjual->pekerjaan }}</td>
+                                <td>{{ $penjual->alamat }}</td>
+                                <td>{{ $penjual->no_telepon }}</td>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <button type="button" class="btn btn-custom-detail view-detail-btn" data-bs-toggle="modal" data-bs-target="#detailPenjualModal"
+                                            data-penjual="{{ json_encode([
+                                                'id' => $penjual->id,
+                                                'kode_penjual' => $penjual->kode_penjual,
+                                                'nama' => $penjual->nama,
+                                                'tanggal_lahir' => $penjual->tanggal_lahir ? Carbon::parse($penjual->tanggal_lahir)->format('Y-m-d') : null, // Kirim Y-m-d ke JS untuk parsing Date
+                                                'pekerjaan' => $penjual->pekerjaan,
+                                                'alamat' => $penjual->alamat,
+                                                'no_telepon' => $penjual->no_telepon,
+                                                'ktp_pasangan' => $penjual->ktp_pasangan ? Storage::url($penjual->ktp_pasangan) : null,
+                                                'created_at' => $penjual->created_at ? Carbon::parse($penjual->created_at)->format('d M Y, H:i') : null,
+                                                'updated_at' => $penjual->updated_at ? Carbon::parse($penjual->updated_at)->format('d M Y, H:i') : null,
+                                            ]) }}">
+                                            <i class="fas fa-info-circle"></i> Detail
+                                        </button>
+                                        @if(in_array($job, ['admin']))
+                                        <a href="{{ route('penjual.edit', $penjual->id) }}" class="btn btn-custom-edit">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
                         @empty
-                        <tr>
-                            <td colspan="8" class="text-center py-4 text-muted empty-state">
-                                <i class="bi bi-info-circle-fill mb-2 d-block"></i>
-                                <p class="mb-1">Tidak ada data penjual yang ditemukan.</p>
-                                <p class="mb-0">Coba ubah filter atau tambahkan penjual baru.</p>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td colspan="8" class="text-center py-4 text-muted empty-state">
+                                    <i class="bi bi-info-circle-fill mb-2 d-block"></i>
+                                    <p class="mb-1">Tidak ada data penjual yang ditemukan.</p>
+                                    <p class="mb-0">Coba ubah filter atau tambahkan penjual baru.</p>
+                                </td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -682,12 +639,11 @@
         <div class="card-footer bg-light border-0 py-3 px-4 d-flex flex-column flex-md-row justify-content-between align-items-center rounded-bottom-4 gap-3">
             <small class="text-muted">Data diperbarui terakhir: {{ Carbon::now()->format('d M Y H:i') }} WIB</small>
             {{-- Pagination Links (Pastikan $penjuals adalah instance Paginator) --}}
-            {{ optional($penjuals)->links('pagination::bootstrap-5') }}
+            {{ optional($penjuals)->appends(request()->query())->links('pagination::bootstrap-5') }}
         </div>
     </div>
 </div>
 
-{{-- MODAL DETAIL PENJUAL --}}
 <div class="modal fade" id="detailPenjualModal" tabindex="-1" aria-labelledby="detailPenjualModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content rounded-4 shadow-lg border-0">
@@ -703,31 +659,31 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label detail-label-new">ID Penjual:</label>
-                                    <p class="form-control-plaintext detail-value-new" id="detail_id_penjual"></p>
+                                    <p class="form-control-plaintext detail-value-new" id="modalPenjualId"></p>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label detail-label-new">Kode Penjual:</label>
-                                    <p class="form-control-plaintext detail-value-new" id="detail_kode_penjual"></p>
+                                    <p class="form-control-plaintext detail-value-new" id="modalPenjualKodePenjual"></p>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label detail-label-new">Nama Lengkap:</label>
-                                    <p class="form-control-plaintext detail-value-new" id="detail_nama"></p>
+                                    <p class="form-control-plaintext detail-value-new" id="modalPenjualNamaDetail"></p>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label detail-label-new">Tanggal Lahir:</label>
-                                    <p class="form-control-plaintext detail-value-new" id="detail_tanggal_lahir"></p>
+                                    <p class="form-control-plaintext detail-value-new" id="modalPenjualTanggalLahir"></p>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label detail-label-new">Pekerjaan:</label>
-                                    <p class="form-control-plaintext detail-value-new" id="detail_pekerjaan"></p>
+                                    <p class="form-control-plaintext detail-value-new" id="modalPenjualPekerjaan"></p>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label detail-label-new">No. Telepon:</label>
-                                    <p class="form-control-plaintext detail-value-new" id="detail_no_telepon"></p>
+                                    <p class="form-control-plaintext detail-value-new" id="modalPenjualNoTelepon"></p>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label detail-label-new">Alamat:</label>
-                                    <p class="form-control-plaintext detail-value-new" id="detail_alamat"></p>
+                                    <p class="form-control-plaintext detail-value-new" id="modalPenjualAlamat"></p>
                                 </div>
                             </div>
                         </div>
@@ -756,11 +712,11 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label detail-label-new">Dibuat Pada:</label>
-                            <p class="form-control-plaintext detail-value-new" id="detail_created_at"></p>
+                            <p class="form-control-plaintext detail-value-new" id="modalPenjualCreatedAt"></p>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label detail-label-new">Terakhir Diperbarui:</label>
-                            <p class="form-control-plaintext detail-value-new" id="detail_updated_at"></p>
+                            <p class="form-control-plaintext detail-value-new" id="modalPenjualUpdatedAt"></p>
                         </div>
                     </div>
                 </div>
@@ -786,11 +742,12 @@
     </div>
 </div>
 
+
 {{-- Bootstrap Bundle with Popper (pastikan ini di-link jika belum ada di layout utama) --}}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 {{-- ======================================================= --}}
-{{-- Bagian JavaScript Internal untuk Fungsionalitas Halaman Penjual (Disamakan dengan Pembeli) --}}
+{{-- Bagian JavaScript Internal untuk Fungsionalitas Halaman Penjual --}}
 {{-- ======================================================= --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -877,31 +834,30 @@
                 const penjualData = JSON.parse(button.getAttribute('data-penjual')); // Dapatkan data dari atribut data-penjual
 
                 // Isi bidang teks
-                document.getElementById('detail_id_penjual').textContent = penjualData.id;
-                document.getElementById('detail_kode_penjual').textContent = penjualData.kode_penjual.toUpperCase();
+                document.getElementById('modalPenjualId').textContent = penjualData.id;
+                document.getElementById('modalPenjualKodePenjual').textContent = penjualData.kode_penjual.toUpperCase();
                 document.getElementById('modalPenjualNama').textContent = penjualData.nama.replace(/\b\w/g, s => s.toUpperCase());
-                document.getElementById('detail_nama').textContent = penjualData.nama.replace(/\b\w/g, s => s.toUpperCase());
+                document.getElementById('modalPenjualNamaDetail').textContent = penjualData.nama.replace(/\b\w/g, s => s.toUpperCase());
 
                 // Format tanggal lahir untuk modal detail (contoh: 06 April 1992)
                 if (penjualData.tanggal_lahir) {
                     const date = new Date(penjualData.tanggal_lahir);
-                    document.getElementById('detail_tanggal_lahir').textContent = date.toLocaleDateString('id-ID', {
+                    // Menggunakan ID yang konsisten: modalPenjualTanggalLahir
+                    document.getElementById('modalPenjualTanggalLahir').textContent = date.toLocaleDateString('id-ID', {
                         day: '2-digit',
                         month: 'long',
                         year: 'numeric'
                     });
                 } else {
-                    document.getElementById('detail_tanggal_lahir').textContent = 'Tidak Tersedia';
+                    // Menggunakan ID yang konsisten: modalPenjualTanggalLahir
+                    document.getElementById('modalPenjualTanggalLahir').textContent = 'Tidak Tersedia';
                 }
 
-                document.getElementById('detail_pekerjaan').textContent = penjualData.pekerjaan.replace(/\b\w/g, s => s.toUpperCase());
-                document.getElementById('detail_alamat').textContent = penjualData.alamat.replace(/\b\w/g, s => s.toUpperCase());
-                document.getElementById('detail_no_telepon').textContent = penjualData.no_telepon;
-
-                // Isi created_at dan updated_at
-                document.getElementById('detail_created_at').textContent = penjualData.created_at || 'Tidak Tersedia';
-                document.getElementById('detail_updated_at').textContent = penjualData.updated_at || 'Tidak Tersedia';
-
+                document.getElementById('modalPenjualPekerjaan').textContent = penjualData.pekerjaan.replace(/\b\w/g, s => s.toUpperCase());
+                document.getElementById('modalPenjualAlamat').textContent = penjualData.alamat.replace(/\b\w/g, s => s.toUpperCase());
+                document.getElementById('modalPenjualNoTelepon').textContent = penjualData.no_telepon;
+                document.getElementById('modalPenjualCreatedAt').textContent = penjualData.created_at || 'Tidak Tersedia';
+                document.getElementById('modalPenjualUpdatedAt').textContent = penjualData.updated_at || 'Tidak Tersedia';
 
                 // Isi pratinjau dokumen
                 populateDocumentPreview(penjualData.ktp_pasangan, 'detail_ktp_pasangan_preview');
@@ -917,74 +873,40 @@
             });
         }
 
-        // --- Logika Filter dan Pencarian ---
+        // --- Logika Filter dan Pencarian BERDASARKAN URL ---
         const searchInput = document.getElementById('searchInput');
         const resetFiltersBtn = document.getElementById('resetFiltersBtn');
-        const penjualTable = document.getElementById('penjualTable');
-        let tableRows = penjualTable.querySelectorAll('tbody tr.data-row'); // Gunakan let untuk memungkinkan pengambilan ulang jika konten tabel berubah
 
-        function applyFiltersAndSearch() {
-            const searchTerm = searchInput.value.toLowerCase().trim();
-            let foundVisibleRows = false;
+        // Fungsi untuk menerapkan filter dengan memperbarui URL
+        function applyFiltersToUrl() {
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.delete('page'); // Reset page saat menerapkan filter baru
 
-            tableRows.forEach(row => {
-                const kodePenjual = row.dataset.kodePenjual || '';
-                const nama = row.dataset.nama || '';
-                const noTelepon = row.dataset.noTelepon || '';
-                const alamat = row.dataset.alamat || '';
-                const pekerjaan = row.dataset.pekerjaan || '';
-                const tanggalLahirFormatted = row.dataset.tanggalLahirFormatted || ''; // Gunakan ini untuk pencarian
-
-                const matchesSearch = searchTerm === '' ||
-                                      kodePenjual.includes(searchTerm) ||
-                                      nama.includes(searchTerm) ||
-                                      noTelepon.includes(searchTerm) ||
-                                      alamat.includes(searchTerm) ||
-                                      pekerjaan.includes(searchTerm) ||
-                                      tanggalLahirFormatted.includes(searchTerm);
-
-                if (matchesSearch) {
-                    row.style.display = '';
-                    foundVisibleRows = true;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-
-            // Tangani pesan keadaan kosong
-            const currentEmptyStateRow = penjualTable.querySelector('.empty-state');
-            if (foundVisibleRows) {
-                if (currentEmptyStateRow) {
-                    currentEmptyStateRow.remove();
-                }
+            if (searchInput.value) {
+                newUrl.searchParams.set('search', searchInput.value);
             } else {
-                if (!currentEmptyStateRow) {
-                    const newEmptyStateRow = document.createElement('tr');
-                    newEmptyStateRow.classList.add('empty-state');
-                    newEmptyStateRow.innerHTML = `
-                        <td colspan="8" class="text-center py-4 text-muted">
-                            <i class="bi bi-info-circle-fill fs-3 mb-2 d-block"></i>
-                            <p class="mb-1">Tidak ada hasil ditemukan untuk pencarian Anda.</p>
-                            <p class="mb-0">Coba kata kunci lain.</p>
-                        </td>
-                    `;
-                    penjualTable.querySelector('tbody').appendChild(newEmptyStateRow);
-                }
+                newUrl.searchParams.delete('search');
             }
+
+            window.location.href = newUrl.toString(); // Redirect ke URL baru
         }
 
-        // Lampirkan event listener untuk pencarian
-        searchInput.addEventListener('keyup', applyFiltersAndSearch);
-
-        resetFiltersBtn.addEventListener('click', function() {
-            searchInput.value = '';
-            applyFiltersAndSearch(); // Terapkan filter dengan nilai yang sudah dibersihkan
+        // Event listener untuk input pencarian (saat menekan Enter)
+        searchInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                applyFiltersToUrl();
+            }
         });
 
-        // Pengaturan awal saat halaman dimuat
-        applyFiltersAndSearch();
+        // Event listener untuk tombol "Reset Filter"
+        resetFiltersBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            applyFiltersToUrl(); // Terapkan filter kosong untuk mereset
+        });
 
-        // Logika Pengurutan Tabel
+        // --- Logika Pengurutan Tabel (tetap di sisi klien karena data yang difilter sudah ada di halaman) ---
+        // Perhatikan: Jika Anda memfilter dengan server, sorting ini hanya akan mengurutkan data yang *sudah ada* di halaman saat ini.
+        // Untuk sorting yang mencakup semua data, sorting juga harus dilakukan di server (controller).
         document.querySelectorAll('th[data-sort-type]').forEach(header => {
             header.addEventListener('click', function() {
                 const table = this.closest('table');
@@ -1026,6 +948,7 @@
                         return newDirection === 'asc' ? comparison : -comparison;
 
                     } else if (sortType === 'numeric') {
+                        // Tidak ada kolom numerik di sini yang perlu sorting kustom, tapi tetap pertahankan jika ada.
                         valA = parseFloat(rowA.children[columnIndex].textContent.trim().replace(/[^0-9.-]+/g,""));
                         valB = parseFloat(rowB.children[columnIndex].textContent.trim().replace(/[^0-9.-]+/g,""));
                     } else { // 'text' type
